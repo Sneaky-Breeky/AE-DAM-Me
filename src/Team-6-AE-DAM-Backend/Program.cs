@@ -10,7 +10,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
-var allowedOrigins = new[] { "http://localhost:3000", "https://yourfrontenddomain.com" }; // Example allowed origins
+// note: this one should reside in appsettings.json, not here!
+var allowedOrigins = new[] { "http://localhost:3000", "https://cpsc319-2025.github.io/Team-6-AE/" };
 
 
 builder.Services.AddCors(options =>

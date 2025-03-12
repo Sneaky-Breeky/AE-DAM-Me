@@ -1,5 +1,5 @@
 const API_BASE_URL = "https://ae-dam-be-h3dtgrehbcgxfpar.westus2-01.azurewebsites.net/api/auth";
-
+const LOCAL_BASE_URL = "http://localhost:5146/api/auth";
 /**
  * Login user
  * @param {string} email 
@@ -13,6 +13,23 @@ export async function loginUser(email, password) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({ email, password })
+    });
+
+    if (!response.ok) {
+        // Handle errors and parse JSON safely
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+        return errorData;
+    }
+
+    return response.json();
+}
+
+export async function fetchUsers() {
+    const response = await fetch(`${API_BASE_URL}/fetch`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
+        }
     });
 
     if (!response.ok) {
