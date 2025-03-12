@@ -21,7 +21,7 @@ namespace DAMBackend.Models
             // Key for metadata tag model
             modelBuilder.Entity<MetadataTagModel>()
             .HasKey(m => new { m.FileId, m.Key });
-            
+
             // One to many betwen file and metadatatag model
             modelBuilder.Entity<FileModel>()
                 .HasMany(f => f.mTags)
@@ -68,6 +68,7 @@ namespace DAMBackend.Models
             modelBuilder.Entity<ProjectModel>()
                 .Property(p => p.Id)
                 .ValueGeneratedOnAdd();
+                
         }
     }
 }
