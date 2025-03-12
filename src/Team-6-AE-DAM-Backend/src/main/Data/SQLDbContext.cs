@@ -19,7 +19,6 @@ namespace DAMBackend.Models
         {
             // One to many betwen file and metadatatag model
             modelBuilder.Entity<FileModel>()
-<<<<<<< HEAD
                 .HasMany(f => f.mTags)
                 .WithOne(t => t.File)
                 .HasForeignKey(t => t.FileId)
@@ -31,16 +30,6 @@ namespace DAMBackend.Models
                 .WithOne(t => t.File)
                 .HasForeignKey(t => t.FileId)
                 .IsRequired();
-=======
-                .HasMany(t => t.Tags)
-                .WithMany(f => f.Files)
-                .UsingEntity<Dictionary<string, object>>( // Create a junction table
-                "FileTag", // Table name
-                j => j.HasOne<TagModel>().WithMany().HasForeignKey("TagId"), // Foreign key for TagModel
-                j => j.HasOne<FileModel>().WithMany().HasForeignKey("FileId"), // Foreign key for FileModel
-                j => j.HasKey("FileId", "TagId") // Composite key
-            );
->>>>>>> 7ef1f930a60f2ec57012cf4a63c3c8b7825d66d6
 
             // One to many from projects to files
             modelBuilder.Entity<ProjectModel>()

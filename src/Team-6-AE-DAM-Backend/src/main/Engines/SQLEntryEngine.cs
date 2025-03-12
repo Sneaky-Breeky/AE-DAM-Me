@@ -65,7 +65,6 @@ namespace DAMBackend.services
             
             var tag = new MetaDataTagModel 
             {   
-<<<<<<< HEAD
                 Value = value,
                 Key = key,
                 type = v_type,
@@ -79,27 +78,12 @@ namespace DAMBackend.services
                 throw new Exception("File was not added to tag, please attach a File");
             }
             // database.Tags.Add(tag);
-=======
-                UserId = file.UserId,
-                Phase = phase,
-                Dep = dep,
-                Type = type
-            };
-
-            tags.Files.Add(file);
-
-            if (project != null) {
-                tags.ProjectId = project.Id;
-            }
-
-            
->>>>>>> 7ef1f930a60f2ec57012cf4a63c3c8b7825d66d6
             // await database.SaveChanges();
             return tag;
         }
 
         private bool IsValidValue(object value, value_type expectedType)
-{
+        {
             return expectedType switch
             {
                 value_type.String => value is string,  // Check if value is a string
