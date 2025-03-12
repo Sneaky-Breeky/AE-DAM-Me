@@ -38,7 +38,7 @@ Project that it was added to with id
         public string? Copyright { get; set; }
         public ICollection<MetadataTagModel> mTags { get; set;} = new HashSet<MetadataTagModel>();
         public ICollection<TagBasicModel> bTags { get; set;} = new HashSet<TagBasicModel>();
-        public Guid? ProjectId { get; set; }
+        public int? ProjectId { get; set; }
         public ProjectModel? Project { get; set; }
 
         public int UserId { get; set; }

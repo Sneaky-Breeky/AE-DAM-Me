@@ -129,7 +129,6 @@ namespace DAMBackend.services
                 Phase = phase,
                 description = desription
             };
-            // database.Tags.Add(tag);
             // await database.SaveChanges();
             return project;
         }
