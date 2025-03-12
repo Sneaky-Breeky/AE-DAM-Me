@@ -36,37 +36,80 @@ namespace DAMBackend.services
         }
 
         // take result from extractExifData
+        // palette has to be set on creation
         public FileModel AddFile(FileModel file, UserModel user, ProjectModel project) {
             if (project != null) {
                 file.Project = project;
                 file.ProjectId = project.Id;
+            } else {
+                throw new Exception("No Project was specified");
             }
 
-            file.User = user;
-            file.UserId = user.Id;
+            if (user != null) {
+                file.User = user;
+                file.UserId = user.Id;
+            } else {
+                throw new Exception("No User was specified");
+            }
+            
             
             // database.Files.Add(file);
             // await database.SaveChanges();
             return file;
         }
 
-        public TagModel addTags(ProjectModel project, FileModel file, string phase, Department dep, MediaType type) {
-            var tags = new TagModel 
+        public MetaDataTagModel addTags(FileModel file, string key, object value, value_type v_type) {
+            if (!IsValidValue(value, expectedType)) {
+                throw new ArgumentException($"Invalid value type for key {key}. Expected {v_type}, but got {value.GetType().Name}.");
+            }
+            
+            var tag = new MetaDataTagModel 
             {   
-                UserId = file.UserId,
-                Phase = phase,
-                Dep = dep,
-                Type = type,
+                Value = value,
+                Key = key,
+                type = v_type,
                 FileId = file.Id,
                 File = file
             };
-            if (project != null) {
-                tags.ProjectId = project.Id;
+            if (file != null) {
+                tags.FileId = file.Id;
+                file.mtags.Add(tag);
+            } else {
+                throw new Exception("File was not added to tag, please attach a File");
             }
-
             // database.Tags.Add(tag);
             // await database.SaveChanges();
-            return tags;
+            return tag;
+        }
+
+        private bool IsValidValue(object value, value_type expectedType)
+{
+            return expectedType switch
+            {
+                value_type.String => value is string,  // Check if value is a string
+                value_type.Integer => value is int,    // Check if value is an integer
+                _ => false                            // If the type doesn't match, return false
+            };
+        }
+
+        public MetaDataTagModel addTags(FileModel file, string value) {
+            
+            var tag = new BasicTagModel 
+            {   
+                Value = value,
+                FileId = file.Id,
+                File = file
+            };
+
+            if (file != null) {
+                tags.FileId = file.Id;
+                file.mtags.Add(tag);
+            } else {
+                throw new Exception("File was not added to tag, please attach a File");
+            }
+            // database.Tags.Add(tag);
+            // await database.SaveChanges();
+            return tag;
         }
 
         public ProjectModel addProject(string name, string status, string location, string imagePath, string phase, AccessLevel al, DateTime lastUp) {

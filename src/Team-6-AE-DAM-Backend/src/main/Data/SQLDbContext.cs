@@ -11,15 +11,24 @@ namespace DAMBackend.Models
 
         public DbSet<FileModel> Files { get; set; }
 
-        public DbSet<TagModel> Tags { get; set; }
+        public DbSet<MetaDataTagModel> MetadataTags { get; set; }
+
+        public DbSet<TagBasicModel> BasicTags { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) 
         {
-            // One to one betwen file and tag model
+            // One to many betwen file and metadatatag model
             modelBuilder.Entity<FileModel>()
-                .HasOne(f => f.Tags)
+                .HasMany(f => f.mTags)
                 .WithOne(t => t.File)
-                .HasForeignKey<TagModel>(t => t.FileId)
+                .HasForeignKey(t => t.FileId)
+                .IsRequired();
+            
+            // One to many betwen file and basictag model
+            modelBuilder.Entity<FileModel>()
+                .HasMany(f => f.bTags)
+                .WithOne(t => t.File)
+                .HasForeignKey(t => t.FileId)
                 .IsRequired();
 
             // One to many from projects to files

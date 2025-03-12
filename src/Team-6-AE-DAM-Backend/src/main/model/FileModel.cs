@@ -2,6 +2,16 @@
 // will work, fluent API is supposedly better, will ask team
 
 namespace DAMBackend.Models
+
+/* 
+    ***INSTRUCTIONS FOR USE***
+
+EXIF parsed data to fill out fields
+A list of both metadata and regular tags
+User that added the file with their id
+Project that it was added to with id
+
+*/
 {
     // some of the data might not be found on exif, so i changed some collumn to be nullable
     public class FileModel 
@@ -24,7 +34,8 @@ namespace DAMBackend.Models
         public int? FocalLength { get; set; }
         public float? Aperture { get; set; }
         public string? Copyright { get; set; }
-        public TagModel? Tags { get; set; }
+        public ICollection<MetadataTagModel> mTags { get; set;} = new HashSet<MetadataTagModel>();
+        public ICollection<TagBasicModel> bTags { get; set;} = new HashSet<TagBasicModel>();
         public Guid? ProjectId { get; set; }
         public ProjectModel? Project { get; set; }
 
@@ -32,6 +43,8 @@ namespace DAMBackend.Models
         // change to be required 
 
         public UserModel User { get; set; }
+
+        public bool Palette {get; set;}
       // public class FileModel 
 
     // EXIF QUALITIES
