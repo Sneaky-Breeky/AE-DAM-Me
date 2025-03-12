@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:5146/api/auth";
+const API_BASE_URL = "https://ae-dam-be-h3dtgrehbcgxfpar.westus2-01.azurewebsites.net/api/auth";
 
 /**
  * Login user
