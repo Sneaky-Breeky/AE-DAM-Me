@@ -149,7 +149,6 @@ export default function UserProjectOverview() {
                     }}
                 >
                     <Card
-                        hoverable
                         style={{
                             backgroundColor: '#37474F',
                             borderRadius: '10px',

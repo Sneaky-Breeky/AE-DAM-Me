@@ -49,57 +49,107 @@ export default function ProjectCreation() {
         });
     };
 
-    const handleAddProjectButton = (values) => {
-        // send project info to backend here
+
+
+
+    const handleAddProjectButton = async (values) => {
         console.log("Submitting data:", values);
-
+    
         const projectData = {
-            ...values, // projectName, description, location
-            metadataFields: defaultMetadataFields,
-            metadataTags: defaultMetadataTags,
+            name: values.projectName,
+            description: values.description,
+            status: "Active",
+            location: values.location || "Unknown",
+            imagePath: null,
+            phase: "Planning",
+            accessLevel: 0,
+            lastUpdated: new Date().toISOString(),  // current time
+            files: [],
+            users: []
         };
-
-        const project = {
-            id: projects.length,
-            name: values.projectName, 
-            location: values.location, 
-            date: dayjs(),
-            thumbnail: null, 
-            accessLevel: 'Admins Only', 
-            listUsers: [], 
-            status: null,
-            phase: null,
-            lastUpdated: dayjs(),
-            files: files
-        };
-
-        const projectFile = {
-            Id: files.length, 
-            FileName: project.name, 
-            FilePath: null, 
-            Metadata: defaultMetadataTags, 
-            ProjectId: project.id, 
-            Status: "Active", 
-            Date: dayjs() 
-       };
-
-       const projectLog = {
-            time: dayjs(), 
-            action: 'Project created' 
-       };
-
-       projects.push(project);
-       files.push(projectFile);
-       logs.push(projectLog);
-        //
-
-        console.log("Final Project Data:", projects.at(-1));
-        success();
-
-        form.resetFields();
-        setDefaultMetadataFields([]);
-        setDefaultMetadataTags([]);
+    
+        try {
+            const response = await fetch('/api/Projects', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(projectData),
+            });
+    
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+    
+            const result = await response.json();
+            console.log("Project successfully added:", result);
+            message.success("Project added successfully");
+    
+            // Reset form
+            form.resetFields();
+            setDefaultMetadataFields([]);
+            setDefaultMetadataTags([]);
+    
+        } catch (error) {
+            console.error("Error adding project:", error);
+            message.error("Failed to add project");
+        }
     };
+    
+
+
+
+    // const handleAddProjectButton = (values) => {
+    //     // send project info to backend here
+    //     console.log("Submitting data:", values);
+
+    //     const projectData = {
+    //         ...values, // projectName, description, location
+    //         metadataFields: defaultMetadataFields,
+    //         metadataTags: defaultMetadataTags,
+    //     };
+
+    //     const project = {
+    //         id: projects.length,
+    //         name: values.projectName, 
+    //         location: values.location, 
+    //         date: dayjs(),
+    //         thumbnail: null, 
+    //         accessLevel: 'Admins Only', 
+    //         listUsers: [], 
+    //         status: null,
+    //         phase: null,
+    //         lastUpdated: dayjs(),
+    //         files: files
+    //     };
+
+    //     const projectFile = {
+    //         Id: files.length, 
+    //         FileName: project.name, 
+    //         FilePath: null, 
+    //         Metadata: defaultMetadataTags, 
+    //         ProjectId: project.id, 
+    //         Status: "Active", 
+    //         Date: dayjs() 
+    //    };
+
+    //    const projectLog = {
+    //         time: dayjs(), 
+    //         action: 'Project created' 
+    //    };
+
+    //    projects.push(project);
+    //    files.push(projectFile);
+    //    logs.push(projectLog);
+    //     //
+
+    //     console.log("Final Project Data:", projects.at(-1));
+    //     success();
+
+    //     form.resetFields();
+    //     setDefaultMetadataFields([]);
+    //     setDefaultMetadataTags([]);
+    // };
 
     return (
         <Box
