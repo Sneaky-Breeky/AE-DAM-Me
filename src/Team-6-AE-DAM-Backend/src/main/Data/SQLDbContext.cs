@@ -11,7 +11,7 @@ namespace DAMBackend.Models
 
         public DbSet<FileModel> Files { get; set; }
 
-        public DbSet<MetaDataTagModel> MetadataTags { get; set; }
+        public DbSet<MetadataTagModel> MetadataTags { get; set; }
 
         public DbSet<TagBasicModel> BasicTags { get; set; }
 

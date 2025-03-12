@@ -58,12 +58,12 @@ namespace DAMBackend.services
             return file;
         }
 
-        public MetaDataTagModel addTags(FileModel file, string key, object value, value_type v_type) {
-            if (!IsValidValue(value, expectedType)) {
+        public MetadataTagModel addTags(FileModel file, string key, object value, value_type v_type) {
+            if (!IsValidValue(value, v_type)) {
                 throw new ArgumentException($"Invalid value type for key {key}. Expected {v_type}, but got {value.GetType().Name}.");
             }
             
-            var tag = new MetaDataTagModel 
+            var tag = new MetadataTagModel 
             {   
                 Value = value,
                 Key = key,
@@ -72,8 +72,8 @@ namespace DAMBackend.services
                 File = file
             };
             if (file != null) {
-                tags.FileId = file.Id;
-                file.mtags.Add(tag);
+                tag.FileId = file.Id;
+                file.mTags.Add(tag);
             } else {
                 throw new Exception("File was not added to tag, please attach a File");
             }
@@ -92,9 +92,9 @@ namespace DAMBackend.services
             };
         }
 
-        public MetaDataTagModel addTags(FileModel file, string value) {
+        public TagBasicModel addTags(FileModel file, string value) {
             
-            var tag = new BasicTagModel 
+            var tag = new TagBasicModel 
             {   
                 Value = value,
                 FileId = file.Id,
@@ -102,8 +102,8 @@ namespace DAMBackend.services
             };
 
             if (file != null) {
-                tags.FileId = file.Id;
-                file.mtags.Add(tag);
+                tag.FileId = file.Id;
+                file.bTags.Add(tag);
             } else {
                 throw new Exception("File was not added to tag, please attach a File");
             }

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DAMBackend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2bea1630f08f540bafb704d1feb775bd1686120a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4a28e0e7abe838a0a762eb60b0c5d385f30d8cac")]
 [assembly: System.Reflection.AssemblyProductAttribute("DAMBackend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DAMBackend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
