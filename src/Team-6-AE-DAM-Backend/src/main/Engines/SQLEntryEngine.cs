@@ -21,11 +21,11 @@ namespace DAMBackend.services
         public UserModel AddUser(string first, string last, string email, Role role, bool stat) {
             var user = new UserModel
             {
-                firstName = first,
-                lastName = last,
+                FirstName = first,
+                LastName = last,
                 Email = email,
                 Role = role,
-                status = stat
+                Status = stat
             };
 
             // database.Users.Add(user); 
@@ -65,6 +65,7 @@ namespace DAMBackend.services
             
             var tag = new MetaDataTagModel 
             {   
+<<<<<<< HEAD
                 Value = value,
                 Key = key,
                 type = v_type,
@@ -78,6 +79,21 @@ namespace DAMBackend.services
                 throw new Exception("File was not added to tag, please attach a File");
             }
             // database.Tags.Add(tag);
+=======
+                UserId = file.UserId,
+                Phase = phase,
+                Dep = dep,
+                Type = type
+            };
+
+            tags.Files.Add(file);
+
+            if (project != null) {
+                tags.ProjectId = project.Id;
+            }
+
+            
+>>>>>>> 7ef1f930a60f2ec57012cf4a63c3c8b7825d66d6
             // await database.SaveChanges();
             return tag;
         }

@@ -49,3 +49,7 @@ Add the following workflow to `.github/workflows/deploy.yml`:
 - uses: azure/webapps-deploy@v2
   with:
     app-name: "dam-backend-app"
+```
+
+## Notes
+① Server will be running at http://localhost:5146 by default

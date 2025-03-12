@@ -23,9 +23,11 @@ Project that it was added to with id
         public required string ThumbnailPath { get; set; }
         public required string ViewPath { get; set; }
         public required string OriginalPath { get; set; }
+
         public decimal? GPSLat { get; set; }
         public decimal? GPSLon { get; set; }
         public decimal? GPSAlt { get; set; }
+        
         public DateTime? DateTimeOriginal { get; set; }
         public required int PixelWidth { get; set; }
         public required int PixelHeight { get; set; }
@@ -34,8 +36,12 @@ Project that it was added to with id
         public int? FocalLength { get; set; }
         public float? Aperture { get; set; }
         public string? Copyright { get; set; }
+<<<<<<< HEAD
         public ICollection<MetadataTagModel> mTags { get; set;} = new HashSet<MetadataTagModel>();
         public ICollection<TagBasicModel> bTags { get; set;} = new HashSet<TagBasicModel>();
+=======
+        public List<TagModel> Tags { get; set; } = new List<TagModel>();
+>>>>>>> 7ef1f930a60f2ec57012cf4a63c3c8b7825d66d6
         public Guid? ProjectId { get; set; }
         public ProjectModel? Project { get; set; }
 

@@ -47,3 +47,41 @@ CREATE TABLE Palette (
                          palette_id INT PRIMARY KEY,
                          media_count TINYINT UNSIGNED
 );
+
+
+
+-- Scripts by Gary
+-- db connection string:
+-- sqlcmd -S ae-server-319.database.windows.net -U aeadmin -P A772513a -d AE-DAM-AUTH
+CREATE TABLE Users (
+    Id INT IDENTITY PRIMARY KEY,
+    FirstName NVARCHAR(100) NOT NULL,
+    LastName NVARCHAR(100) NOT NULL,
+    Email NVARCHAR(255) UNIQUE NOT NULL,
+    PasswordHash NVARCHAR(255) NOT NULL, -- Now storing Base64 hash
+    Role INT NOT NULL CHECK (Role IN (0, 1)), -- 0: User, 1: Admin
+    Status BIT DEFAULT 1 -- 1: Active, 0: Inactive
+);
+
+-- Declare variables for hashed passwords
+DECLARE @UserHashBase64 NVARCHAR(255);
+DECLARE @AdminHashBase64 NVARCHAR(255);
+
+-- Compute SHA-256 hashes as VARBINARY
+DECLARE @UserHash VARBINARY(32) = HASHBYTES('SHA2_256', 'password');
+DECLARE @AdminHash VARBINARY(32) = HASHBYTES('SHA2_256', 'password');
+
+-- Convert VARBINARY hashes to Base64 encoding
+SELECT @UserHashBase64 = CAST('' AS XML).value('xs:base64Binary(xs:hexBinary(sql:column("HashValue")))', 'NVARCHAR(255)')
+FROM (SELECT @UserHash AS HashValue) AS HashData;
+
+SELECT @AdminHashBase64 = CAST('' AS XML).value('xs:base64Binary(xs:hexBinary(sql:column("HashValue")))', 'NVARCHAR(255)')
+FROM (SELECT @AdminHash AS HashValue) AS HashData;
+
+-- Insert hashed values into Users table
+INSERT INTO Users (FirstName, LastName, Email, PasswordHash, Role, Status)
+VALUES ('user', 'mock', 'user@gmail.com', @UserHashBase64, 0, 1);
+
+INSERT INTO Users (FirstName, LastName, Email, PasswordHash, Role, Status)
+VALUES ('admin', 'mock', 'admin@gmail.com', @AdminHashBase64, 1, 1);
+

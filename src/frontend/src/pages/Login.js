@@ -14,6 +14,7 @@ import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { authenticateUser } from '../utils/auth';
+import { loginUser } from '../api/authApi';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -48,7 +49,7 @@ export default function Login({setLoggedIn}) {
   const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
   
     const userData = new FormData(event.currentTarget);
@@ -61,21 +62,33 @@ export default function Login({setLoggedIn}) {
     setPasswordError(false);
     setEmailError(false);
 
-    if (user === "wrongpassword") {
-      setPasswordError(true);
-      setPasswordErrorMessage("Incorrect password.");
-      return;
-    } else if (!user) {
+    try {
+      const response = await loginUser(email, password);
+
+      console.log("yay" + response);
+
+      if (response.error) {
+        if (response.error === "wrongpassword") {
+          setPasswordError(true);
+          setPasswordErrorMessage("Incorrect password.");
+        } else {
+          setEmailError(true);
+          setEmailErrorMessage("Account does not exist.");
+        }
+        return;
+      }
+
+      localStorage.setItem("loggedIn", "true");
+      localStorage.setItem("userRole", response.role);
+
+      setLoggedIn(true);
+      navigate(response.role === 'admin' ? '/admin/dashboard' : '/user/dashboard');
+      
+    } catch (error) {
+      console.error("Login error:", error);
       setEmailError(true);
-      setEmailErrorMessage("Account does not exist.");
-      return;
+      setEmailErrorMessage("Something went wrong. Please try again.");
     }
-
-    localStorage.setItem("loggedIn", "true");
-    localStorage.setItem("userRole", user.role);
-
-    setLoggedIn(true);
-    navigate(user.role === 'admin' ? '/admin/dashboard' : '/user/dashboard');
     
   };
   

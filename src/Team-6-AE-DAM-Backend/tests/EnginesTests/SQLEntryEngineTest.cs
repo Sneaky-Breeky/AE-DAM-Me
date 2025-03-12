@@ -52,11 +52,11 @@ namespace DAMBackend.Tests
 
             
             Assert.NotNull(user);
-            Assert.Equal(firstName, user.firstName);
-            Assert.Equal(lastName, user.lastName);
+            Assert.Equal(firstName, user.FirstName);
+            Assert.Equal(lastName, user.LastName);
             Assert.Equal(email, user.Email);
             Assert.Equal(role, user.Role);
-            Assert.Equal(statusU, user.status);
+            Assert.Equal(statusU, user.Status);
         }
 
 
@@ -99,8 +99,8 @@ namespace DAMBackend.Tests
             Assert.Equal(phase, tag.Phase);
             Assert.Equal(dep, tag.Dep);
             Assert.Equal(type, tag.Type);
-            Assert.Equal(file.Id, tag.FileId);
-            Assert.Equal(file, tag.File);
+            // Assert.Equal(file.Id, tag.FileId);
+            Assert.Contains(file, tag.Files);
             Assert.Equal(project.Id, tag.ProjectId);
         }
 

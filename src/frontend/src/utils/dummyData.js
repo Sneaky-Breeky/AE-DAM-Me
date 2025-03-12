@@ -2,18 +2,18 @@ import dayjs from 'dayjs';
 
 
 const files = [
-    { Id: 0, FileName: "Bridge Construction", FilePath: `${process.env.PUBLIC_URL}/images/bridge.webp`, Metadata: ["bridge", "construction"], ProjectId: 0, Status: "Active", Date: dayjs("2024-09-10 00:16:01") },
-    { Id: 1, FileName: "High-Rise Development", FilePath: `${process.env.PUBLIC_URL}/images/highrise.jpg`, Metadata: ["high-rise", "high rise", "highrise", "construction"], ProjectId: 1, Status: "Active", Date: dayjs("2024-12-28 00:16:01") },
-    { Id: 2, FileName: "Highway Expansion", FilePath: `${process.env.PUBLIC_URL}/images/highway.jpg`, Metadata: ["highway", "expansion", "road"], ProjectId: 2, Status: "Active", Date: dayjs("2024-10-14 00:16:01") },
-    { Id: 3, FileName: "Oil Pipeline Repair", FilePath: `${process.env.PUBLIC_URL}/images/pipeline.jpg`, Metadata: ["oil", "pipeline", "pipeline repair"], ProjectId: 3, Status: "Active", Date: dayjs("2024-11-07 00:16:01") },
-    { Id: 4, FileName: "Park Restoration", FilePath: `${process.env.PUBLIC_URL}/images/park.jpeg`, Metadata: ["park", "restoration"], ProjectId: 4, Status: "Active", Date: dayjs("2025-01-31 00:16:01") },
-    { Id: 5, FileName: "School Construction", FilePath: `${process.env.PUBLIC_URL}/images/school.png`, Metadata: ["school", "construction"], ProjectId: 5, Status: "Active", Date: dayjs("2024-12-18 00:16:01") },
-    { Id: 6, FileName: "Airport Expansion", FilePath: `${process.env.PUBLIC_URL}/images/airport.webp`, Metadata: ["airport", "expansion"], ProjectId: 6, Status: "Active", Date: dayjs("2024-11-22 00:16:01") },
-    { Id: 7, FileName: "Hospital Renovation", FilePath: `${process.env.PUBLIC_URL}/images/hospital.jpg`, Metadata: ["hospital", "renovation"], ProjectId: 7, Status: "Archived", Date: dayjs("2024-09-30 00:16:01") },
-    { Id: 8, FileName: "Railway Modernization", FilePath: `${process.env.PUBLIC_URL}/images/railway.jpeg`, Metadata: ["railway", "modernization"], ProjectId: 8, Status: "Active", Date: dayjs("2024-07-10 00:16:01") },
-    { Id: 9, FileName: "Water Treatment Plant", FilePath: `${process.env.PUBLIC_URL}/images/waterTreatment.webp`, Metadata: ["water", "treatment", "plant"], ProjectId: 9, Status: "Archived", Date: dayjs("2024-06-22 00:16:01") },
-    { Id: 10, FileName: "Underground Parking Facility", FilePath: `${process.env.PUBLIC_URL}/images/undergroundParking.jpg`, Metadata: ["parking", "underground"], ProjectId: 10, Status: "Active", Date: dayjs("2024-05-05 00:16:01") },
-    { Id: 11, FileName: "Renewable Energy Farm", FilePath: `${process.env.PUBLIC_URL}/images/energyFarm.png`, Metadata: ["renewable", "energy", "farm"], ProjectId: 11, Status: "Active", Date: dayjs("2024-04-12 00:16:01") }
+    { Id: 0, FileName: "Bridge Construction", FilePath: `${process.env.PUBLIC_URL}/images/bridge.webp`, Metadata: ["bridge", "construction"], ProjectId: 0, Status: "Active", Date: dayjs("2024-09-10 00:16:01"), Location: "" },
+    { Id: 1, FileName: "High-Rise Development", FilePath: `${process.env.PUBLIC_URL}/images/highrise.jpg`, Metadata: ["high-rise", "high rise", "highrise", "construction"], ProjectId: 1, Status: "Active", Date: dayjs("2024-12-28 00:16:01"), Location: "" },
+    { Id: 2, FileName: "Highway Expansion", FilePath: `${process.env.PUBLIC_URL}/images/highway.jpg`, Metadata: ["highway", "expansion", "road"], ProjectId: 2, Status: "Active", Date: dayjs("2024-10-14 00:16:01"), Location: "" },
+    { Id: 3, FileName: "Oil Pipeline Repair", FilePath: `${process.env.PUBLIC_URL}/images/pipeline.jpg`, Metadata: ["oil", "pipeline", "pipeline repair"], ProjectId: 3, Status: "Active", Date: dayjs("2024-11-07 00:16:01"), Location: "" },
+    { Id: 4, FileName: "Park Restoration", FilePath: `${process.env.PUBLIC_URL}/images/park.jpeg`, Metadata: ["park", "restoration"], ProjectId: 4, Status: "Active", Date: dayjs("2025-01-31 00:16:01"), Location: "" },
+    { Id: 5, FileName: "School Construction", FilePath: `${process.env.PUBLIC_URL}/images/school.png`, Metadata: ["school", "construction"], ProjectId: 5, Status: "Active", Date: dayjs("2024-12-18 00:16:01"), Location: "" },
+    { Id: 6, FileName: "Airport Expansion", FilePath: `${process.env.PUBLIC_URL}/images/airport.webp`, Metadata: ["airport", "expansion"], ProjectId: 6, Status: "Active", Date: dayjs("2024-11-22 00:16:01"), Location: "" },
+    { Id: 7, FileName: "Hospital Renovation", FilePath: `${process.env.PUBLIC_URL}/images/hospital.jpg`, Metadata: ["hospital", "renovation"], ProjectId: 7, Status: "Archived", Date: dayjs("2024-09-30 00:16:01"), Location: "" },
+    { Id: 8, FileName: "Railway Modernization", FilePath: `${process.env.PUBLIC_URL}/images/railway.jpeg`, Metadata: ["railway", "modernization"], ProjectId: 8, Status: "Active", Date: dayjs("2024-07-10 00:16:01"), Location: "" },
+    { Id: 9, FileName: "Water Treatment Plant", FilePath: `${process.env.PUBLIC_URL}/images/waterTreatment.webp`, Metadata: ["water", "treatment", "plant"], ProjectId: 9, Status: "Archived", Date: dayjs("2024-06-22 00:16:01"), Location: "" },
+    { Id: 10, FileName: "Underground Parking Facility", FilePath: `${process.env.PUBLIC_URL}/images/undergroundParking.jpg`, Metadata: ["parking", "underground"], ProjectId: 10, Status: "Active", Date: dayjs("2024-05-05 00:16:01"), Location: "" },
+    { Id: 11, FileName: "Renewable Energy Farm", FilePath: `${process.env.PUBLIC_URL}/images/energyFarm.png`, Metadata: ["renewable", "energy", "farm"], ProjectId: 11, Status: "Active", Date: dayjs("2024-04-12 00:16:01"), Location: "" }
 ];
 
 

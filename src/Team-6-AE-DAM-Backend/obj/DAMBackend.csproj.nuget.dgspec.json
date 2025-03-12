@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\UBC\\Y4S2\\CPSC319\\github\\Team-6-AE-DAM-Backend\\DAMBackend.csproj": {}
+    "D:\\UBC\\Y4S2\\CPSC319\\github\\Team-6-AE\\src\\Team-6-AE-DAM-Backend\\DAMBackend.csproj": {}
   },
   "projects": {
-    "D:\\UBC\\Y4S2\\CPSC319\\github\\Team-6-AE-DAM-Backend\\DAMBackend.csproj": {
+    "D:\\UBC\\Y4S2\\CPSC319\\github\\Team-6-AE\\src\\Team-6-AE-DAM-Backend\\DAMBackend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\UBC\\Y4S2\\CPSC319\\github\\Team-6-AE-DAM-Backend\\DAMBackend.csproj",
+        "projectUniqueName": "D:\\UBC\\Y4S2\\CPSC319\\github\\Team-6-AE\\src\\Team-6-AE-DAM-Backend\\DAMBackend.csproj",
         "projectName": "DAMBackend",
-        "projectPath": "D:\\UBC\\Y4S2\\CPSC319\\github\\Team-6-AE-DAM-Backend\\DAMBackend.csproj",
+        "projectPath": "D:\\UBC\\Y4S2\\CPSC319\\github\\Team-6-AE\\src\\Team-6-AE-DAM-Backend\\DAMBackend.csproj",
         "packagesPath": "C:\\Users\\Gary\\.nuget\\packages\\",
-        "outputPath": "D:\\UBC\\Y4S2\\CPSC319\\github\\Team-6-AE-DAM-Backend\\obj\\",
+        "outputPath": "D:\\UBC\\Y4S2\\CPSC319\\github\\Team-6-AE\\src\\Team-6-AE-DAM-Backend\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Gary\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -57,29 +57,53 @@
               "target": "Package",
               "version": "[8.0.13, )"
             },
+            "Microsoft.Data.Sqlite": {
+              "target": "Package",
+              "version": "[9.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
             "Microsoft.EntityFrameworkCore.Design": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
               "target": "Package",
-              "version": "[9.0.2, )"
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Relational": {
+              "target": "Package",
+              "version": "[8.0.2, )"
             },
             "Microsoft.EntityFrameworkCore.SqlServer": {
               "target": "Package",
-              "version": "[9.0.2, )"
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Sqlite": {
+              "target": "Package",
+              "version": "[8.0.2, )"
             },
             "Microsoft.EntityFrameworkCore.Tools": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
               "target": "Package",
-              "version": "[9.0.2, )"
+              "version": "[8.0.2, )"
             },
             "Microsoft.VisualStudio.Web.CodeGeneration.Design": {
               "target": "Package",
               "version": "[8.0.7, )"
             },
+            "MySql.Data": {
+              "target": "Package",
+              "version": "[8.0.33, )"
+            },
+            "Pomelo.EntityFrameworkCore.MySql": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
             "SixLabors.ImageSharp": {
               "target": "Package",
-              "version": "[3.1.6, )"
+              "version": "[3.1.7, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",

@@ -24,9 +24,10 @@ namespace DAMBackend.Controllers
 
         // GET: api/Files
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<File>>> GetFiles()
+        public async Task<ActionResult<IEnumerable<FileModel>>> GetFiles()
         {
-            return await _context.Files.ToListAsync();
+            var files = await _context.Files.ToListAsync();
+            return Ok(files);
         }
 
         // GET: api/Files/5
@@ -40,13 +41,13 @@ namespace DAMBackend.Controllers
                 return NotFound();
             }
 
-            return @file;
+            return Ok(@file);
         }
 
         // PUT: api/Files/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutFile(int id, File @file)
+        public async Task<IActionResult> PutFile(Guid id, File @file)
         {
             if (id != @file.Id)
             {
@@ -77,12 +78,12 @@ namespace DAMBackend.Controllers
         // POST: api/Files
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<File>> PostFile(File @file)
+        public async Task<ActionResult<FileModel>> PostFile(FileModel filemodel)
         {
-            _context.Files.Add(@file);
+            _context.Files.Add(filemodel);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetFile", new { id = @file.Id }, @file);
+            return CreatedAtAction("GetFile", new { id = filemodel.Id }, filemodel);
         }
 
         // DELETE: api/Files/5
@@ -101,7 +102,7 @@ namespace DAMBackend.Controllers
             return NoContent();
         }
 
-        private bool FileExists(int id)
+        private bool FileExists(Guid id)
         {
             return _context.Files.Any(e => e.Id == id);
         }

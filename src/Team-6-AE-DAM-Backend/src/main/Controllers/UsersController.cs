@@ -23,9 +23,10 @@ namespace DAMBackend.Controllers
 
         // GET: api/Users
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        public async Task<ActionResult<List<UserModel>>> GetUsers()
         {
-            return await _context.Users.ToListAsync();
+            var users = await _context.Users.ToListAsync();
+            return Ok(users); // Returns HTTP 200 OK with the list
         }
 
         // GET: api/Users/5
@@ -39,7 +40,7 @@ namespace DAMBackend.Controllers
                 return NotFound();
             }
 
-            return user;
+            return Ok(user);
         }
 
         // PUT: api/Users/5
@@ -76,12 +77,12 @@ namespace DAMBackend.Controllers
         // POST: api/Users
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
+        public async Task<ActionResult<User>> PostUser(UserModel usermodel)
         {
-            _context.Users.Add(user);
+            _context.Users.Add(usermodel);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUser", new { id = user.Id }, user);
+            return CreatedAtAction("GetUser", new { id = usermodel.Id }, usermodel);
         }
 
         // DELETE: api/Users/5

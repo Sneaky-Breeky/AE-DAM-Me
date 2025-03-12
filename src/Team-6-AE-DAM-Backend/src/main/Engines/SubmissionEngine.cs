@@ -94,7 +94,7 @@ namespace DAMBackend.SubmissionEngine
                 FocalLength = null,
                 Aperture = null,
                 Copyright = null,
-                Tags = null,
+                Tags = new List<TagModel>(),
                 ProjectId = null
             };
     

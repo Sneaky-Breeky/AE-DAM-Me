@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import { Input, Typography, DatePicker, Button, Form, Select, Tag, Flex, Image, Modal, Slider, message } from "antd";
 import { PlusOutlined, RotateLeftOutlined, RotateRightOutlined, ExclamationCircleOutlined, CalendarOutlined, DownOutlined, CloseOutlined } from '@ant-design/icons';
 import Cropper from 'react-easy-crop';
+import { projects, users } from '../../utils/dummyData.js';
 
 const { Title } = Typography;
 const { confirm } = Modal;
@@ -26,7 +27,7 @@ export default function UserUpload() {
     const [selectedFiles, setSelectedFiles] = useState(new Set());
 
 
-    const [projectName, setProjectName] = useState(null);
+    const [project, setProject] = useState(null);
     const [metadataTagsInput, setMetadataTagsInput] = useState();
     const [metadataTags, setMetadataTags] = useState([]);
     const [tagApplications, setTagApplications] = useState([]);
@@ -64,7 +65,9 @@ export default function UserUpload() {
         const selectedFiles = Array.from(event.target.files).map(file => ({
             file,
             preview: URL.createObjectURL(file),
-            metadata: []
+            metadata: [],
+            date: selectedDate || null,
+            location: location || ""
         }));
 
         setFiles((prevFiles) => {
@@ -143,7 +146,6 @@ export default function UserUpload() {
     };
 
 
-
     const toggleFileSelection = (fileObj) => {
 
         const fileName = fileObj.file.name;
@@ -208,17 +210,33 @@ export default function UserUpload() {
         setTagApplications(prev => prev.filter((_, i) => i !== index));
     };
 
+    const handleDateChange = (date, dateString) => {
+        setSelectedDate(dateString);
+        setFiles(prevFiles => prevFiles.map(file => ({ ...file, date: dateString })));
+    };
+
+    const handleLocationChange = (event) => {
+        const newLocation = event.target.value;
+        setLocation(newLocation);
+        setFiles(prevFiles => prevFiles.map(file => ({ ...file, location: newLocation })));
+    };
+
     const handleUploadFilesToProject = () => {
+        // TODO: add "files" to current "project"'s "files" variable, and other associated info
         console.log("Uploading files:", files);
         setFiles([]);
         setTagApplications([]);
+        setProject(null);
+        setMetadataTags([]);
+        setSelectedDate(null);
+        setLocation(null);
     };
 
 
 
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'row', minHeight: '100vh', padding: '20px', gap: '20px', paddingBottom: '40px'}}>
+        <Box sx={{ display: 'flex', flexDirection: 'row', minHeight: '100vh', padding: '20px', gap: '20px', paddingBottom: '40px' }}>
             {/* Left section (image uploading)*/}
             <Box sx={{ flex: 3, display: 'flex', flexDirection: 'column', gap: '15px', padding: '20px' }}>
                 <Box sx={{
@@ -317,7 +335,7 @@ export default function UserUpload() {
 
                 {/* Upload button */}
                 <Box sx={{ textAlign: 'center', marginTop: '20px' }}>
-                    <Button type="primary" color="cyan" variant="solid" onClick = {handleUploadFilesToProject} disabled={files.length === 0}>
+                    <Button type="primary" color="cyan" variant="solid" onClick={handleUploadFilesToProject} disabled={files.length === 0}>
                         Upload Files to Project
                     </Button>
                 </Box>
@@ -328,10 +346,18 @@ export default function UserUpload() {
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px', padding: '30px' }}>
                 <Box sx={metadataBoxStyle}>
                     <Title level={5}>Project Name:</Title>
-                    <Input
-                        value={projectName}
-                        onChange={(e) => setProjectName(e.target.value)}
-                        placeholder="Enter project name"
+                    <Select
+                        showSearch
+                        placeholder="Enter project number"
+                        filterOption={(input, option) =>
+                            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                        }
+                        options={projects.map(proj => ({
+                            value: proj.id,
+                            label: `${proj.id}: ${proj.name}`
+                        }))}
+                        onChange={(value) => setProject(value)}
+                        style={{ width: '100%' }}
                     />
                 </Box>
 
@@ -406,7 +432,7 @@ export default function UserUpload() {
                     <Title level={5}>Add Date:</Title>
                     <DatePicker
                         placeholder="Select date"
-                        onChange={(date, dateString) => setSelectedDate(dateString)}
+                        onChange={handleDateChange}
                         suffixIcon={<CalendarOutlined />}
                         style={{ width: '100%' }}
                     />
@@ -416,7 +442,7 @@ export default function UserUpload() {
                     <Title level={5}>Location:</Title>
                     <Input
                         value={location}
-                        onChange={(e) => setLocation(e.target.value)}
+                        onChange={handleLocationChange}
                         placeholder="Enter location"
                     />
                 </Box>

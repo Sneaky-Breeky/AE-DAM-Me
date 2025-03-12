@@ -10,9 +10,9 @@ namespace backend.auth
         private readonly AuthService _authService;
         private readonly ILogger<AuthController> _logger;
 
-        public AuthController(ILogger<AuthController> logger)
+        public AuthController(AuthService authService, ILogger<AuthController> logger)
         {
-            _authService = new AuthService();
+            _authService = authService;
             _logger = logger;
         }
 
@@ -27,7 +27,13 @@ namespace backend.auth
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             var result = await _authService.AuthenticateUserAsync(request.Email, request.Password);
-            return result ? Ok("Login successful") : Unauthorized("Invalid email or password");
+            
+            if (!result)
+            {
+                return Unauthorized(new { error = "Invalid email or password" }); // ✅ Return JSON
+            }
+
+            return Ok(new { message = "Login successful", role = "user" }); // ✅ Return JSON
         }
     }
 

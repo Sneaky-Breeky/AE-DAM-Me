@@ -25,27 +25,28 @@ namespace DAMBackend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Project>>> GetProjects()
         {
-            return await _context.Projects.ToListAsync();
+            var projects = _context.Projects.ToListAsync();
+            return Ok(projects);
         }
 
         // GET: api/Projects/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Project>> GetProject(int id)
         {
-            var project = await _context.Projects.FindAsync(id);
+            var projects = await _context.Projects.FindAsync(id);
 
-            if (project == null)
+            if (projects == null)
             {
                 return NotFound();
             }
 
-            return project;
+            return Ok(projects);
         }
 
         // PUT: api/Projects/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutProject(int id, Project project)
+        public async Task<IActionResult> PutProject(Guid id, Project project)
         {
             if (id != project.Id)
             {
@@ -76,12 +77,12 @@ namespace DAMBackend.Controllers
         // POST: api/Projects
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Project>> PostProject(Project project)
+        public async Task<ActionResult<ProjectModel>> PostProject(ProjectModel projectmodel)
         {
-            _context.Projects.Add(project);
+            _context.Projects.Add(projectmodel);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetProject", new { id = project.Id }, project);
+            return CreatedAtAction("GetProject", new { id = projectmodel.Id }, projectmodel);
         }
 
         // DELETE: api/Projects/5
@@ -100,7 +101,7 @@ namespace DAMBackend.Controllers
             return NoContent();
         }
 
-        private bool ProjectExists(int id)
+        private bool ProjectExists(Guid id)
         {
             return _context.Projects.Any(e => e.Id == id);
         }
