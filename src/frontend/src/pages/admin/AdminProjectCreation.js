@@ -69,7 +69,7 @@ export default function ProjectCreation() {
         };
     
         try {
-            const response = await fetch('/api/Projects', {
+            const response = await fetch('http://localhost:5146/api/Projects', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
