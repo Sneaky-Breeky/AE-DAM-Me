@@ -65,12 +65,17 @@ namespace DAMBackend.services
             
             var tag = new MetadataTagModel 
             {   
-                Value = value,
                 Key = key,
                 type = v_type,
                 FileId = file.Id,
                 File = file
             };
+
+            if (v_type == value_type.String) {
+                tag.sValue = value as string;
+            } else {
+                tag.iValue = Convert.ToInt32(value);
+            }
             if (file != null) {
                 tag.FileId = file.Id;
                 file.mTags.Add(tag);
@@ -112,7 +117,7 @@ namespace DAMBackend.services
             return tag;
         }
 
-        public ProjectModel addProject(string name, string status, string location, string imagePath, string phase, AccessLevel al, DateTime lastUp) {
+        public ProjectModel addProject(string name, string status, string location, string imagePath, string phase, AccessLevel al, DateTime lastUp, string desription) {
             var project = new ProjectModel
             {
                 Name = name,
@@ -121,7 +126,8 @@ namespace DAMBackend.services
                 imagePath = imagePath,
                 accessLevel = al,
                 LastUpdate = lastUp,
-                Phase = phase
+                Phase = phase,
+                description = desription
             };
             // database.Tags.Add(tag);
             // await database.SaveChanges();
