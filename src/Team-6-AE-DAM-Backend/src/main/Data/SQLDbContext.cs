@@ -18,12 +18,15 @@ namespace DAMBackend.Models
         protected override void OnModelCreating(ModelBuilder modelBuilder) 
 
         {
+            modelBuilder.Entity<TagBasicModel>().HasNoKey();
+
             // Key for metadata tag model
             modelBuilder.Entity<MetadataTagModel>()
             .HasKey(m => new { m.FileId, m.Key });
 
             // One to many betwen file and metadatatag model
             modelBuilder.Entity<FileModel>()
+                .Ignore(f => f.bTags)
                 .HasMany(f => f.mTags)
                 .WithOne(t => t.File)
                 .HasForeignKey(t => t.FileId)

@@ -1,4 +1,7 @@
 using Microsoft.Identity.Client;
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DAMBackend.Models
 
@@ -23,10 +26,10 @@ File and Fileid assigned to know which file is referenced
     // Metadata
 
     {
+        [Key]
+        public required Guid FileId { get; set; }
         
         public required string Key { get; set; }
-        
-        public required Guid FileId { get; set; }
 
         public required FileModel File { get; set; }
 

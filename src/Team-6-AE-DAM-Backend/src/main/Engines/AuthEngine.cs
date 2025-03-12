@@ -17,6 +17,18 @@ namespace DAMBackend.auth
             _context = context;
         }
 
+        public async Task<List<dynamic>> fetchUserAsync()
+        {
+            var userList = await _context.Users.FromSqlRaw("SELECT * FROM Users").ToListAsync();
+            
+            return userList.Select(user => (dynamic)new {
+                name = user.FirstName + " " + user.LastName,
+                email = user.Email,
+                role = user.Role,
+                status = user.Status ? "Active" : "Inactive"
+            }).ToList();
+        }
+
         public async Task<bool> RegisterUserAsync(string email, string password)
         {
             if (await _context.Users.AnyAsync(u => u.Email == email))
@@ -44,7 +56,7 @@ namespace DAMBackend.auth
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
 
             if (user == null) return false; // User not found
-            Console.WriteLine($"Hashed Password for {email}: {HashPassword(password)}, {user.PasswordHash}");
+            // Console.WriteLine($"Hashed Password for {email}: {HashPassword(password)}, {user.PasswordHash}");
 
             return VerifyPassword(password, user.PasswordHash);
         }
