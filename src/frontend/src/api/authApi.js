@@ -1,5 +1,7 @@
-const API_BASE_URL = "https://ae-dam-be-h3dtgrehbcgxfpar.westus2-01.azurewebsites.net/api/auth";
-const LOCAL_BASE_URL = "http://localhost:5146/api/auth";
+import {API_BASE_URL} from "./apiURL.js"
+
+const AUTH_URL = `${API_BASE_URL}/api/auth`;
+// const LOCAL_AUTH_URL = `${LOCAL_AUTH_URL}/api/auth`;
 /**
  * Login user
  * @param {string} email 
@@ -7,7 +9,7 @@ const LOCAL_BASE_URL = "http://localhost:5146/api/auth";
  * @returns {Promise<Response>}
  */
 export async function loginUser(email, password) {
-    const response = await fetch(`${API_BASE_URL}/login`, {
+    const response = await fetch(`${AUTH_URL}/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -25,7 +27,7 @@ export async function loginUser(email, password) {
 }
 
 export async function fetchUsers() {
-    const response = await fetch(`${API_BASE_URL}/fetch`, {
+    const response = await fetch(`${AUTH_URL}/fetchuser`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json"

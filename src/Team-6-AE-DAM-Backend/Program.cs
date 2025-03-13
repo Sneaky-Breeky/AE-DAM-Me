@@ -11,7 +11,7 @@ builder.Services.AddSwaggerGen();
 
 // var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
 // note: this one should reside in appsettings.json, not here!
-var allowedOrigins = new[] { "http://localhost:3000", "https://cpsc319-2025.github.io/Team-6-AE/", " https://thankful-field-0410c1a1e.6.azurestaticapps.net/#/login"};
+var allowedOrigins = new[] { "http://localhost:3000", "https://cpsc319-2025.github.io/Team-6-AE/", "https://thankful-field-0410c1a1e.6.azurestaticapps.net/#/login"};
 
 builder.Services.AddCors(options =>
 {
