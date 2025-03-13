@@ -1,7 +1,7 @@
 import React, { useState, useEffect  } from 'react';
 import Box from '@mui/material/Box';
-import { Typography, Button, Input, Form, Space } from 'antd';
-import { SearchOutlined, CloseOutlined, MinusCircleOutlined, PlusOutlined} from '@ant-design/icons';
+import { Typography, Button, Input, Form, Space, DatePicker } from 'antd';
+import { SearchOutlined, CloseOutlined, MinusCircleOutlined, PlusOutlined, CalendarOutlined} from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { projects } from '../../utils/dummyData.js';
 
@@ -13,10 +13,6 @@ export default function AdminMetadataManage() {
   const [isEditOpen, setEditOpen] = useState(false);
   const [project, setProject] = useState(null);
 
-  const handleChange = (e) => {
-    const { id, value } = e.target;
-  };
-
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -25,7 +21,12 @@ export default function AdminMetadataManage() {
         field: fieldObj.field,
         fieldMD: fieldObj.fieldMD
       }));
-      form.setFieldsValue({ fields: convertedFields });
+      form.setFieldsValue({name: project.name, 
+        location: project.location, 
+        date: project.date, 
+        status: project.status, 
+        phase: project.phase, 
+        fields: convertedFields });
     }
   }, [project, isEditOpen]); // runs when project or isEditOpen changes
 
@@ -217,7 +218,12 @@ export default function AdminMetadataManage() {
           name="date"
           label={<p style={{fontWeight:"bold"}}>Date</p>}
         >
-          {isEditOpen ? <Input defaultValue={dayjs(project.date).format('MMM DD, YYYY')}/> : dayjs(project.date).format('MMM DD, YYYY')}
+          {isEditOpen ? <DatePicker
+                        placeholder= {dayjs(project.date).format('MMM DD, YYYY')}
+                        suffixIcon={<CalendarOutlined />}
+                        style={{ width: '100%' }}
+                    />
+          : dayjs(project.date).format('MMM DD, YYYY')}
         </Form.Item>
 
         <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
@@ -239,6 +245,7 @@ export default function AdminMetadataManage() {
           {(fields, { add, remove }) => (
             <>
               {fields.map(({ key, name, ...restField }) => (
+                
                 <Space
                 key={key}
                 align="baseline"
@@ -315,9 +322,7 @@ export default function AdminMetadataManage() {
           {isEditOpen ?
           (<Button htmlType="submit" type="primary" size={"default"}
             onClick={() => {
-              //e.stopPropagation();
-              //setEditOpen(false);
-              //handleMDEdits();
+              form.validateFields()
               form.submit();
               setPopupFormOpen(false);
             }}>Submit</Button>)
