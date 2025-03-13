@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Box from '@mui/material/Box';
 import { Input, Button, Typography, Row, Col } from 'antd';
 import { PlusOutlined, UserOutlined, SettingOutlined, LockOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 
 const { Title } = Typography;
 
@@ -13,6 +14,8 @@ const pages = [
 ]
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
+
   return (
     <Box
     sx={{
@@ -51,7 +54,7 @@ export default function AdminDashboard() {
           <Box
           onClick={() => {
             sessionStorage.setItem('menu', page.menu);
-            window.location.href = page.url;
+            navigate(page.url);
           }}
           sx={{
             textAlign: 'center',

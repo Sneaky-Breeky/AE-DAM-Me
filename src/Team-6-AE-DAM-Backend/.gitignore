@@ -1,0 +1,28 @@
+# Ignore .NET build files
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.log
+*.pdb
+*.mdb
+*.ilk
+*.sdf
+*.ipch
+*.tlog
+*.log
+*.vs/
+*.dbmdl
+*.jfm
+
+# Ignore Rider & VS Code settings
+.idea/
+.vscode/
+
+# Ignore NuGet Packages
+*.nupkg
+packages/
+project.lock.json
+project.assets.json
+nuget.config

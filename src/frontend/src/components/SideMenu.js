@@ -19,7 +19,7 @@ const Drawer = styled(MuiDrawer)({
   },
 });
 
-export default function SideMenu() {
+export default function SideMenu({setLoggedIn}) {
   return (
     <Drawer
       variant="permanent"
@@ -40,7 +40,7 @@ export default function SideMenu() {
         }}
       >
         <img
-          src="/images/AE_logo.png"
+          src={`${process.env.PUBLIC_URL}/images/AE_logo.png`}
           alt="AE Logo"
           style={{
             width: '150px',
@@ -58,7 +58,7 @@ export default function SideMenu() {
           flexDirection: 'column',
         }}
       >
-        <MenuContent />
+        <MenuContent setLoggedIn={setLoggedIn} />
       </Box>
       <Stack
         direction="row"

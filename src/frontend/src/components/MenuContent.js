@@ -14,6 +14,7 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import PostAddIcon from '@mui/icons-material/PostAdd';
 import SecurityIcon from '@mui/icons-material/Security';
 import { isAdmin } from '../utils/auth';
+import { useNavigate } from 'react-router-dom';
 
 
 var userPages = [
@@ -40,14 +41,18 @@ const secondaryListItems = [
 const GetDirectoryPrefix = (isAdmin) => (isAdmin ? '/admin/' : '/user/');
 
 
-export default function MenuContent() {
+export default function MenuContent({setLoggedIn}) {
   const menuItems = isAdmin() ? adminPages : userPages;
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     sessionStorage.clear();
-    localStorage.removeItem('authToken');
-    window.location.href = '/login';
+    localStorage.removeItem("authToken");
+    localStorage.setItem("loggedIn", "false");
+    localStorage.removeItem("userRole");
+    setLoggedIn(false);
+    navigate("/login");
   };
 
   return (
@@ -59,7 +64,7 @@ export default function MenuContent() {
             <ListItemButton selected={index === parseInt(sessionStorage.getItem('menu'))}
               onClick={() => {
                 sessionStorage.setItem('menu', index);
-                window.location.href = GetDirectoryPrefix(isAdmin()) + item.url;
+                navigate(GetDirectoryPrefix(isAdmin()) + item.url)
               }}
             >
               <ListItemIcon sx={{ color: 'white' }} >{item.icon}</ListItemIcon>

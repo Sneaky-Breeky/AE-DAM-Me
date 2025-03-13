@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import Box from '@mui/material/Box';
-import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, } from 'antd';
-import { SearchOutlined, CalendarOutlined, PlusOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Tooltip } from 'antd';
+import { SearchOutlined, CalendarOutlined, StarFilled, StarOutlined, PlusOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { projects } from '../../utils/dummyData.js';
+import { projects, users } from '../../utils/dummyData.js';
 
-const { RangePicker } = DatePicker;
 const { Title } = Typography;
 const { Meta } = Card;
 
@@ -14,10 +13,24 @@ export default function UserDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDate, setSelectedDate] = useState(null);
   const navigate = useNavigate();
+  const currentUser = users.find((user) => user.name === "John Doe"); // assume John Doe is logged in
+  const [favProjects, setFavProjects] = useState(new Set(currentUser.favProjs));
 
   const handleSearch = () => {
     // when backend is done connect this part with backend
     console.log("Search Query:", searchQuery, "Date:", selectedDate);
+  };
+
+  const toggleFavorite = (projectId) => {
+    const updatedFavs = new Set(favProjects);
+    if (updatedFavs.has(projectId)) {
+      updatedFavs.delete(projectId);
+    } else {
+      updatedFavs.add(projectId);
+    }
+    setFavProjects(updatedFavs);
+    currentUser.favProjs = Array.from(updatedFavs);
+    console.log("Updated Favorites:", currentUser.favProjs);
   };
 
   return (
@@ -28,6 +41,7 @@ export default function UserDashboard() {
         height: '100vh',
       }}
     >
+
       {/* Title */}
       <Box
         sx={{
@@ -111,7 +125,7 @@ export default function UserDashboard() {
           <Box
             onClick={() => {
               sessionStorage.setItem('menu', 2);
-              window.location.href = '/user/uploadFiles';
+              navigate('/user/uploadFiles');
             }}
             sx={{
               textAlign: 'center',
@@ -131,7 +145,7 @@ export default function UserDashboard() {
           <Box
             onClick={() => {
               sessionStorage.setItem('menu', 3);
-              window.location.href = '/user/activityLog';
+              navigate('/user/activityLog');
             }}
             sx={{
               textAlign: 'center',
@@ -155,7 +169,7 @@ export default function UserDashboard() {
         <Box
           onClick={() => {
             sessionStorage.setItem('menu', 1);
-            window.location.href = '/user/projectDirectory';
+            navigate('/user/projectDirectory');
           }}
           sx={{
             display: 'flex',
@@ -185,36 +199,68 @@ export default function UserDashboard() {
             }}
           >
             <Row gutter={[16, 16]} justify="center">
-              {projects.map((project, index) => (
-                <Col key={index} xs={24} sm={12} md={8} lg={6}>
-                  <Card
-                    hoverable
-                    cover={
-                      <img
-                        alt={project.name}
-                        src={project.thumbnail}
-                        style={{ height: '80px', objectFit: 'cover' }}
-                      />
-                    }
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      sessionStorage.setItem('menu', 1);
-                      navigate(`/projectDirectory/projectOverview/${project.id}`, { state: { project } })
-                      window.location.reload();
-                    }}
-                    style={{
-                      borderRadius: '10px',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <Meta
-                      title={project.name}
-                      description={project.location}
-                      style={{ textAlign: 'center' }}
-                    />
-                  </Card>
-                </Col>
-              ))}
+              {projects
+                .sort((a, b) => (favProjects.has(a.id) ? -1 : 1) - (favProjects.has(b.id) ? -1 : 1))
+                .map((project, index) => (
+                  <Col key={index} xs={24} sm={12} md={8} lg={6}>
+                    <Card
+                      hoverable
+                      cover={
+                        <img
+                          alt={project.name}
+                          src={project.thumbnail}
+                          style={{ height: '80px', objectFit: 'cover' }}
+                        />
+                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        sessionStorage.setItem('menu', 1);
+                        navigate(`/projectDirectory/projectOverview/${project.id}`, { state: { project } });
+                        window.location.reload();
+                      }}
+                      style={{ borderRadius: '10px', overflow: 'hidden' }}
+                    >
+                      <Tooltip title="Favorite Project">
+                        {favProjects.has(project.id) ? (
+                          <StarFilled
+                            style={{
+                              fontSize: '22px',
+                              color: '#FFD700',
+                              position: 'absolute',
+                              top: '10px',
+                              right: '10px',
+                              cursor: 'pointer',
+                              transition: 'transform 0.2s ease-in-out',
+                              textShadow: '0px 0px 4px rgba(0, 0, 0, 0.5)',
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFavorite(project.id);
+                            }}
+                          />
+                        ) : (
+                          <StarOutlined
+                            style={{
+                              fontSize: '22px',
+                              color: '#FFD700',
+                              position: 'absolute',
+                              top: '10px',
+                              right: '10px',
+                              cursor: 'pointer',
+                              transition: 'transform 0.2s ease-in-out',
+                              WebkitTextStroke: '1.5px black',
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFavorite(project.id);
+                            }}
+                          />
+                        )}
+                      </Tooltip>
+                      <Meta title={project.name} description={project.location} style={{ textAlign: 'center' }} />
+                    </Card>
+                  </Col>
+                ))}
             </Row>
           </Box>
         </Box>
