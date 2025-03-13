@@ -28,7 +28,7 @@ const projects = [
         listUsers: [], 
         status: null,
         phase: 2,
-        fields: {test1: "test2", test2: "test3"},
+        fields: [{field: "test1", fieldMD: "test11"}, {field: "test2", fieldMD: "test22"}],
         lastUpdated: dayjs("2025-01-18 00:16:01"),
         files: files
     },
@@ -42,7 +42,7 @@ const projects = [
         listUsers: [],
         status: 'Active',
         phase: 1,
-        fields: {},
+        fields: [],
         lastUpdated: dayjs("2025-01-12 00:16:01"),
         files: files
     },
@@ -56,7 +56,7 @@ const projects = [
         listUsers: ['John Doe', 'Sarah Brown'],
         status: 'Inactive',
         phase: 3,
-        fields: {},
+        fields: [],
         lastUpdated: dayjs("2025-01-10 00:16:01"),
         files: files
     },
@@ -70,7 +70,7 @@ const projects = [
         listUsers: [],
         status: 'Active',
         phase: 1,
-        fields: {},
+        fields: [],
         lastUpdated: dayjs("2025-01-05 00:16:01"),
         files: files
     },
@@ -84,7 +84,7 @@ const projects = [
         listUsers: [],
         status: 'Active',
         phase: 2,
-        fields: {},
+        fields: [],
         lastUpdated: dayjs("2025-01-20 00:16:01"),
         files: files
     },
@@ -98,7 +98,7 @@ const projects = [
         listUsers: [],
         status: 'Active',
         phase: 1,
-        fields: {},
+        fields: [],
         lastUpdated: dayjs("2025-01-08 00:16:01"),
         files: files
     },
@@ -112,7 +112,7 @@ const projects = [
         listUsers: [],
         status: 'Active',
         phase: 2,
-        fields: {},
+        fields: [],
         lastUpdated: dayjs("2025-01-15 00:16:01"),
         files: files
     },
@@ -126,7 +126,7 @@ const projects = [
         listUsers: ['Sarah Brown'],
         status: 'Inactive',
         phase: 1,
-        fields: {},
+        fields: [],
         lastUpdated: dayjs("2025-01-10 00:16:01"),
         files: files
     },
@@ -140,7 +140,7 @@ const projects = [
         listUsers: [],
         status: 'Active',
         phase: 2,
-        fields: {},
+        fields: [],
         lastUpdated: dayjs("2025-01-12 00:16:01"),
         files: files
     },
@@ -154,7 +154,7 @@ const projects = [
         listUsers: ['John Doe'],
         status: 'Inactive',
         phase: 3,
-        fields: {},
+        fields: [],
         lastUpdated: dayjs("2025-01-10 00:16:01"),
         files: files
     },
@@ -168,7 +168,7 @@ const projects = [
         listUsers: [],
         status: 'Active',
         phase: 1,
-        fields: {},
+        fields: [],
         lastUpdated: dayjs("2025-01-08 00:16:01"),
         files: files
     },
@@ -182,7 +182,7 @@ const projects = [
         listUsers: [],
         status: 'Active',
         phase: 2,
-        fields: {},
+        fields: [],
         lastUpdated: dayjs("2025-01-05 00:16:01"),
         files: files
     }

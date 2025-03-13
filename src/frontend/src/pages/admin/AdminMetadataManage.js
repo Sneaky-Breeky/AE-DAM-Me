@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect  } from 'react';
 import Box from '@mui/material/Box';
-import { Typography, Button, Input, Form } from 'antd';
-import { SearchOutlined, CloseOutlined} from '@ant-design/icons';
+import { Typography, Button, Input, Form, Space } from 'antd';
+import { SearchOutlined, CloseOutlined, MinusCircleOutlined, PlusOutlined} from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { projects } from '../../utils/dummyData.js';
 
@@ -18,6 +18,16 @@ export default function AdminMetadataManage() {
   };
 
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    if (project && project.fields) {  // check if project is null before running?
+      const convertedFields = project.fields.map(fieldObj => ({
+        field: fieldObj.field,
+        fieldMD: fieldObj.fieldMD
+      }));
+      form.setFieldsValue({ fields: convertedFields });
+    }
+  }, [project, isEditOpen]); // runs when project or isEditOpen changes
 
   const handleMDEdits = (values) => {
     console.log("input values: ", values);
@@ -168,10 +178,10 @@ export default function AdminMetadataManage() {
                 <th colspan="3" style={{height: '40px', textAlign: 'center', padding: '0px'}} ><h3 style={{ margin:'0'}}>Current Metadata</h3></th>
             </tr>
             <tr style={{paddingTop: '0'}}>
-                <th colspan="3" style={{height: '40px', textAlign: 'center', borderBottom:'1px solid black', padding: '0px'}} ><h5 style={{ margin:'0'}}>
+                <th colspan="3" style={{height: '40px', textAlign: 'center', borderBottom:'1px solid black', padding: '0px'}} ><h4 style={{ margin:'0'}}>
                   {project.name + " Project"}
                   
-                  </h5></th>
+                  </h4></th>
             </tr>
             
         </table>
@@ -179,69 +189,118 @@ export default function AdminMetadataManage() {
         <Form
           form={form}
           name="md_edits"
-          labelCol={{ span: 8 }}
-          wrapperCol={{ span: 16 }}
           layout="horizontal"
           autoComplete="off"
           onFinish={handleMDEdits}
-          style={{margin: '20px auto'}}
+          style={{margin: '10px auto'}}
           onKeyDown={(e) => {
               if (e.key === "Enter") {
                   e.preventDefault();
               }
           }}>
 
-        <Form.Item
+        <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
           name="name"
-          label="Project Name"
+          label={<p style={{fontWeight:"bold"}}>Project Name</p>}
         >
           {isEditOpen ? <Input defaultValue={project.name}/> : project.name}
         </Form.Item>
 
-        <Form.Item
+        <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
           name="location"
-          label="Location"
+          label={<p style={{fontWeight:"bold"}}>Location</p>}
         >
           {isEditOpen ? <Input defaultValue={project.location}/> : project.location}
         </Form.Item>
 
-        <Form.Item
+        <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
           name="date"
-          label="Date"
+          label={<p style={{fontWeight:"bold"}}>Date</p>}
         >
           {isEditOpen ? <Input defaultValue={dayjs(project.date).format('MMM DD, YYYY')}/> : dayjs(project.date).format('MMM DD, YYYY')}
         </Form.Item>
 
-        <Form.Item
+        <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
           name="status"
-          label="Status"
+          label={<p style={{fontWeight:"bold"}}>Status</p>}
         >
           {isEditOpen ? <Input defaultValue={project.status}/> : project.status}
         </Form.Item>
 
-        <Form.Item
+        <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
           name="phase"
-          label="Phase"
+          label={<p style={{fontWeight:"bold"}}>Phase</p>}
         >
           {isEditOpen ? <Input defaultValue={project.phase}/> : project.phase}
         </Form.Item>
         
 
-        {Object.entries(project.fields).map(([key, value]) => {
-          console.log(key, value); 
-          return (<Form.Item
-            name={key} 
-            label={key}
-          >
-            {isEditOpen ? <Input defaultValue={value}/> : value}
-          </Form.Item>);
-        })}
+        <Form.List name="fields">
+          {(fields, { add, remove }) => (
+            <>
+              {fields.map(({ key, name, ...restField }) => (
+                <Space
+                key={key}
+                align="baseline"
+                style={{ display: 'block' }}
+              >
+                {isEditOpen ?
+                  <div style={{ display: 'flex', flexDirection: 'row'}}>
+                  <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
+                    {...restField}
+                    name={[name, 'field']}
+                    rules={[
+                      {
+                        required: true,
+                        message: 'Missing field name',
+                      },
+                    ]}
+                  >
+                    <Input placeholder="Field name" />
+                  </Form.Item>
+
+                  <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
+                    {...restField}
+                    name={[name, 'fieldMD']}
+                  >
+                    <Input placeholder="Metadata" />
+                  </Form.Item>
+                  
+                  <MinusCircleOutlined style={{ marginBottom: "5px", marginRight: "20px" }}onClick={() => remove(name)} />
+                  </div>
+                
+                : <Form.Item
+                style={{ marginBottom: '5px', marginRight: '10px' }}
+                {...restField}
+                name={[name, 'field']}
+                label={<p style={{fontWeight:"bold"}}>{form.getFieldValue(['fields', name, 'field'])}</p>}
+              >
+                <span> {form.getFieldValue(['fields', name, 'fieldMD'])} </span>
+              </Form.Item>
+                }
+
+              </Space>
+              ))}
+              
+              
+              <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}>
+                {isEditOpen ?
+                (<Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+                  Add field
+                </Button>)
+                : (<div style={{height:"0"}}></div>)
+                }
+              </Form.Item>
+            </>
+          )}
+        </Form.List>
 
         <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', margin: '20px auto', marginBottom: '0'}}>
           <Button color="default" variant="text" size={"default"} icon={<CloseOutlined/>}
             onClick={(e) => {
               //e.stopPropagation();
               form.resetFields();
+              setEditOpen(false);
               setPopupFormOpen(false);
             }}/>
 
@@ -257,7 +316,7 @@ export default function AdminMetadataManage() {
           (<Button htmlType="submit" type="primary" size={"default"}
             onClick={() => {
               //e.stopPropagation();
-              setEditOpen(false);
+              //setEditOpen(false);
               //handleMDEdits();
               form.submit();
               setPopupFormOpen(false);
