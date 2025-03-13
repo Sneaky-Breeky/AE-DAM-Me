@@ -1,134 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect  } from 'react';
 import Box from '@mui/material/Box';
-import { Typography, Button, Input } from 'antd';
-import { SearchOutlined, EditOutlined, CloseOutlined} from '@ant-design/icons';
+import { Typography, Button, Input, Form, Space } from 'antd';
+import { SearchOutlined, CloseOutlined, MinusCircleOutlined, PlusOutlined} from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { projects } from '../../utils/dummyData.js';
 
 const { Title } = Typography;
 
-function EditMD(md, i, searchEditQuery, setSearchEditQuery, editOpen, setEditOpen) {
-  searchEditQuery = md;
-
-  const handleChange = (e) => {
-    setSearchEditQuery(e.target.value);
-  };
-
-  return (
-      <><td style={{ fontSize: '12px', width: '50%', textAlign: 'left', borderBottom: '1px solid black' }}>
-      {editOpen ?
-        <Input
-          size="small"
-          onChange={handleChange}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                setSearchEditQuery(e.target.value);
-            }
-        }}
-          style={{ width: '90%' }} />
-        : searchEditQuery}
-    </td><td style={{ fontSize: '12px', width: '15%', textAlign: 'right', borderBottom: '1px solid black' }}>
-        {searchEditQuery === null || searchEditQuery === '' ?
-          <Button size={"small"} onClick={() => { setEditOpen(editOpen ? false : true); } }>
-            {editOpen ? 'Close' :
-              'Create'}</Button>
-          : <Button color="default" variant="text" size={"default"} icon={editOpen ? <CloseOutlined /> : <EditOutlined />}
-            onClick={() => { setEditOpen(editOpen ? false : true); } } />}
-      </td></>
-  );
-}
-
-function popupForm(proj, searchEditQuery, setSearchEditQuery, setPopupFormOpen,
-  editNameOpen, setEditNameOpen, editLocOpen, setEditLocOpen, editDateOpen, setEditDateOpen, editStateOpen, setEditStateOpen, editPhaseOpen, setEditPhaseOpen) {
-
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'flex-start',
-        alignItems: 'left',
-        width: '80%',
-        height: '100%',
-        backgroundColor: '#f5f5f5',
-        borderRadius: '10px',
-        margin: '20px auto',
-        marginLeft: '0',
-        marginTop: '0',
-        padding: '20px',
-        paddingTop: '10px',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        overflow: 'auto'
-      }}
-    >
-
-    <div style={{overflowY: 'auto', width: '100%', height: '100%'}}>
-      <table style={{width: '100%', borderCollapse: 'collapse'}}>
-          <tr style={{paddingTop: '0'}}>
-              <th colspan="3" style={{height: '40px', textAlign: 'center', padding: '0px'}} ><h3 style={{ margin:'0'}}>Current Metadata</h3></th>
-          </tr>
-          <tr style={{paddingTop: '0'}}>
-              <th colspan="3" style={{height: '40px', textAlign: 'center', borderBottom:'1px solid black', padding: '0px'}} ><h5 style={{ margin:'0'}}>
-                {proj.name + " Project"}
-                
-                </h5></th>
-          </tr>
-          {/*{labels.map((label, index) => (
-            EditMD(p[index], label, index, searchEditQuery, setSearchEditQuery, editOpen, setEditOpen)
-          ))} */}
-
-          <tr style={{height: '50px'}}>
-            <td style={{ fontSize: '12px', width: '25%', textAlign: 'left', borderBottom:'1px solid black'}} >{"Project Name: "}</td>
-            {EditMD(proj.name, 0, searchEditQuery, setSearchEditQuery, editNameOpen, setEditNameOpen)}
-          </tr>
-          <tr style={{height: '50px'}}>
-            <td style={{ fontSize: '12px', width: '25%', textAlign: 'left', borderBottom:'1px solid black'}} >{"Location: "}</td>
-            {EditMD(proj.location, 1, searchEditQuery, setSearchEditQuery, editLocOpen, setEditLocOpen)}
-          </tr>
-          <tr style={{height: '50px'}}>
-            <td style={{ fontSize: '12px', width: '25%', textAlign: 'left', borderBottom:'1px solid black'}} >{"Date: "}</td>
-            {EditMD(dayjs(proj.date).format('MMM DD, YYYY'), 2, searchEditQuery, setSearchEditQuery, editDateOpen, setEditDateOpen)}
-          </tr>
-          <tr style={{height: '50px'}}>
-            <td style={{ fontSize: '12px', width: '25%', textAlign: 'left', borderBottom:'1px solid black'}} >{"Status: "}</td>
-            {EditMD(proj.status, 3, searchEditQuery, setSearchEditQuery, editStateOpen, setEditStateOpen)}
-          </tr>
-          <tr style={{height: '50px'}}>
-            <td style={{ fontSize: '12px', width: '25%', textAlign: 'left', borderBottom:'1px solid black'}} >{"Phase: "}</td>
-            {EditMD(proj.phase, 4, searchEditQuery, setSearchEditQuery, editPhaseOpen, setEditPhaseOpen)}
-          </tr>
-          
-      </table>
-      <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', margin: '20px auto', marginBottom: '0'}}>
-        <Button color="default" variant="text" size={"default"} icon={<CloseOutlined/>}
-          onClick={(e) => {
-            e.stopPropagation();
-            setPopupFormOpen(false);
-          }}/>
-        <Button type="primary" size={"default"}
-          onClick={(e) => {
-            e.stopPropagation();
-            setPopupFormOpen(false);
-
-          }}>Submit</Button>
-      </div>
-      
-    </div>
-  </Box>
-  );
-}
-
 export default function AdminMetadataManage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isPopupFormOpen, setPopupFormOpen] = useState(false);
+  const [isEditOpen, setEditOpen] = useState(false);
   const [project, setProject] = useState(null);
-  const [searchEditQuery, setSearchEditQuery] = useState('');
-  const [editNameOpen, setEditNameOpen] = useState(false);
-  const [editLocOpen, setEditLocOpen] = useState(false);
-  const [editDateOpen, setEditDateOpen] = useState(false);
-  const [editStateOpen, setEditStateOpen] = useState(false);
-  const [editPhaseOpen, setEditPhaseOpen] = useState(false);
+
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+  };
+
+  const [form] = Form.useForm();
+
+  useEffect(() => {
+    if (project && project.fields) {  // check if project is null before running?
+      const convertedFields = project.fields.map(fieldObj => ({
+        field: fieldObj.field,
+        fieldMD: fieldObj.fieldMD
+      }));
+      form.setFieldsValue({ fields: convertedFields });
+    }
+  }, [project, isEditOpen]); // runs when project or isEditOpen changes
+
+  const handleMDEdits = (values) => {
+    console.log("input values: ", values);
+    console.log("null name: ", !values.name ); // if name is empty, returns true
+    form.resetFields();
+  };
 
   return (
     <Box
@@ -211,12 +116,8 @@ export default function AdminMetadataManage() {
         {(projects.filter(p => {return p.name.toLowerCase().includes(searchQuery.toLowerCase())})).map((p) => (
           <tr onClick={() => {
             setPopupFormOpen(true);
-            setEditNameOpen(false);
-            setEditLocOpen(false);
-            setEditDateOpen(false);
-            setEditStateOpen(false);
-            setEditPhaseOpen(false);
-            setProject(p)
+            setEditOpen(false);
+            setProject(p);
           }} style={{height: '50px'}}
             onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#fcfcfc';}}
             onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '';}}>
@@ -246,9 +147,192 @@ export default function AdminMetadataManage() {
     }}
   > 
 
-    {isPopupFormOpen && popupForm(project, searchEditQuery, setSearchEditQuery, setPopupFormOpen,
+    {/*isPopupFormOpen && popupForm(form, onFinish, project, searchEditQuery, setSearchEditQuery, setPopupFormOpen,
       editNameOpen, setEditNameOpen, editLocOpen, setEditLocOpen, editDateOpen, setEditDateOpen, editStateOpen, setEditStateOpen, editPhaseOpen, setEditPhaseOpen
-    )}
+    )*/}
+
+    {isPopupFormOpen && 
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'flex-start',
+          alignItems: 'left',
+          width: '80%',
+          height: '100%',
+          backgroundColor: '#f5f5f5',
+          borderRadius: '10px',
+          margin: '20px auto',
+          marginLeft: '0',
+          marginTop: '0',
+          padding: '20px',
+          paddingTop: '10px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          overflow: 'auto'
+        }}
+      >
+
+      <div style={{overflowY: 'auto', width: '100%', height: '100%'}}>
+        <table style={{width: '100%', borderCollapse: 'collapse'}}>
+            <tr style={{paddingTop: '0'}}>
+                <th colspan="3" style={{height: '40px', textAlign: 'center', padding: '0px'}} ><h3 style={{ margin:'0'}}>Current Metadata</h3></th>
+            </tr>
+            <tr style={{paddingTop: '0'}}>
+                <th colspan="3" style={{height: '40px', textAlign: 'center', borderBottom:'1px solid black', padding: '0px'}} ><h4 style={{ margin:'0'}}>
+                  {project.name + " Project"}
+                  
+                  </h4></th>
+            </tr>
+            
+        </table>
+
+        <Form
+          form={form}
+          name="md_edits"
+          layout="horizontal"
+          autoComplete="off"
+          onFinish={handleMDEdits}
+          style={{margin: '10px auto'}}
+          onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                  e.preventDefault();
+              }
+          }}>
+
+        <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
+          name="name"
+          label={<p style={{fontWeight:"bold"}}>Project Name</p>}
+        >
+          {isEditOpen ? <Input defaultValue={project.name}/> : project.name}
+        </Form.Item>
+
+        <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
+          name="location"
+          label={<p style={{fontWeight:"bold"}}>Location</p>}
+        >
+          {isEditOpen ? <Input defaultValue={project.location}/> : project.location}
+        </Form.Item>
+
+        <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
+          name="date"
+          label={<p style={{fontWeight:"bold"}}>Date</p>}
+        >
+          {isEditOpen ? <Input defaultValue={dayjs(project.date).format('MMM DD, YYYY')}/> : dayjs(project.date).format('MMM DD, YYYY')}
+        </Form.Item>
+
+        <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
+          name="status"
+          label={<p style={{fontWeight:"bold"}}>Status</p>}
+        >
+          {isEditOpen ? <Input defaultValue={project.status}/> : project.status}
+        </Form.Item>
+
+        <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
+          name="phase"
+          label={<p style={{fontWeight:"bold"}}>Phase</p>}
+        >
+          {isEditOpen ? <Input defaultValue={project.phase}/> : project.phase}
+        </Form.Item>
+        
+
+        <Form.List name="fields">
+          {(fields, { add, remove }) => (
+            <>
+              {fields.map(({ key, name, ...restField }) => (
+                <Space
+                key={key}
+                align="baseline"
+                style={{ display: 'block' }}
+              >
+                {isEditOpen ?
+                  <div style={{ display: 'flex', flexDirection: 'row'}}>
+                  <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
+                    {...restField}
+                    name={[name, 'field']}
+                    rules={[
+                      {
+                        required: true,
+                        message: 'Missing field name',
+                      },
+                    ]}
+                  >
+                    <Input placeholder="Field name" />
+                  </Form.Item>
+
+                  <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
+                    {...restField}
+                    name={[name, 'fieldMD']}
+                  >
+                    <Input placeholder="Metadata" />
+                  </Form.Item>
+                  
+                  <MinusCircleOutlined style={{ marginBottom: "5px", marginRight: "20px" }}onClick={() => remove(name)} />
+                  </div>
+                
+                : <Form.Item
+                style={{ marginBottom: '5px', marginRight: '10px' }}
+                {...restField}
+                name={[name, 'field']}
+                label={<p style={{fontWeight:"bold"}}>{form.getFieldValue(['fields', name, 'field'])}</p>}
+              >
+                <span> {form.getFieldValue(['fields', name, 'fieldMD'])} </span>
+              </Form.Item>
+                }
+
+              </Space>
+              ))}
+              
+              
+              <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}>
+                {isEditOpen ?
+                (<Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+                  Add field
+                </Button>)
+                : (<div style={{height:"0"}}></div>)
+                }
+              </Form.Item>
+            </>
+          )}
+        </Form.List>
+
+        <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', margin: '20px auto', marginBottom: '0'}}>
+          <Button color="default" variant="text" size={"default"} icon={<CloseOutlined/>}
+            onClick={(e) => {
+              //e.stopPropagation();
+              form.resetFields();
+              setEditOpen(false);
+              setPopupFormOpen(false);
+            }}/>
+
+          <Button type="default" htmlType="button" size={"default"}
+            onClick={() => {
+              //e.stopPropagation();
+              form.resetFields();
+              setEditOpen(isEditOpen ? false:true);
+            }}>{isEditOpen ? 'Close':'Edit'}</Button>
+
+
+          {isEditOpen ?
+          (<Button htmlType="submit" type="primary" size={"default"}
+            onClick={() => {
+              //e.stopPropagation();
+              //setEditOpen(false);
+              //handleMDEdits();
+              form.submit();
+              setPopupFormOpen(false);
+            }}>Submit</Button>)
+          : (<Button type="primary" disabled size={"default"}>Submit</Button>)
+          }
+            
+        </div>
+
+        </Form>
+        
+      </div>
+    </Box>
+    }
+
+    
   </Box>
   </Box>
     </Box>
