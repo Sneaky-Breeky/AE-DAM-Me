@@ -1,5 +1,7 @@
 // *** Not using Data Annotations currently as am not sure how the searching 
 // will work, fluent API is supposedly better, will ask team
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
 
 namespace DAMBackend.Models
 
@@ -36,8 +38,12 @@ Project that it was added to with id
         public int? FocalLength { get; set; }
         public float? Aperture { get; set; }
         public string? Copyright { get; set; }
+        
         public ICollection<MetadataTagModel> mTags { get; set;} = new HashSet<MetadataTagModel>();
+        
+        [NotMapped]
         public ICollection<TagBasicModel> bTags { get; set;} = new HashSet<TagBasicModel>();
+        
         public int? ProjectId { get; set; }
         public ProjectModel? Project { get; set; }
 

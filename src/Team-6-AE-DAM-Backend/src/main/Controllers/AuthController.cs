@@ -30,10 +30,18 @@ namespace backend.auth
             
             if (!result)
             {
-                return Unauthorized(new { error = "Invalid email or password" }); // ✅ Return JSON
+                return Unauthorized(new { error = "Invalid email or password" });
             }
 
-            return Ok(new { message = "Login successful", role = "user" }); // ✅ Return JSON
+            return Ok(new { message = "Login successful", role = "user" });
+        }
+
+        [HttpGet("fetchuser")]
+        public async Task<IActionResult> FetchUser()
+        {
+            var result = await _authService.fetchUserAsync();
+
+            return Ok(result);
         }
     }
 
