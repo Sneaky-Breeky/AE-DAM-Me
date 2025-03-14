@@ -26,7 +26,7 @@ const projects = [
         thumbnail: `${process.env.PUBLIC_URL}/images/bridge.webp`,
         accessLevel: 'Admins Only', 
         listUsers: [], 
-        status: null,
+        status: 'Active',
         phase: 2,
         fields: [{field: "test1", fieldMD: "test11"}, {field: "test2", fieldMD: "test22"}],
         lastUpdated: dayjs("2025-01-18 00:16:01"),

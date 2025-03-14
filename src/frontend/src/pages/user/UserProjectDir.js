@@ -4,6 +4,7 @@ import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, To
 import { SearchOutlined, CalendarOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { projects, users } from '../../utils/dummyData.js';
+import dayjs from 'dayjs';
 
 const { Title } = Typography;
 const { Meta } = Card;
@@ -15,13 +16,53 @@ export default function UserProjectDir() {
   const navigate = useNavigate();
   const currentUser = users.find((user) => user.name === "John Doe"); // assume John Doe is logged in
   const [favProjects, setFavProjects] = useState(new Set(currentUser.favProjs));
+  const [filteredProjects, setFilteredProjects] = useState(projects);
+  //TODO: check each project to see if the current user has access to it, then modify it accordingly
+  const [selectedStatus, setSelectedStatus] = useState("");
 
-  const handleSearch = () => {
-    // when backend is done connect this part with backend
-    console.log("Search Query:", searchQuery, "Date:", selectedDate);
-  };
 
-  const toggleFavorite = (projectId) => {
+    const handleSearch = () => {
+        let filtered = [...projects];
+
+        if (searchQuery.trim() !== '') {
+            const query = searchQuery.toLowerCase();
+
+            filtered = filtered.filter(project =>
+                project.name.toLowerCase() === query ||
+                project.id.toString() === query || 
+                project.location.toLowerCase() === query ||
+                project.files.some(file =>
+                    file.Metadata.some(tag => tag.toLowerCase() === query)
+                )
+            );
+        }
+
+        if (selectedDate) {
+            filtered = filtered.filter(project =>
+                dayjs(project.lastUpdated).isSame(selectedDate, 'day')
+            );
+        }
+
+        if (selectedStatus) {
+            filtered = filtered.filter(project =>
+                project.status.toLowerCase() === selectedStatus.toLowerCase()
+            );
+        }
+
+        setFilteredProjects([...filtered]);
+        console.log("Filtered projects:", filtered);
+    };
+
+
+    const handleClearFilters = () => {
+        setSearchQuery('');
+        setSelectedDate(null);
+        setSelectedStatus('');
+        setFilteredProjects(projects);
+    };
+
+
+    const toggleFavorite = (projectId) => {
     const updatedFavs = new Set(favProjects);
     if (updatedFavs.has(projectId)) {
       updatedFavs.delete(projectId);
@@ -82,15 +123,15 @@ export default function UserProjectDir() {
           </Form.Item>
 
           <Form.Item>
-            <Select
-              defaultValue="Active"
-              style={{ width: 120 }}
-              allowClear
-              options={[
-                { value: 'active', label: 'Active' },
-                { value: 'inactive', label: 'Inactive' }]}
-              placeholder="Select Status"
-            />
+              <Select
+                  style={{ width: 120 }}
+                  allowClear
+                  options={[
+                      { value: 'active', label: 'Active' },
+                      { value: 'inactive', label: 'Inactive' }]}
+                  onChange={(value) => setSelectedStatus(value)}
+                  placeholder="Select status"
+              />
           </Form.Item>
 
           <Form.Item>
@@ -106,6 +147,12 @@ export default function UserProjectDir() {
               Search
             </Button>
           </Form.Item>
+
+            <Form.Item>
+                <Button type="default" onClick={handleClearFilters} danger>
+                    Clear Filters
+                </Button>
+            </Form.Item>
         </Form>
       </Box>
 
@@ -149,7 +196,7 @@ export default function UserProjectDir() {
             }}
           >
             <Row gutter={[16, 16]} justify="center">
-              {projects.sort((a, b) => {
+              {filteredProjects.sort((a, b) => {
                 const aFav = favProjects.has(a.id) ? -1 : 1;
                 const bFav = favProjects.has(b.id) ? -1 : 1;
                 return aFav - bFav;
