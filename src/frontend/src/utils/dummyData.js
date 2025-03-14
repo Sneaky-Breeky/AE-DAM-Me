@@ -206,9 +206,9 @@ const logs = [
 
 
 const users = [
-    { name: 'John Doe', email: 'johndoe123@example.com', role: 'User', status: 'Active', favProjs: [], workingProjs: []},
-    { name: 'Sarah Brown', email: 'sarah.brown@example.com', role: 'Admin', status: 'Active', favProjs: [], workingProjs: []},
-    { name: 'Michael Johnson', email: 'michael.j2009@example.com', role: 'User', status: 'Inactive', favProjs: [], workingProjs: [] }
+    { name: 'John Doe', email: 'johndoe123@example.com', role: 'User', status: 'Active', files: [], favProjs: [], workingProjs: []},
+    { name: 'Sarah Brown', email: 'sarah.brown@example.com', role: 'Admin', status: 'Active', files: [], favProjs: [], workingProjs: []},
+    { name: 'Michael Johnson', email: 'michael.j2009@example.com', role: 'User', status: 'Inactive', files: [], favProjs: [], workingProjs: [] }
 ];
 
 export { projects, files, logs, users };
