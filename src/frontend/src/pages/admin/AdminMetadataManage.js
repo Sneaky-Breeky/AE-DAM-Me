@@ -32,6 +32,8 @@ export default function AdminMetadataManage() {
 
   const handleMDEdits = (values) => {
     console.log("input values: ", values);
+    // filter out empty fields
+    console.log("filtered fields values: ", (values.fields).filter((f) => f.field));
     console.log("null name: ", !values.name ); // if name is empty, returns true
     form.resetFields();
   };

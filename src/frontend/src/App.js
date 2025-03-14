@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUserManage from './pages/admin/AdminUserManage';
 import AdminMetadataManage from './pages/admin/AdminMetadataManage';
+import AdminProjectManage from './pages/admin/AdminProjectManage';
 import UserDashboard from './pages/user/UserDashboard';
 import UserUpload from './pages/user/UserUpload';
 import ProjectDirectory from './pages/user/UserProjectDir';
@@ -51,6 +52,7 @@ function AppContent({ loggedIn, setLoggedIn }) {
           <Route path="/admin/projectCreation" element={<ProjectCreation />} />
           <Route path="/admin/userManagement" element={<AdminUserManage />} />
           <Route path="/admin/metadataManagement" element={<AdminMetadataManage />} />
+          <Route path="/admin/projectManagement" element={<AdminProjectManage />} />
           <Route path="/admin/projectSecurity" element={<AdminProjectSecurity />} />
 
           {/* user */}
