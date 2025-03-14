@@ -39,7 +39,7 @@ export default function UserProjectDir() {
 
         if (selectedDate) {
             filtered = filtered.filter(project =>
-                dayjs(project.lastUpdated).isSame(selectedDate, 'day')
+                dayjs(project.date).isSame(selectedDate, 'day')
             );
         }
 
