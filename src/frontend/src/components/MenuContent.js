@@ -13,6 +13,7 @@ import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import PostAddIcon from '@mui/icons-material/PostAdd';
 import SecurityIcon from '@mui/icons-material/Security';
+import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import { isAdmin } from '../utils/auth';
 import { useNavigate } from 'react-router-dom';
 
@@ -29,6 +30,7 @@ var adminPages = [
   { text: 'Project Creation', url: 'projectCreation', icon: <CreateNewFolderIcon /> },
   { text: 'User Management', url: 'userManagement', icon: <ManageAccountsIcon /> },
   { text: 'Metadata Management', url: 'metadataManagement', icon: <PostAddIcon /> },
+  { text: 'Project Management', url: 'projectManagement', icon: <FormatListBulletedIcon /> },
   { text: 'Project Security', url: 'projectSecurity', icon: <SecurityIcon /> },
 ];
 
