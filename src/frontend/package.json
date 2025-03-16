@@ -16,7 +16,9 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.1.5",
     "react-scripts": "5.0.1",
-    "web-vitals": "^4.2.4"
+    "selenium-webdriver": "^4.29.0",
+    "web-vitals": "^4.2.4",
+    "mocha": "11.1.0"
   },
   "scripts": {
     "start": "react-scripts start",
