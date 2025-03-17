@@ -9,7 +9,7 @@ const pages = [
   {title: 'Create Project Directories', icon: PlusOutlined, url: '/admin/projectCreation', menu: 1 },
   {title: 'User Management', icon: UserOutlined, url: '/admin/userManagement', menu: 2 },
   {title: 'Metadata Management', icon: SettingOutlined, url: '/admin/metadataManagement', menu: 3 },
-  {title: 'File Metadata Management', icon: UnorderedListOutlined, url: '/admin/projectManagement', menu: 4 },
+  {title: 'File Metadata Management', icon: UnorderedListOutlined, url: '/admin/fileManagement', menu: 4 },
   {title: 'Assign Project Security', icon: LockOutlined, url: '/admin/projectSecurity', menu: 5 }
 ]
 

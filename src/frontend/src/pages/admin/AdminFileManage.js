@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { Typography, Input, Space, Image, Button, Popconfirm, Form} from 'antd';
 import { SearchOutlined, DeleteOutlined, CloseOutlined, EditOutlined, QuestionCircleOutlined} from '@ant-design/icons';
@@ -11,7 +9,7 @@ import { projects } from '../../utils/dummyData.js';
 
 const { Title } = Typography;
 
-export default function AdminProjectManage() {
+export default function AdminFileManage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isPopupFormOpen, setPopupFormOpen] = useState(false);
   const [isEditOpen, setEditOpen] = useState(false);
@@ -345,7 +343,7 @@ export default function AdminProjectManage() {
             
           </div>
 
-          <Button type="submit" color="default" variant="outlined" size={"default"} onClick={handleSubmitForm} style={{marginTop:'10%', float: 'right'}}>Subscribe</Button>
+          <Button type="primary" onClick={handleSubmitForm} style={{marginTop:'10%', float: 'right'}}>Submit</Button>
           </Form>
 
           </div>)
