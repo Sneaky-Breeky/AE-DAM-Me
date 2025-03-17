@@ -15,9 +15,9 @@ namespace DAMBackend.Controllers
     [ApiController]
     public class FilesController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly SQLDbContext _context;
 
-        public FilesController(AppDbContext context)
+        public FilesController(SQLDbContext context)
         {
             _context = context;
         }
@@ -77,6 +77,8 @@ namespace DAMBackend.Controllers
 
         // POST: api/Files
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        
+        // Call function in submission engine
         [HttpPost]
         public async Task<ActionResult<FileModel>> PostFile(FileModel filemodel)
         {

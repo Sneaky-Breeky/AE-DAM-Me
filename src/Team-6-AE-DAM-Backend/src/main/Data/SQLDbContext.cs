@@ -10,16 +10,24 @@ namespace DAMBackend.Models
         public DbSet<ProjectModel> Projects { get; set; }
 
         public DbSet<FileModel> Files { get; set; }
+        
+        public DbSet<UserModel> Users { get; set; }
 
         public DbSet<MetadataTagModel> MetadataTags { get; set; }
 
         public DbSet<TagBasicModel> BasicTags { get; set; }
+        
+        
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) 
 
         {
-            modelBuilder.Entity<TagBasicModel>().HasNoKey();
+            
 
+            // Key for basic data tag model
+            modelBuilder.Entity<TagBasicModel>()
+                .HasKey(m => new { m.Value });
+            
             // Key for metadata tag model
             modelBuilder.Entity<MetadataTagModel>()
             .HasKey(m => new { m.FileId, m.Key });
@@ -32,12 +40,15 @@ namespace DAMBackend.Models
                 .HasForeignKey(t => t.FileId)
                 .IsRequired();
             
-            // One to many betwen file and basictag model
+            // Many to many betwen file and basictag model
             modelBuilder.Entity<FileModel>()
                 .HasMany(f => f.bTags)
-                .WithOne(t => t.File)
-                .HasForeignKey(t => t.FileId)
-                .IsRequired();
+                .WithMany(t => t.Files) 
+                .UsingEntity<Dictionary<string, object>>(
+                    "FileTag", 
+                    j => j.HasOne<TagBasicModel>().WithMany().HasForeignKey("TagId"),
+                    j => j.HasOne<FileModel>().WithMany().HasForeignKey("FileId")
+                );
 
             // One to many from projects to files
             modelBuilder.Entity<ProjectModel>()
@@ -71,7 +82,19 @@ namespace DAMBackend.Models
             modelBuilder.Entity<ProjectModel>()
                 .Property(p => p.Id)
                 .ValueGeneratedOnAdd();
-                
+            
+            // For SQL, defining the bounds of decimals
+            modelBuilder.Entity<FileModel>()
+                .Property(f => f.GPSLat)
+                .HasPrecision(10, 7); 
+
+            modelBuilder.Entity<FileModel>()
+                .Property(f => f.GPSLon)
+                .HasPrecision(10, 7);
+
+            modelBuilder.Entity<FileModel>()
+                .Property(f => f.GPSAlt)
+                .HasPrecision(10, 3); 
         }
     }
 }

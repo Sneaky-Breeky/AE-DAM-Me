@@ -10,9 +10,9 @@ namespace DAMBackend.auth
 {
     public class AuthService
     {
-        private readonly AppDbContext _context;
+        private readonly SQLDbContext _context;
 
-        public AuthService(AppDbContext context)
+        public AuthService(SQLDbContext context)
         {
             _context = context;
         }
