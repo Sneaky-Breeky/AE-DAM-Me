@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
 import Box from '@mui/material/Box';
-import { Input, Button, Typography, Row, Col } from 'antd';
-import { PlusOutlined, UserOutlined, SettingOutlined, LockOutlined } from '@ant-design/icons';
+import { Typography, Row, Col } from 'antd';
+import { PlusOutlined, UserOutlined, SettingOutlined, LockOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
 const { Title } = Typography;
@@ -10,7 +9,8 @@ const pages = [
   {title: 'Create Project Directories', icon: PlusOutlined, url: '/admin/projectCreation', menu: 1 },
   {title: 'User Management', icon: UserOutlined, url: '/admin/userManagement', menu: 2 },
   {title: 'Metadata Management', icon: SettingOutlined, url: '/admin/metadataManagement', menu: 3 },
-  {title: 'Assign Project Security', icon: LockOutlined, url: '/admin/projectSecurity', menu: 4 }
+  {title: 'File Metadata Management', icon: UnorderedListOutlined, url: '/admin/fileManagement', menu: 4 },
+  {title: 'Assign Project Security', icon: LockOutlined, url: '/admin/projectSecurity', menu: 5 }
 ]
 
 export default function AdminDashboard() {
@@ -50,7 +50,7 @@ export default function AdminDashboard() {
 
       <Row gutter={[16, 16]} justify="center">
         {pages.map((page) => (
-          <Col span={12} align="center">
+          <Col span={8} align="center">
           <Box
           onClick={() => {
             sessionStorage.setItem('menu', page.menu);

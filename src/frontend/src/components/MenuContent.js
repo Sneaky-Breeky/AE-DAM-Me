@@ -30,7 +30,7 @@ var adminPages = [
   { text: 'Project Creation', url: 'projectCreation', icon: <CreateNewFolderIcon /> },
   { text: 'User Management', url: 'userManagement', icon: <ManageAccountsIcon /> },
   { text: 'Metadata Management', url: 'metadataManagement', icon: <PostAddIcon /> },
-  { text: 'Project Management', url: 'projectManagement', icon: <FormatListBulletedIcon /> },
+  { text: 'File Metadata Management', url: 'fileManagement', icon: <FormatListBulletedIcon /> },
   { text: 'Project Security', url: 'projectSecurity', icon: <SecurityIcon /> },
 ];
 
