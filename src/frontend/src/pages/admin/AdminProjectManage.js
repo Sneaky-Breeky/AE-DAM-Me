@@ -87,7 +87,7 @@ export default function AdminProjectManage() {
           padding: 4,
         }}
       >
-        <Title level={1}>Metadata Management</Title>
+        <Title level={1}>File Metadata Management</Title>
       </Box>
        
 <Box
