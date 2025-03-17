@@ -13,7 +13,7 @@ namespace DAMBackend.Models
 
     {
         
-        public int Id { get; set; } = 1;
+        public int Id { get; set; }
 
         public required string Description {get; set;}
 

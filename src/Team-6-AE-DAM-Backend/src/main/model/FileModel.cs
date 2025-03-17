@@ -38,10 +38,8 @@ Project that it was added to with id
         public int? FocalLength { get; set; }
         public float? Aperture { get; set; }
         public string? Copyright { get; set; }
-        
-        public ICollection<MetadataTagModel> mTags { get; set;} = new HashSet<MetadataTagModel>();
-        
-        [NotMapped]
+
+        public ICollection<MetadataTagModel> mTags { get; set; } = new HashSet<MetadataTagModel>();
         public ICollection<TagBasicModel> bTags { get; set;} = new HashSet<TagBasicModel>();
         
         public int? ProjectId { get; set; }
@@ -49,7 +47,6 @@ Project that it was added to with id
 
         public int UserId { get; set; }
         // change to be required 
-
         public UserModel User { get; set; }
 
         public bool Palette {get; set;}

@@ -26,7 +26,6 @@ File and Fileid assigned to know which file is referenced
     // Metadata
 
     {
-        [Key]
         public required Guid FileId { get; set; }
         
         public required string Key { get; set; }

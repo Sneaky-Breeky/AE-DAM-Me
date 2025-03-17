@@ -15,10 +15,10 @@ ON DELETE CASCADE where appropriate s
     public class SQLEntryEngine {
 
         // Connecting to database
-        private readonly AppDbContext database;
+        private readonly SQLDbContext database;
 
         // parameter will be AppDbContext db
-        public SQLEntryEngine(AppDbContext db) {
+        public SQLEntryEngine(SQLDbContext db) {
             database = db;
         }
 
@@ -42,6 +42,9 @@ ON DELETE CASCADE where appropriate s
 
         // take result from extractExifData
         // palette has to be set on creation
+        
+        // Called from submission engine after exif data has been extracted
+        // 
         public FileModel AddFile(FileModel file, UserModel user, ProjectModel project) {
             if (project != null) {
                 file.Project = project;
@@ -106,13 +109,11 @@ ON DELETE CASCADE where appropriate s
             
             var tag = new TagBasicModel 
             {   
-                Value = value,
-                FileId = file.Id,
-                File = file
+                Value = value
             };
 
             if (file != null) {
-                tag.FileId = file.Id;
+                tag.Files.Add(file);
                 file.bTags.Add(tag);
             } else {
                 throw new Exception("File was not added to tag, please attach a File");
