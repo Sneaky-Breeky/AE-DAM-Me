@@ -26,6 +26,8 @@ export default function UserUpload() {
     const MAX_FILES = 100;
     const [taggingMode, setTaggingMode] = useState(false);
     const [selectedFiles, setSelectedFiles] = useState(new Set());
+    const [userFiles, setUserFiles] = useState([]);
+
 
 
     const [project, setProject] = useState(null);
@@ -98,6 +100,7 @@ export default function UserUpload() {
                 showDuplicateAlert(duplicateFiles);
             }
 
+            setUserFiles((prevUserFiles) => [...prevUserFiles, ...newFiles]);
             return [...prevFiles, ...newFiles];
         });
     };
@@ -141,6 +144,7 @@ export default function UserUpload() {
             const updatedFiles = prevFiles.filter(file => file.file.name !== fileName);
             return [...updatedFiles];
         });
+        setUserFiles(prevFiles => prevFiles.filter(file => file.file.name !== fileName));
     };
 
     const handleProjectChange = (value) => {
@@ -177,7 +181,6 @@ export default function UserUpload() {
     };
 
     const handleSubmitTagInfo = () => {
-        // TODO: add this project to the user's "workingProjs" if its not already there
         if (selectedFiles.size === 0 || metadataTags.length === 0) return;
 
         setFiles(prevFiles =>
@@ -236,6 +239,7 @@ export default function UserUpload() {
         // TODO: update user's activity log that they added files to this certain project
         console.log("Uploading files:", files);
         setFiles([]);
+        setUserFiles([]);
         setTagApplications([]);
         setProject(null);
         setMetadataTags([]);

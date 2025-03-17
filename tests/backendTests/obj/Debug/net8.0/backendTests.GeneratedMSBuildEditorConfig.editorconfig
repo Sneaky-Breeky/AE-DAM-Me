@@ -8,6 +8,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = backendTests
-build_property.ProjectDir = D:\UBC\Y4S2\CPSC319\github\Team-6-AE\tests\backendTests\
+build_property.ProjectDir = C:\Users\mukun\Desktop\CPSC319\Team-6-AE\tests\backendTests\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 

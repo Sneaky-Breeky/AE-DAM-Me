@@ -15,17 +15,17 @@ namespace DAMBackend.Models
         
         public int Id { get; set; } = 1;
 
-        public required string description {get; set;}
+        public required string Description {get; set;}
 
         public required string Name { get; set; }
 
         public string Status { get; set; }
 
-        public string? location { get; set; }
+        public string? Location { get; set; }
 
-        public string? imagePath {get; set; }
+        public string? ImagePath {get; set; }
 
-        public AccessLevel accessLevel {get; set;}
+        public AccessLevel AccessLevel {get; set;}
 
         public string Phase { get; set;}
 

@@ -26,8 +26,9 @@ const projects = [
         thumbnail: `${process.env.PUBLIC_URL}/images/bridge.webp`,
         accessLevel: 'Admins Only', 
         listUsers: [], 
-        status: null,
+        status: 'Active',
         phase: 2,
+        fields: [{field: "test1", fieldMD: "test11"}, {field: "test2", fieldMD: "test22"}],
         lastUpdated: dayjs("2025-01-18 00:16:01"),
         files: files
     },
@@ -41,6 +42,7 @@ const projects = [
         listUsers: [],
         status: 'Active',
         phase: 1,
+        fields: [],
         lastUpdated: dayjs("2025-01-12 00:16:01"),
         files: files
     },
@@ -54,6 +56,7 @@ const projects = [
         listUsers: ['John Doe', 'Sarah Brown'],
         status: 'Inactive',
         phase: 3,
+        fields: [],
         lastUpdated: dayjs("2025-01-10 00:16:01"),
         files: files
     },
@@ -67,6 +70,7 @@ const projects = [
         listUsers: [],
         status: 'Active',
         phase: 1,
+        fields: [],
         lastUpdated: dayjs("2025-01-05 00:16:01"),
         files: files
     },
@@ -80,6 +84,7 @@ const projects = [
         listUsers: [],
         status: 'Active',
         phase: 2,
+        fields: [],
         lastUpdated: dayjs("2025-01-20 00:16:01"),
         files: files
     },
@@ -93,6 +98,7 @@ const projects = [
         listUsers: [],
         status: 'Active',
         phase: 1,
+        fields: [],
         lastUpdated: dayjs("2025-01-08 00:16:01"),
         files: files
     },
@@ -106,6 +112,7 @@ const projects = [
         listUsers: [],
         status: 'Active',
         phase: 2,
+        fields: [],
         lastUpdated: dayjs("2025-01-15 00:16:01"),
         files: files
     },
@@ -119,6 +126,7 @@ const projects = [
         listUsers: ['Sarah Brown'],
         status: 'Inactive',
         phase: 1,
+        fields: [],
         lastUpdated: dayjs("2025-01-10 00:16:01"),
         files: files
     },
@@ -132,6 +140,7 @@ const projects = [
         listUsers: [],
         status: 'Active',
         phase: 2,
+        fields: [],
         lastUpdated: dayjs("2025-01-12 00:16:01"),
         files: files
     },
@@ -145,6 +154,7 @@ const projects = [
         listUsers: ['John Doe'],
         status: 'Inactive',
         phase: 3,
+        fields: [],
         lastUpdated: dayjs("2025-01-10 00:16:01"),
         files: files
     },
@@ -158,6 +168,7 @@ const projects = [
         listUsers: [],
         status: 'Active',
         phase: 1,
+        fields: [],
         lastUpdated: dayjs("2025-01-08 00:16:01"),
         files: files
     },
@@ -171,6 +182,7 @@ const projects = [
         listUsers: [],
         status: 'Active',
         phase: 2,
+        fields: [],
         lastUpdated: dayjs("2025-01-05 00:16:01"),
         files: files
     }
@@ -194,9 +206,9 @@ const logs = [
 
 
 const users = [
-    { name: 'John Doe', email: 'johndoe123@example.com', role: 'User', status: 'Active', favProjs: [], workingProjs: []},
-    { name: 'Sarah Brown', email: 'sarah.brown@example.com', role: 'Admin', status: 'Active', favProjs: [], workingProjs: []},
-    { name: 'Michael Johnson', email: 'michael.j2009@example.com', role: 'User', status: 'Inactive', favProjs: [], workingProjs: [] }
+    { name: 'John Doe', email: 'johndoe123@example.com', role: 'User', status: 'Active', files: [], favProjs: [], workingProjs: []},
+    { name: 'Sarah Brown', email: 'sarah.brown@example.com', role: 'Admin', status: 'Active', files: [], favProjs: [], workingProjs: []},
+    { name: 'Michael Johnson', email: 'michael.j2009@example.com', role: 'User', status: 'Inactive', files: [], favProjs: [], workingProjs: [] }
 ];
 
 export { projects, files, logs, users };

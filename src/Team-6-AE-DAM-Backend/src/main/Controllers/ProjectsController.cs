@@ -15,38 +15,44 @@ namespace DAMBackend.Controllers
     [ApiController]
     public class ProjectsController : ControllerBase
     {
-        // Temp list for projects
+        private readonly AppDbContext _context;
+
+        public ProjectsController(AppDbContext context)
+        {
+            _context = context;
+        }
 
         private static List<ProjectModel> _projects = new List<ProjectModel>();
 
-        private SQLEntryEngine engine = new SQLEntryEngine();
+        private SQLEntryEngine engine;
 
         // POST response for api/Projects"
         [HttpPost]
-        public IActionResult AddProject([FromBody] ProjectModel projectData)
+        public async Task<ActionResult<ProjectModel>> PostProject([FromBody] ProjectModel projectData)
         {
+            engine = new SQLEntryEngine(_context);
             if (projectData == null)
             {
                 return BadRequest("Invalid project data.");
             }
 
             // You can now pass the incoming data to the addProject method
-            var newProject = engine.addProject(
+            var newProject = await engine.addProject(
                 projectData.Name,
                 projectData.Status,
-                projectData.location,
-                projectData.imagePath,
+                projectData.Location,
+                projectData.ImagePath,
                 projectData.Phase,
-                projectData.accessLevel,
+                projectData.AccessLevel,
                 projectData.LastUpdate,
-                projectData.description
+                projectData.Description
             );
 
             // Store the new project to the list or your database
-            _projects.Add(newProject);
+            // _projects.Add(newProject);
 
             // Return a success response with the created project
-            return CreatedAtAction(nameof(AddProject), new { id = newProject.Name }, newProject);
+            return CreatedAtAction(nameof(PostProject), new { id = newProject.Name }, newProject);
         }
 
 

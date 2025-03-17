@@ -6,15 +6,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DAMBackend.services
 
+/*
+
+ON DELETE CASCADE where appropriate s
+*/
+
 {
     public class SQLEntryEngine {
 
         // Connecting to database
-        // private readonly AppDbContext database;
+        private readonly AppDbContext database;
 
         // parameter will be AppDbContext db
-        public SQLEntryEngine() {
-            // database = db;
+        public SQLEntryEngine(AppDbContext db) {
+            database = db;
         }
 
         // change to async task when uploading to database
@@ -117,19 +122,20 @@ namespace DAMBackend.services
             return tag;
         }
 
-        public ProjectModel addProject(string name, string status, string location, string imagePath, string phase, AccessLevel al, DateTime lastUp, string desription) {
+        public async Task<ProjectModel> addProject(string name, string status, string location, string imagePath, string phase, AccessLevel al, DateTime lastUp, string desription) {
             var project = new ProjectModel
             {
                 Name = name,
                 Status = status,
-                location = location,
-                imagePath = imagePath,
-                accessLevel = al,
+                Location = location,
+                ImagePath = imagePath,
+                AccessLevel = al,
                 LastUpdate = lastUp,
                 Phase = phase,
-                description = desription
+                Description = desription
             };
-            // await database.SaveChanges();
+            database.Projects.Add(project);
+            await database.SaveChangesAsync();
             return project;
         }
     }
