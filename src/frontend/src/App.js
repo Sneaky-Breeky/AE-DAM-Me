@@ -12,6 +12,7 @@ import ProjectOverview from './pages/user/UserProjectOverview';
 import ProjectCreation from './pages/admin/AdminProjectCreation';
 import AdminProjectSecurity from './pages/admin/AdminProjectSecurity';
 import ActivityLog from './pages/user/UserActivityLog';
+import { isAdmin, isLoggedIn } from './utils/auth';
 import SideMenu from './components/SideMenu';
 import AppNavbar from './components/AppNavbar';
 import Box from '@mui/material/Box';
@@ -22,8 +23,13 @@ function App() {
   );
 
   useEffect(() => {
-    const storedLoginStatus = localStorage.getItem("loggedIn") === "true";
-    setLoggedIn(storedLoginStatus);
+    const handleStorageChange = () => {
+      const storedLoginStatus = localStorage.getItem("loggedIn") === "true";
+      setLoggedIn(storedLoginStatus);
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   return (
@@ -45,7 +51,7 @@ function AppContent({ loggedIn, setLoggedIn }) {
         <AppNavbar />
         <Routes>
           <Route path="/login" element={<Login setLoggedIn={setLoggedIn} />} />
-          <Route path="*" element={<Navigate to={loggedIn ? "/user/dashboard" : "/login"} />} />
+          <Route path="*" element={<Navigate to={isLoggedIn() ? (isAdmin() ? "/admin/dashboard" : "/user/dashboard") : "/login"} />} />
 
           {/* admin */}
           <Route path="/admin/dashboard" element={<AdminDashboard />} />

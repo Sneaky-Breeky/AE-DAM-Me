@@ -13,7 +13,7 @@ import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
-import { authenticateUser } from '../utils/auth';
+import {authenticateUser, isAdmin} from '../utils/auth';
 import { loginUser } from '../api/authApi';
 
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -80,7 +80,7 @@ export default function Login({setLoggedIn}) {
       localStorage.setItem("userRole", response.role);
 
       setLoggedIn(true);
-      navigate(response.role === 'admin' ? '/admin/dashboard' : '/user/dashboard');
+      navigate(isAdmin() ? "/admin/dashboard" : "/user/dashboard");
       
     } catch (error) {
       console.error("Login error:", error);
