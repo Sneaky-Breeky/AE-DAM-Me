@@ -36,5 +36,6 @@ namespace DAMBackend.Models
 
         public ICollection<UserModel> Users { get; set;} = new HashSet<UserModel>();
 
+        public ICollection<UserFavouriteProject> FavoritedByUsers { get; set; } = new HashSet<UserFavouriteProject>();
     }
 }

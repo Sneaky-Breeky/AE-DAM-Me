@@ -22,7 +22,8 @@ namespace DAMBackend.Models
         protected override void OnModelCreating(ModelBuilder modelBuilder) 
 
         {
-            
+            modelBuilder.Entity<UserFavouriteProject>()
+                .HasKey(ufp => new { ufp.UserId, ufp.ProjectId });
 
             // Key for basic data tag model
             modelBuilder.Entity<TagBasicModel>()
