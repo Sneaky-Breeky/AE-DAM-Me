@@ -102,7 +102,7 @@ namespace DAMBackend.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Files");
+                    b.ToTable("Files", (string)null);
                 });
 
             modelBuilder.Entity("DAMBackend.Models.MetadataTagModel", b =>
@@ -125,7 +125,7 @@ namespace DAMBackend.Migrations
 
                     b.HasKey("FileId", "Key");
 
-                    b.ToTable("MetadataTags");
+                    b.ToTable("MetadataTags", (string)null);
                 });
 
             modelBuilder.Entity("DAMBackend.Models.ProjectModel", b =>
@@ -166,7 +166,7 @@ namespace DAMBackend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Projects");
+                    b.ToTable("Projects", (string)null);
                 });
 
             modelBuilder.Entity("DAMBackend.Models.TagBasicModel", b =>
@@ -176,7 +176,7 @@ namespace DAMBackend.Migrations
 
                     b.HasKey("Value");
 
-                    b.ToTable("BasicTags");
+                    b.ToTable("BasicTags", (string)null);
                 });
 
             modelBuilder.Entity("DAMBackend.Models.UserModel", b =>
@@ -215,7 +215,7 @@ namespace DAMBackend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("FileTag", b =>
@@ -230,7 +230,7 @@ namespace DAMBackend.Migrations
 
                     b.HasIndex("TagId");
 
-                    b.ToTable("FileTag");
+                    b.ToTable("FileTag", (string)null);
                 });
 
             modelBuilder.Entity("ProjectModelUserModel", b =>
@@ -245,7 +245,7 @@ namespace DAMBackend.Migrations
 
                     b.HasIndex("UsersId");
 
-                    b.ToTable("ProjectModelUserModel");
+                    b.ToTable("ProjectModelUserModel", (string)null);
                 });
 
             modelBuilder.Entity("DAMBackend.Models.FileModel", b =>
