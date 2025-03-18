@@ -63,3 +63,22 @@ export async function addUser(values) {
         throw err;
     }
 }
+
+export async function deleteUser(email) {
+    try {
+        const response = await fetch(`${AUTH_URL}/deleteuser/${email}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+            throw new Error(errorData.error || "Failed to delete user.");
+        }
+
+        return await response.json();
+    } catch (err) {
+        console.error("Error deleting user:", err);
+        throw err;
+    }
+}
