@@ -15,9 +15,9 @@ namespace DAMBackend.Controllers
     [ApiController]
     public class ProjectsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly SQLDbContext _context;
 
-        public ProjectsController(AppDbContext context)
+        public ProjectsController(SQLDbContext context)
         {
             _context = context;
         }
