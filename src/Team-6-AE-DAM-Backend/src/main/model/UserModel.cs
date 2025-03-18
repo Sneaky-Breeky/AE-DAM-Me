@@ -39,7 +39,7 @@ namespace DAMBackend.Models
         public ICollection<FileModel> Files { get; set; } = new HashSet<FileModel>();
         public ICollection<ProjectModel> Projects { get; set; } = new HashSet<ProjectModel>();
         
-        public ICollection<int> FavouriteProjectIds { get; set; } = new HashSet<int>();
+        public ICollection<int> FavouriteProjectIds { get; set; }
 
     }
 }
