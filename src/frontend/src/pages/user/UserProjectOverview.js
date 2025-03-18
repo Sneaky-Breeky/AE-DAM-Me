@@ -41,18 +41,18 @@ export default function UserProjectOverview() {
 
 
 
-    // if (!state?.project) {
-    //     return <p>Project not found.</p>;
-    // }
-
-    if (!project) {
+    if (!state?.project) {
         return <p>Project not found.</p>;
     }
+
+    // if (!project) {
+    //     return <p>Project not found.</p>;
+    // }
 
 
     // when backend is done connect this part with backend
     const handleSearch = () => {
-        let filteredImages = project.files;
+        let filteredImages = state.project.files;
 
         if (searchQuery.trim() !== '') {
             const query = searchQuery.toLowerCase();
@@ -82,7 +82,7 @@ export default function UserProjectOverview() {
         setSearchQuery('');
         setSelectedDate(null);
         setSelectedStatus('');
-        setImageList(project.files);
+        setImageList(state.project.files);
     };
 
 
@@ -166,8 +166,8 @@ export default function UserProjectOverview() {
                         }}
                     >
                         <Meta
-                            title={<span style={{ color: 'white', fontWeight: 'bold' }}>{project.name}</span>}
-                            description={<span style={{ color: 'white' }}>{project.location}</span>}
+                            title={<span style={{ color: 'white', fontWeight: 'bold' }}>{state.project.name}</span>}
+                            description={<span style={{ color: 'white' }}>{state.project.location}</span>}
                             style={{ textAlign: 'center' }}
                         />
                     </Card>
