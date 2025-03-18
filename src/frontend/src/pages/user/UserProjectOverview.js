@@ -17,15 +17,18 @@ import {
     EditOutlined,
     QuestionCircleOutlined
 } from '@ant-design/icons';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { projects, users } from '../../utils/dummyData.js';
 import dayjs from 'dayjs';
 
 const { RangePicker } = DatePicker;
 const { Title } = Typography;
 const { Meta } = Card;
 
-
+// instead of passing project via state, try access the url id and using params
 export default function UserProjectOverview() {
+    const { projectId } = useParams();
+    const project = projects.find(proj => proj.id === projectId);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedDate, setSelectedDate] = useState(null);
     const navigate = useNavigate();
@@ -34,18 +37,22 @@ export default function UserProjectOverview() {
     const [imageList, setImageList] = useState(state.project.files);
     const [isEditMode, setIsEditMode] = useState(false);
     const [selectedImages, setSelectedImages] = useState(new Set());
-    const [selectedStatus, setSelectedStatus] = useState("Active");
+    const [selectedStatus, setSelectedStatus] = useState("");
 
 
 
-    if (!state?.project) {
+    // if (!state?.project) {
+    //     return <p>Project not found.</p>;
+    // }
+
+    if (!project) {
         return <p>Project not found.</p>;
     }
 
 
     // when backend is done connect this part with backend
     const handleSearch = () => {
-        let filteredImages = state.project.files;
+        let filteredImages = project.files;
 
         if (searchQuery.trim() !== '') {
             const query = searchQuery.toLowerCase();
@@ -74,8 +81,8 @@ export default function UserProjectOverview() {
     const handleClearFilters = () => {
         setSearchQuery('');
         setSelectedDate(null);
-        setSelectedStatus('Active');
-        setImageList(state.project.files); // Reset to original list
+        setSelectedStatus('');
+        setImageList(project.files);
     };
 
 
@@ -159,8 +166,8 @@ export default function UserProjectOverview() {
                         }}
                     >
                         <Meta
-                            title={<span style={{ color: 'white', fontWeight: 'bold' }}>{state.project.name}</span>}
-                            description={<span style={{ color: 'white' }}>{state.project.location}</span>}
+                            title={<span style={{ color: 'white', fontWeight: 'bold' }}>{project.name}</span>}
+                            description={<span style={{ color: 'white' }}>{project.location}</span>}
                             style={{ textAlign: 'center' }}
                         />
                     </Card>
