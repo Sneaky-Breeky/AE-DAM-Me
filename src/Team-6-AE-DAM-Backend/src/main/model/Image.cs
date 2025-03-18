@@ -1,4 +1,4 @@
-namespace DAMBackend.Data;
+namespace DAMBackend.Data
 {
     public class Image
     {
