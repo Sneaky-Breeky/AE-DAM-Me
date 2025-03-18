@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import { Typography, Button, Popover, Radio, Form, Input, message } from 'antd';
 import { PlusOutlined, EditOutlined, CloseOutlined } from '@ant-design/icons';
 import { users } from '../../utils/dummyData.js';
-import { fetchUsers, addUser } from '../../api/authApi.js';
+import { fetchUsers, addUser, deleteUser } from '../../api/authApi.js';
 
 const { Title } = Typography;
 
@@ -179,6 +179,20 @@ export default function AdminUserManage() {
     fetchUsersList();
   }, []);
 
+  const save = () => {
+    message.success("Changes saved successfully!");
+  };
+
+  const handleDeleteUser = async (email) => {
+    try {
+      await deleteUser(email);
+      message.success("User deleted successfully!");
+      fetchUsersList();  // Refresh user list after deletion
+    } catch (error) {
+      message.error("Failed to delete user");
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -249,17 +263,26 @@ export default function AdminUserManage() {
                     <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>
                       <Popover
                         content={
-                          user.status === 'Active' ? (
-                            <Radio.Group defaultValue="1">
+                          <div>
+                            {/* Activate/Deactivate */}
+                            <Radio.Group
+                              defaultValue={user.status === 'Active' ? '1' : '2'}
+                              onChange={(e) => console.log('Status changed:', e.target.value)}
+                            >
                               <Radio value="1">Activate</Radio>
                               <Radio value="2">Deactivate</Radio>
                             </Radio.Group>
-                          ) : (
-                            <Radio.Group defaultValue="2">
-                              <Radio value="1">Activate</Radio>
-                              <Radio value="2">Deactivate</Radio>
-                            </Radio.Group>
-                          )
+
+                            {/* Delete Button inside Popover */}
+                            <Button
+                              type="primary"
+                              danger
+                              style={{ marginTop: '10px', width: '100%' }}
+                              onClick={() => handleDeleteUser(user.email)}
+                            >
+                              Delete User
+                            </Button>
+                          </div>
                         }
                         title={user.status === 'Active' ? "User Activated" : "User Deactivated"}
                         trigger="click"
@@ -267,6 +290,8 @@ export default function AdminUserManage() {
                         <Button color="default" variant="text" icon={<EditOutlined />} />
                       </Popover>
                     </td>
+                    {/* <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>
+                    </td> */}
                   </tr>
                 ))}
               </tbody>
@@ -281,7 +306,7 @@ export default function AdminUserManage() {
             width: '100%',
             margin: '20px auto',
           }}>
-            <Button type="primary" htmlType="submit">
+            <Button type="primary" htmlType="submit" onClick={save}>
               Save
             </Button>
           </div>
@@ -320,11 +345,11 @@ export default function AdminUserManage() {
           </Box>
 
           {/* {isPopupFormOpen && <PopupForm />} */}
-          {isPopupFormOpen && <PopupForm visible={isPopupFormOpen} onClose={() => setPopupFormOpen(false)} refreshUsers={fetchUsersList}/>}
+          {isPopupFormOpen && <PopupForm visible={isPopupFormOpen} onClose={() => setPopupFormOpen(false)} refreshUsers={fetchUsersList} />}
 
         </Box>
       </Box>
 
-    </Box>
+    </Box >
   );
 }

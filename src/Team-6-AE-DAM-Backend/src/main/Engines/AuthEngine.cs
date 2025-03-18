@@ -76,6 +76,16 @@ namespace DAMBackend.auth
             return true;
         }
 
+        public async Task<bool> DeleteUserAsync(string email) 
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null) return false;
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         private static string HashPassword(string password)
         {
             using var sha256 = SHA256.Create();

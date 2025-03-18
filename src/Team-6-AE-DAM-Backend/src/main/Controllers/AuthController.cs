@@ -46,6 +46,13 @@ namespace backend.auth
             return Ok(result);
         }
 
+        [HttpDelete("deleteuser/{email}")]
+        public async Task<IActionResult> DeleteUser(string email)
+        {
+            var result = await _authService.DeleteUserAsync(email);
+            return result ? Ok(new { message = "User deleted successfully" }) : BadRequest(new { error = "User not found" });
+        }
+
         [HttpPost("adduser")]
         public async Task<IActionResult> AddUser([FromBody] JsonElement jsonUser) 
         {
