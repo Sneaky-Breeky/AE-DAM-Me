@@ -14,9 +14,9 @@ namespace DAMBackend.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly SQLDbContext _context;
 
-        public UsersController(AppDbContext context)
+        public UsersController(SQLDbContext context)
         {
             _context = context;
         }
