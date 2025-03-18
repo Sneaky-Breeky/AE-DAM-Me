@@ -1,15 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
-import { Typography, Button, Popover, Radio, Form, Input } from 'antd';
+import { Typography, Button, Popover, Radio, Form, Input, message } from 'antd';
 import { PlusOutlined, EditOutlined, CloseOutlined } from '@ant-design/icons';
 import { users } from '../../utils/dummyData.js';
-import { fetchUsers } from '../../api/authApi.js';
+import { fetchUsers, addUser } from '../../api/authApi.js';
 
 const { Title } = Typography;
 
 
 
-function popupForm() {
+function PopupForm({ visible, onClose, refreshUsers }) {
+  const [form] = Form.useForm();
+  const handleSubmit = async (values) => {
+    try {
+      await addUser(values);
+      message.success("User added successfully!");
+      form.resetFields();
+      refreshUsers();
+      onClose();
+    } catch (error) {
+      console.error("Error adding user:", error);
+      message.error("Error adding user:", error);
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -29,22 +43,38 @@ function popupForm() {
       }}
     >
       <Form
-        name="basic"
+        form={form}
+        name="addUserForm"
         layout="vertical"
         initialValues={{
           remember: true,
         }}
         size='small'
         autoComplete="off"
+        onFinish={handleSubmit}
       >
-
+        {/* first name */}
         <Form.Item
-          label={<p style={{ fontSize: '12px', margin: '0px' }}>User Name</p>}
-          name="name"
+          label={<p style={{ fontSize: '12px', margin: '0px' }}>First Name</p>}
+          name="firstname"
           rules={[
             {
               required: true,
-              message: <p style={{ fontSize: '12px', margin: '0px' }}>Please select the new user's name!</p>,
+              message: <p style={{ fontSize: '12px', margin: '0px' }}>Please input the new user's first name!</p>,
+            },
+          ]}
+          style={{ padding: "0px", marginBottom: "5px", marginTop: "0px" }}
+        >
+          <Input />
+        </Form.Item>
+
+        <Form.Item
+          label={<p style={{ fontSize: '12px', margin: '0px' }}>Last Name</p>}
+          name="lastname"
+          rules={[
+            {
+              required: true,
+              message: <p style={{ fontSize: '12px', margin: '0px' }}>Please input the new user's last name!</p>,
             },
           ]}
           style={{ padding: "0px", marginBottom: "5px", marginTop: "0px" }}
@@ -59,6 +89,20 @@ function popupForm() {
             {
               required: true,
               message: <p style={{ fontSize: '12px', margin: '0px' }}>Please select the new user's email!</p>,
+            },
+          ]}
+          style={{ marginBottom: "5px" }}
+        >
+          <Input />
+        </Form.Item>
+
+        <Form.Item
+          label={<p style={{ fontSize: '12px', margin: '0px' }}>User Password</p>}
+          name="password"
+          rules={[
+            {
+              required: true,
+              message: <p style={{ fontSize: '12px', margin: '0px' }}>Please input the new user's password!</p>,
             },
           ]}
           style={{ marginBottom: "5px" }}
@@ -115,26 +159,24 @@ function popupForm() {
 export default function AdminUserManage() {
   const [isPopupFormOpen, setPopupFormOpen] = useState(false);
   const [userList, setUserList] = useState([]);
-  
-  useEffect(() => {
-    async function getUsers() {
-      try {
-        const users = await fetchUsers();
-        console.log("Fetched Users (Raw Response):", users);
-        console.log(JSON.stringify(users, null, 2));
-  
-        if (Array.isArray(users)) {
-          setUserList(users);
-        } else {
-          console.error("Expected an array but got:", users);
-          setUserList([]);
-        }
-      } catch (error) {
-        console.error("Error fetching users:", error);
+
+  const fetchUsersList = async () => {
+    try {
+      const users = await fetchUsers();
+      if (Array.isArray(users)) {
+        setUserList(users);
+      } else {
+        console.error("Expected an array but got:", users);
         setUserList([]);
       }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      setUserList([]);
     }
-    getUsers();
+  };
+
+  useEffect(() => {
+    fetchUsersList();
   }, []);
 
   return (
@@ -188,39 +230,46 @@ export default function AdminUserManage() {
           }}
         >
           <div style={{ overflowY: 'auto', width: '100%', height: '100%' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', borderSpacing: '10px' }}>
-              <tr style={{ height: '50px' }}>
-                <th style={{ width: '25%', textAlign: 'left', borderBottom: '1px solid black' }} >Name</th>
-                <th style={{ width: '30%', textAlign: 'left', borderBottom: '1px solid black' }} >Email</th>
-                <th style={{ width: '10%', textAlign: 'left', borderBottom: '1px solid black' }} >Role</th>
-                <th colSpan="2" style={{ width: '15%', textAlign: 'left', borderBottom: '1px solid black' }} >Status</th>
-              </tr>
-              {userList.map((user) => (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
                 <tr style={{ height: '50px' }}>
-                  <td style={{ fontSize: '12px', width: '25%', textAlign: 'left', borderBottom: '1px solid black' }} >{user.name}</td>
-                  <td style={{ fontSize: '12px', width: '30%', textAlign: 'left', borderBottom: '1px solid black' }} >{user.email}</td>
-                  <td style={{ fontSize: '12px', width: '10%', textAlign: 'left', borderBottom: '1px solid black' }} >{user.role}</td>
-                  <td style={{ fontSize: '12px', width: '10%', textAlign: 'left', borderBottom: '1px solid black' }} >{user.status}</td>
-                  <td style={{ fontSize: '12px', width: '5%', textAlign: 'left', borderBottom: '1px solid black' }} >{
-                    // reload if status input differs from original user.status
-                    <Popover
-                      content={(user.status === 'Active') ?
-                        <Radio.Group defaultValue="1">
-                          <Radio value="1">Activate</Radio>
-                          <Radio value="2">Deactivate</Radio>
-                        </Radio.Group>
-                        : <Radio.Group defaultValue="2">
-                          <Radio value="1">Activate</Radio>
-                          <Radio value="2">Deactivate</Radio>
-                        </Radio.Group>}
-                      title={(user.status === 'Active') ? "User Activated" : "User Deactivated"}
-                      trigger="click"
-                    >
-                      <Button color="default" variant="text" size={"default"} icon={<EditOutlined />} />
-                    </Popover>
-                  }</td>
+                  <th style={{ width: '25%', textAlign: 'left', borderBottom: '1px solid black' }}>Name</th>
+                  <th style={{ width: '30%', textAlign: 'left', borderBottom: '1px solid black' }}>Email</th>
+                  <th style={{ width: '10%', textAlign: 'left', borderBottom: '1px solid black' }}>Role</th>
+                  <th colSpan="2" style={{ width: '15%', textAlign: 'left', borderBottom: '1px solid black' }}>Status</th>
                 </tr>
-              ))}
+              </thead>
+              <tbody>
+                {userList.map((user, idx) => (
+                  <tr key={user.email || idx} style={{ height: '50px' }}>
+                    <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.name}</td>
+                    <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.email}</td>
+                    <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.role}</td>
+                    <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.status}</td>
+                    <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>
+                      <Popover
+                        content={
+                          user.status === 'Active' ? (
+                            <Radio.Group defaultValue="1">
+                              <Radio value="1">Activate</Radio>
+                              <Radio value="2">Deactivate</Radio>
+                            </Radio.Group>
+                          ) : (
+                            <Radio.Group defaultValue="2">
+                              <Radio value="1">Activate</Radio>
+                              <Radio value="2">Deactivate</Radio>
+                            </Radio.Group>
+                          )
+                        }
+                        title={user.status === 'Active' ? "User Activated" : "User Deactivated"}
+                        trigger="click"
+                      >
+                        <Button color="default" variant="text" icon={<EditOutlined />} />
+                      </Popover>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
 
           </div>
@@ -270,7 +319,8 @@ export default function AdminUserManage() {
               : <h5 style={{ margin: '15px' }}>Add User</h5>}
           </Box>
 
-          {isPopupFormOpen && popupForm()}
+          {/* {isPopupFormOpen && <PopupForm />} */}
+          {isPopupFormOpen && <PopupForm visible={isPopupFormOpen} onClose={() => setPopupFormOpen(false)} refreshUsers={fetchUsersList}/>}
 
         </Box>
       </Box>

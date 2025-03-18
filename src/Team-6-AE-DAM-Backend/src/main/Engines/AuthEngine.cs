@@ -61,6 +61,21 @@ namespace DAMBackend.auth
             return VerifyPassword(password, user.PasswordHash);
         }
 
+        public async Task<bool> AddUserAsync(UserModel user)
+        {
+            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
+            
+            if (existingUser != null)
+                return false; // Email already exists
+
+            user.PasswordHash = HashPassword(user.PasswordHash);
+            
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+            
+            return true;
+        }
+
         private static string HashPassword(string password)
         {
             using var sha256 = SHA256.Create();

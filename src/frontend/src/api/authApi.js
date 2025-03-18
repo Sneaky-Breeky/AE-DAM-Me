@@ -1,4 +1,4 @@
-import {API_BASE_URL} from "./apiURL.js"
+import { API_BASE_URL } from "./apiURL.js"
 
 const AUTH_URL = `${API_BASE_URL}/api/auth`;
 // const LOCAL_AUTH_URL = `${LOCAL_AUTH_URL}/api/auth`;
@@ -41,4 +41,25 @@ export async function fetchUsers() {
     }
 
     return response.json();
+}
+
+export async function addUser(values) {
+    try {
+        const response = await fetch(`${AUTH_URL}/addUser`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(values)
+        });
+
+        if (!response.ok) {
+            // Attempt to extract error details
+            const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+            throw new Error(errorData.error || "Failed to add user.");
+        }
+
+        return await response.json();
+    } catch (err) {
+        console.error("Error adding user:", err);
+        throw err;
+    }
 }
