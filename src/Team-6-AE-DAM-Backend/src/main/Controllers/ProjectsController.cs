@@ -132,36 +132,24 @@ namespace DAMBackend.Controllers
             return NoContent();
         }
 
-    //     // POST: api/Projects
-    //     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-    //     [HttpPost]
-    //     public async Task<ActionResult<ProjectModel>> PostProject(ProjectModel projectmodel)
-    //     {
-    //         _context.Projects.Add(projectmodel);
-    //         await _context.SaveChangesAsync();
+    
 
-    //         return CreatedAtAction("GetProject", new { id = projectmodel.Id }, projectmodel);
-    //     }
+        // DELETE: api/Projects/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteProject(int id)
+        {
+            var project = await _context.Projects.FindAsync(id);
+            if (project == null)
+            {
+                return NotFound();
+            }
 
-    //     // DELETE: api/Projects/5
-    //     [HttpDelete("{id}")]
-    //     public async Task<IActionResult> DeleteProject(int id)
-    //     {
-    //         var project = await _context.Projects.FindAsync(id);
-    //         if (project == null)
-    //         {
-    //             return NotFound();
-    //         }
+            _context.Projects.Remove(project);
+            await _context.SaveChangesAsync();
 
-    //         _context.Projects.Remove(project);
-    //         await _context.SaveChangesAsync();
+            return NoContent();
+        }
 
-    //         return NoContent();
-    //     }
-
-    //     private bool ProjectExists(Guid id)
-    //     {
-    //         return _context.Projects.Any(e => e.Id == id);
-    //     }
+    
     }
 }

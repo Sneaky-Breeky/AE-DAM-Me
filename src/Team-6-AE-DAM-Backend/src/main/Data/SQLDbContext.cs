@@ -36,7 +36,15 @@ namespace DAMBackend.Models
             // Key for project tag model
             modelBuilder.Entity<ProjectTagModel>()
                 .HasKey(t => new { t.ProjectId, t.Key });
-
+            
+            // Delete tags with Project
+            modelBuilder.Entity<ProjectTagModel>()
+                .HasOne(t => t.Project)
+                .WithMany(p => p.Tags)
+                .HasForeignKey(t => t.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+                
             // One to many betwen file and metadatatag model
             modelBuilder.Entity<FileModel>()
                 .Ignore(f => f.bTags)
@@ -64,6 +72,20 @@ namespace DAMBackend.Models
             // Configuring the many-to-many relationship with IsFavourite in the join table
             modelBuilder.Entity<UserFavouriteProject>()
                 .HasKey(ufp => new { ufp.UserId, ufp.ProjectId });
+            
+            // Configure the relationship between User and UserFavouriteProject
+            modelBuilder.Entity<UserFavouriteProject>()
+                .HasOne(ufp => ufp.User)  
+                .WithMany(u => u.UserFavouriteProjects) 
+                .HasForeignKey(ufp => ufp.UserId)
+                .OnDelete(DeleteBehavior.Cascade); // Cascade delete for User
+
+            // Configure the relationship between Project and UserFavouriteProject
+            modelBuilder.Entity<UserFavouriteProject>()
+                .HasOne(ufp => ufp.Project) 
+                .WithMany(p => p.UserAccess) 
+                .HasForeignKey(ufp => ufp.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // one to many between user and files
             modelBuilder.Entity<FileModel>()
