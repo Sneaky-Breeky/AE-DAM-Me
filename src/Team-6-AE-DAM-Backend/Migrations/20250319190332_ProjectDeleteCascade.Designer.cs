@@ -4,6 +4,7 @@ using DAMBackend.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DAMBackend.Migrations
 {
     [DbContext(typeof(SQLDbContext))]
-    partial class SQLDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250319190332_ProjectDeleteCascade")]
+    partial class ProjectDeleteCascade
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -189,7 +192,7 @@ namespace DAMBackend.Migrations
 
                     b.HasKey("ProjectId", "Key");
 
-                    b.ToTable("ProjectTags");
+                    b.ToTable("ProjectTagModel");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.TagBasicModel", b =>
