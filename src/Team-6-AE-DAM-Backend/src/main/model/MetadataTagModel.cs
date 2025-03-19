@@ -26,11 +26,11 @@ File and Fileid assigned to know which file is referenced
     // Metadata
 
     {
-        public required Guid FileId { get; set; }
+        public Guid FileId { get; set; }
         
         public required string Key { get; set; }
 
-        public required FileModel File { get; set; }
+        public FileModel File { get; set; }
 
         public string sValue {get; set;}
 
