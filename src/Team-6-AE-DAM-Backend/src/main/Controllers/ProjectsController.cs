@@ -54,23 +54,19 @@ namespace DAMBackend.Controllers
             // Return a success response with the created project
             return CreatedAtAction(nameof(PostProject), new { id = newProject.Name }, newProject);
         }
+        
 
-
-
-        // private readonly AppDbContext _context;
-
-        // public ProjectsController(AppDbContext context)
-        // {
-        //     _context = context;
-        // }
-
-        // GET: api/Projects
-    //     [HttpGet]
-    //     public async Task<ActionResult<IEnumerable<Project>>> GetProjects()
-    //     {
-    //         var projects = _context.Projects.ToListAsync();
-    //         return Ok(projects);
-    //     }
+        // GET: api/Projects/AccessList/{id}
+        
+        [HttpGet("AccessList/{id}")]
+        public async Task<ActionResult<IEnumerable<Project>>> GetProjects(int userId)
+        {
+            var projects = await _context.UserFavouriteProjects
+                .Where(ufp => ufp.UserId == userId)
+                .Select(ufp => ufp.Project)
+                .ToListAsync();
+            return Ok(projects);
+        }
 
     //     // GET: api/Projects/5
     //     [HttpGet("{id}")]

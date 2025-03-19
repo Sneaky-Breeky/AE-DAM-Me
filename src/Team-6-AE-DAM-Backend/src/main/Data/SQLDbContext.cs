@@ -17,13 +17,13 @@ namespace DAMBackend.Models
 
         public DbSet<TagBasicModel> BasicTags { get; set; }
         
+        public DbSet<UserFavouriteProject> UserFavouriteProjects { get; set; }
+        
         
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) 
 
         {
-            modelBuilder.Entity<UserFavouriteProject>()
-                .HasKey(ufp => new { ufp.UserId, ufp.ProjectId });
 
             // Key for basic data tag model
             modelBuilder.Entity<TagBasicModel>()
@@ -32,6 +32,10 @@ namespace DAMBackend.Models
             // Key for metadata tag model
             modelBuilder.Entity<MetadataTagModel>()
             .HasKey(m => new { m.FileId, m.Key });
+            
+            // Key for project tag model
+            modelBuilder.Entity<ProjectTagModel>()
+                .HasKey(t => new { t.ProjectId, t.Key });
 
             // One to many betwen file and metadatatag model
             modelBuilder.Entity<FileModel>()
@@ -57,16 +61,22 @@ namespace DAMBackend.Models
                 .WithOne(f => f.Project)
                 .HasForeignKey(f => f.ProjectId);
 
-            // many to many between projects and users
-            modelBuilder.Entity<UserModel>()
-                .HasMany(u => u.Projects)
-                .WithMany(p => p.Users);
+            // Configuring the many-to-many relationship with IsFavourite in the join table
+            modelBuilder.Entity<UserFavouriteProject>()
+                .HasKey(ufp => new { ufp.UserId, ufp.ProjectId });
 
             // one to many between user and files
             modelBuilder.Entity<FileModel>()
                 .HasOne(f => f.User)
                 .WithMany(u => u.Files)
                 .HasForeignKey(f => f.UserId)
+                .IsRequired();
+            
+            // one to many between project and project tags
+            modelBuilder.Entity<ProjectModel>()
+                .HasMany(p => p.Tags)
+                .WithOne(t => t.Project)
+                .HasForeignKey(t => t.ProjectId)
                 .IsRequired();
 
             // generate int for userid
