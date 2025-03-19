@@ -258,7 +258,7 @@ export default function AdminUserManage() {
                   <tr key={user.email || idx} style={{ height: '50px' }}>
                     <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.name}</td>
                     <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.email}</td>
-                    <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.role}</td>
+                    <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.role == "0"? "User" : "Admin"}</td>
                     <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.status}</td>
                     <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>
                       <Popover
