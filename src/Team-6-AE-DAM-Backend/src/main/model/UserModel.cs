@@ -43,11 +43,7 @@ namespace DAMBackend.Models
     public class UserFavouriteProject
     {
         public int UserId { get; set; }
-<<<<<<< HEAD
-        public UserModel User { get; set; } = null!;
-=======
         public UserModel User { get; set; } 
->>>>>>> 7f038279eb82d2f67089fb49102b025d34cc4864
 
         public int ProjectId { get; set; }
         public ProjectModel Project { get; set; }
