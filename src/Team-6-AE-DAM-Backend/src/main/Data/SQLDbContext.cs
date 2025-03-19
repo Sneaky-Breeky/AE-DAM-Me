@@ -17,6 +17,8 @@ namespace DAMBackend.Models
 
         public DbSet<TagBasicModel> BasicTags { get; set; }
         
+        public DbSet<ProjectTagModel> ProjectTags { get; set; }
+        
         public DbSet<UserFavouriteProject> UserFavouriteProjects { get; set; }
         
         

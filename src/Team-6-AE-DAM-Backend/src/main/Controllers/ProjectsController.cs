@@ -149,7 +149,77 @@ namespace DAMBackend.Controllers
 
             return NoContent();
         }
+        
+        // POST: api/Projects/Tag
+        /* Input format should be:
+            {
+              "ProjectId": 1,
+              "Key": "TagName",
+              "Value": "Hello" or 3902 // Depends on type
+              "type": 0 // for String or 1 for "Integer", depending on the value type
+            }
+         
+         */
 
-    
+        [HttpPost]
+
+        public async Task<IActionResult> AddProjectTag(
+            [FromQuery] int ProjectId, 
+            [FromQuery] string Key, 
+            [FromQuery] object Value, 
+            [FromQuery] value_type type)
+        {
+            
+            var engine = new SQLEntryEngine(_context);
+            
+            var project = await _context.Projects.FindAsync(ProjectId);
+            
+            if (project == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var tag = engine.addProjectTag(
+                    project,
+                    Key,
+                    Value,
+                    type
+                );
+                return Ok(tag);
+            }
+            catch (ArgumentException ex)
+            {
+                // Handle the specific exception and return a meaningful response to the client
+                return BadRequest(ex.Message); // You can customize this message as needed
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
+
+            
+
+        }
+        
+        // DELETE: api/Projects/Tags/{key}/{pId}
+        [HttpDelete("{key}/{pId}")]
+        public async Task<IActionResult> DeleteProject(string key, int pId)
+        {
+            var tag = await _context.ProjectTags
+                .Where(pt => pt.Key == key && pt.ProjectId == pId)
+                .FirstOrDefaultAsync();
+            
+            if (tag == null)
+            {
+                return NotFound(); 
+            }
+        
+            _context.ProjectTags.Remove(tag);
+            await _context.SaveChangesAsync();
+        
+            return NoContent();
+        }
     }
 }
