@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import { Typography, Button, Input, Form, Space, DatePicker } from 'antd';
 import { SearchOutlined, CloseOutlined, MinusCircleOutlined, PlusOutlined, CalendarOutlined} from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { projects } from '../../utils/dummyData.js';
+// import { projects } from '../../utils/dummyData.js';
 
 const { Title } = Typography;
 
@@ -11,24 +11,39 @@ export default function AdminMetadataManage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isPopupFormOpen, setPopupFormOpen] = useState(false);
   const [isEditOpen, setEditOpen] = useState(false);
-  const [project, setProject] = useState(null);
+  const [projects, setProjects] = useState(null);
 
   const [form] = Form.useForm();
 
+  // useEffect(() => {
+  //   if (project && project.fields) {  // check if project is null before running?
+  //     const convertedFields = project.fields.map(fieldObj => ({
+  //       field: fieldObj.field,
+  //       fieldMD: fieldObj.fieldMD
+  //     }));
+  //     form.setFieldsValue({name: project.name, 
+  //       location: project.location, 
+  //       date: project.date, 
+  //       status: project.status, 
+  //       phase: project.phase, 
+  //       fields: convertedFields });
+  //   }
+  // }, [project, isEditOpen]); // runs when project or isEditOpen changes
+
   useEffect(() => {
-    if (project && project.fields) {  // check if project is null before running?
-      const convertedFields = project.fields.map(fieldObj => ({
-        field: fieldObj.field,
-        fieldMD: fieldObj.fieldMD
-      }));
-      form.setFieldsValue({name: project.name, 
-        location: project.location, 
-        date: project.date, 
-        status: project.status, 
-        phase: project.phase, 
-        fields: convertedFields });
-    }
-  }, [project, isEditOpen]); // runs when project or isEditOpen changes
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch('/api/projects'); // Adjust API endpoint
+        if (!response.ok) throw new Error('Failed to fetch projects');
+        const data = await response.json();
+        setProjects(data);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
+    };
+  
+    fetchProjects();
+  }, []);
 
   const handleMDEdits = (values) => {
     console.log("input values: ", values);

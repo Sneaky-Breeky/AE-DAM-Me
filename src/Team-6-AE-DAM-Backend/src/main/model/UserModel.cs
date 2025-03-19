@@ -45,10 +45,10 @@ namespace DAMBackend.Models
     public class UserFavouriteProject
     {
         public int UserId { get; set; }
-        public UserModel User { get; set; }
+        public UserModel User { get; set; } = null!;
 
         public int ProjectId { get; set; }
-        public ProjectModel Project { get; set; }
+        public ProjectModel Project { get; set; } = null!;
     }
 
 }

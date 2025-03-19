@@ -11,7 +11,7 @@ using DAMBackend.services;
 
 namespace DAMBackend.Controllers
 {
-    [Route("api/Projects")]
+    [Route("api/projects")]
     [ApiController]
     public class ProjectsController : ControllerBase
     {
@@ -22,23 +22,28 @@ namespace DAMBackend.Controllers
             _context = context;
         }
 
-        private static List<ProjectModel> _projects = new List<ProjectModel>();
-
-        private SQLEntryEngine engine;
+        // GET: api/Projects
+        [HttpGet("")]
+        public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjects()
+        {
+            var projects = _context.Projects.ToListAsync();
+            return Ok(projects);
+        }
 
         // POST response for api/Projects"
         [HttpPost]
         public async Task<ActionResult<ProjectModel>> PostProject([FromBody] ProjectModel projectData)
         {
-            engine = new SQLEntryEngine(_context);
             if (projectData == null)
             {
                 return BadRequest("Invalid project data.");
             }
 
+            var engine = new SQLEntryEngine(_context);
+
             // You can now pass the incoming data to the addProject method
             var newProject = await engine.addProject(
-                projectData.Name,
+                projectData.Id,
                 projectData.Status,
                 projectData.Location,
                 projectData.ImagePath,
@@ -52,7 +57,23 @@ namespace DAMBackend.Controllers
             // _projects.Add(newProject);
 
             // Return a success response with the created project
-            return CreatedAtAction(nameof(PostProject), new { id = newProject.Name }, newProject);
+            return CreatedAtAction(nameof(PostProject), new { id = newProject.Id }, newProject);
+        }
+
+        // DELETE: api/projects/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteProject(int id)
+        {
+            var project = await _context.Projects.FindAsync(id);
+            if (project == null)
+            {
+                return NotFound();
+            }
+
+            _context.Projects.Remove(project);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
 
 
@@ -63,14 +84,6 @@ namespace DAMBackend.Controllers
         // {
         //     _context = context;
         // }
-
-        // GET: api/Projects
-    //     [HttpGet]
-    //     public async Task<ActionResult<IEnumerable<Project>>> GetProjects()
-    //     {
-    //         var projects = _context.Projects.ToListAsync();
-    //         return Ok(projects);
-    //     }
 
     //     // GET: api/Projects/5
     //     [HttpGet("{id}")]

@@ -7,7 +7,8 @@ namespace DAMBackend.Models
 
     public enum AccessLevel {
         Admin,
-        Everyone
+        Everyone,
+        Selected_Users
     }
     public class ProjectModel 
 

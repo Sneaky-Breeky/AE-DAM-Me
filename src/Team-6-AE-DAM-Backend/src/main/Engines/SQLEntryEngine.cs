@@ -4,13 +4,13 @@ using DAMBackend.Data;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace DAMBackend.services
 
 /*
 
 ON DELETE CASCADE where appropriate s
 */
 
+namespace DAMBackend.services
 {
     public class SQLEntryEngine {
 
@@ -20,24 +20,6 @@ ON DELETE CASCADE where appropriate s
         // parameter will be AppDbContext db
         public SQLEntryEngine(SQLDbContext db) {
             database = db;
-        }
-
-        // change to async task when uploading to database
-        public UserModel AddUser(string first, string last, string email, Role role, bool stat) {
-            var user = new UserModel
-            {
-                FirstName = first,
-                LastName = last,
-                Email = email,
-                Role = role,
-                Status = stat
-            };
-
-            // database.Users.Add(user); 
-            // await database.SaveChanges();
-            // add when database implemented
-
-            return user;
         }
 
         // take result from extractExifData
