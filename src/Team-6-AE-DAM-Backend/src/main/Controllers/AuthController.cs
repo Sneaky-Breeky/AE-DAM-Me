@@ -1,0 +1,104 @@
+using Microsoft.AspNetCore.Mvc;
+using DAMBackend.auth;
+using DAMBackend.Models;
+using System.Text.Json;
+
+namespace backend.auth
+{
+    [Route("api/auth")]
+    [ApiController]
+    public class AuthController : ControllerBase
+    {
+        private readonly AuthService _authService;
+        private readonly ILogger<AuthController> _logger;
+
+        public AuthController(AuthService authService, ILogger<AuthController> logger)
+        {
+            _authService = authService;
+            _logger = logger;
+        }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] LoginRequest request)
+        {
+            var result = await _authService.RegisterUserAsync(request.Email, request.Password);
+            return result ? Ok("User registered successfully") : BadRequest("Email already exists");
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        {
+            var result = await _authService.AuthenticateUserAsync(request.Email, request.Password);
+            
+            if (!result)
+            {
+                return Unauthorized(new { error = "Invalid email or password" });
+            }
+
+            return Ok(new { message = "Login successful", role = "user" });
+        }
+
+        [HttpGet("fetchuser")]
+        public async Task<IActionResult> FetchUser()
+        {
+            var result = await _authService.fetchUserAsync();
+
+            return Ok(result);
+        }
+
+        [HttpDelete("deleteuser/{email}")]
+        public async Task<IActionResult> DeleteUser(string email)
+        {
+            var result = await _authService.DeleteUserAsync(email);
+            return result ? Ok(new { message = "User deleted successfully" }) : BadRequest(new { error = "User not found" });
+        }
+
+        [HttpPost("adduser")]
+        public async Task<IActionResult> AddUser([FromBody] JsonElement jsonUser) 
+        {
+            try
+            {
+                string firstName = jsonUser.GetProperty("firstname").GetString() ?? "";
+                string lastName = jsonUser.GetProperty("lastname").GetString() ?? "";
+                string email = jsonUser.GetProperty("email").GetString() ?? "";
+                string password = jsonUser.GetProperty("password").GetString() ?? "";
+                string roleString = jsonUser.GetProperty("role").GetString() ?? "user";
+                string statusString = jsonUser.GetProperty("status").GetString() ?? "inactive";
+
+                // Convert role string to Role enum
+                Role role = roleString.ToLower() == "admin" ? Role.Admin : Role.User;
+
+                // Convert status string to boolean
+                bool status = statusString.ToLower() == "active";
+
+                // Create user model
+                var user = new UserModel
+                {
+                    FirstName = firstName,
+                    LastName = lastName,
+                    Email = email,
+                    PasswordHash = password,
+                    Role = role,
+                    Status = status
+                };
+
+                var result = await _authService.AddUserAsync(user);
+
+                return result
+                    ? Ok(new { message = "User added successfully" })
+                    : BadRequest(new { error = "User already exists" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error adding user: {ex.Message}");
+                return BadRequest(new { error = "Invalid user data format" });
+            }
+        }
+    }
+
+    public class LoginRequest
+    {
+        public required string Email { get; set; }
+        public required string Password { get; set; }
+    }
+}

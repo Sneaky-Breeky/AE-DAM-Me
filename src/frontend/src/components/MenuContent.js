@@ -13,7 +13,9 @@ import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import PostAddIcon from '@mui/icons-material/PostAdd';
 import SecurityIcon from '@mui/icons-material/Security';
+import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import { isAdmin } from '../utils/auth';
+import { useNavigate } from 'react-router-dom';
 
 
 var userPages = [
@@ -28,6 +30,7 @@ var adminPages = [
   { text: 'Project Creation', url: 'projectCreation', icon: <CreateNewFolderIcon /> },
   { text: 'User Management', url: 'userManagement', icon: <ManageAccountsIcon /> },
   { text: 'Metadata Management', url: 'metadataManagement', icon: <PostAddIcon /> },
+  { text: 'File Metadata Management', url: 'fileManagement', icon: <FormatListBulletedIcon /> },
   { text: 'Project Security', url: 'projectSecurity', icon: <SecurityIcon /> },
 ];
 
@@ -40,14 +43,18 @@ const secondaryListItems = [
 const GetDirectoryPrefix = (isAdmin) => (isAdmin ? '/admin/' : '/user/');
 
 
-export default function MenuContent() {
+export default function MenuContent({setLoggedIn}) {
   const menuItems = isAdmin() ? adminPages : userPages;
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     sessionStorage.clear();
-    localStorage.removeItem('authToken');
-    window.location.href = '/login';
+    localStorage.removeItem("authToken");
+    localStorage.setItem("loggedIn", "false");
+    localStorage.removeItem("userRole");
+    setLoggedIn(false);
+    navigate("/login");
   };
 
   return (
@@ -59,7 +66,7 @@ export default function MenuContent() {
             <ListItemButton selected={index === parseInt(sessionStorage.getItem('menu'))}
               onClick={() => {
                 sessionStorage.setItem('menu', index);
-                window.location.href = GetDirectoryPrefix(isAdmin()) + item.url;
+                navigate(GetDirectoryPrefix(isAdmin()) + item.url)
               }}
             >
               <ListItemIcon sx={{ color: 'white' }} >{item.icon}</ListItemIcon>
