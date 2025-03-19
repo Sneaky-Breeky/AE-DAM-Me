@@ -58,14 +58,15 @@ namespace DAMBackend.Controllers
 
         // GET: api/Projects/AccessList/{id}
         
-        [HttpGet("AccessList/{id}")]
+        [HttpGet("AccessList/{userId}")]
         public async Task<ActionResult<IEnumerable<Project>>> GetProjects(int userId)
         {
             var projects = await _context.UserFavouriteProjects
                 .Where(ufp => ufp.UserId == userId)
                 .Select(ufp => ufp.Project)
                 .ToListAsync();
-            return Ok(projects);
+            
+            return Ok(new { data = projects });
         }
 
     //     // GET: api/Projects/5
