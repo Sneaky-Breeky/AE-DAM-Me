@@ -56,7 +56,7 @@ namespace DAMBackend.Controllers
         }
         
 
-        // GET: api/Projects/AccessList/{id}
+        // GET: api/Projects/AccessList/{userId}
         
         [HttpGet("AccessList/{id}")]
         public async Task<ActionResult<IEnumerable<Project>>> GetProjects(int userId)
@@ -67,51 +67,70 @@ namespace DAMBackend.Controllers
                 .ToListAsync();
             return Ok(projects);
         }
+        
+        // POST: api/Projects/GiveAccess/{userId}/{pId}
 
-    //     // GET: api/Projects/5
-    //     [HttpGet("{id}")]
-    //     public async Task<ActionResult<Project>> GetProject(int id)
-    //     {
-    //         var projects = await _context.Projects.FindAsync(id);
+        [HttpPost("AccessList/{userId}/{pId}")]
+        public async Task<ActionResult<UserFavouriteProject>> GiveAccess(int userId, int pId)
+        {
+            var access = new UserFavouriteProject
+            {
+                UserId = userId,
+                ProjectId = pId,
+                IsFavourite = false
+            };
+            _context.UserFavouriteProjects.Add(access);
+            await _context.SaveChangesAsync();
+            
+            return Ok(access);
+        }
 
-    //         if (projects == null)
-    //         {
-    //             return NotFound();
-    //         }
+        // GET: api/Projects/id
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Project>> GetProject(int id)
+        {
+            var project = await _context.Projects.FindAsync(id);
 
-    //         return Ok(projects);
-    //     }
+            if (project == null)
+            {
+                return NotFound();
+            }
 
-    //     // PUT: api/Projects/5
-    //     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-    //     [HttpPut("{id}")]
-    //     public async Task<IActionResult> PutProject(Guid id, Project project)
-    //     {
-    //         if (id != project.Id)
-    //         {
-    //             return BadRequest();
-    //         }
+            return Ok(project);
+        }
 
-    //         _context.Entry(project).State = EntityState.Modified;
+        // PUT: api/Projects/{id}
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutProject(int id, [FromBody] ProjectModel projectData)
+        {
+            
+            if (id != projectData.Id)
+            {
+                return BadRequest("Project ID in URL does not match project ID in body.");
+            }
+            
+            var currentProject = await _context.Projects.FindAsync(id);
+            
+            if (currentProject == null)
+            {
+                return NotFound();
+            }
 
-    //         try
-    //         {
-    //             await _context.SaveChangesAsync();
-    //         }
-    //         catch (DbUpdateConcurrencyException)
-    //         {
-    //             if (!ProjectExists(id))
-    //             {
-    //                 return NotFound();
-    //             }
-    //             else
-    //             {
-    //                 throw;
-    //             }
-    //         }
+            _context.Entry(currentProject).CurrentValues.SetValues(projectData);
+            currentProject.LastUpdate = DateTime.UtcNow;
 
-    //         return NoContent();
-    //     }
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return StatusCode(500, "Error updating project.");
+            }
+
+            return NoContent();
+        }
 
     //     // POST: api/Projects
     //     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
