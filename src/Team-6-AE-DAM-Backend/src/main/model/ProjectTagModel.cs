@@ -5,32 +5,26 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DAMBackend.Models
 
-/* 
+/*
     ***INSTRUCTIONS FOR USE***
 
 String key, which will appear on the front end
 Type of argument, currently String or Integer
 Value that follows the type given
-File and Fileid assigned to know which file is referenced
+Project and Projectid assigned to know which file is referenced
 
 */
 {
+    public class ProjectTagModel
 
-    public enum value_type {
-        String,
-        Integer
-    }
-
-    public class MetadataTagModel
-
-    // Metadata
+        // Metadata
 
     {
-        public Guid FileId { get; set; }
+        public required int ProjectId { get; set; }
         
         public required string Key { get; set; }
 
-        public FileModel File { get; set; }
+        public required ProjectModel Project { get; set; }
 
         public string sValue {get; set;}
 

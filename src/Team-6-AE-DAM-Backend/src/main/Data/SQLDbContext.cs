@@ -17,16 +17,13 @@ namespace DAMBackend.Models
 
         public DbSet<TagBasicModel> BasicTags { get; set; }
         
+        public DbSet<UserFavouriteProject> UserFavouriteProjects { get; set; }
+        
         
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) 
 
         {
-            // ******** CAUTION **************
-            // KEEP MODELS TOGETHER FOR READABILITY!
-
-            modelBuilder.Entity<UserFavouriteProject>()
-                .HasKey(ufp => new { ufp.UserId, ufp.ProjectId });
 
             modelBuilder.Entity<UserFavouriteProject>()
                 .HasOne(ufp => ufp.User)
@@ -45,6 +42,10 @@ namespace DAMBackend.Models
             // Key for metadata tag model
             modelBuilder.Entity<MetadataTagModel>()
             .HasKey(m => new { m.FileId, m.Key });
+            
+            // Key for project tag model
+            modelBuilder.Entity<ProjectTagModel>()
+                .HasKey(t => new { t.ProjectId, t.Key });
 
 
 
@@ -64,40 +65,30 @@ namespace DAMBackend.Models
                     j => j.HasOne<TagBasicModel>().WithMany().HasForeignKey("TagId"),
                     j => j.HasOne<FileModel>().WithMany().HasForeignKey("FileId")
                 );
-            // one to many between user and files
-            modelBuilder.Entity<FileModel>()
-                .HasOne(f => f.User)
-                .WithMany(u => u.Files)
-                .HasForeignKey(f => f.UserId)
-                .IsRequired();
-            // generate int id for fileid
-            modelBuilder.Entity<FileModel>()
-                .Property(f => f.Id)
-                .UseIdentityColumn();
-            // For SQL, defining the bounds of decimals
-            modelBuilder.Entity<FileModel>()
-                .Property(f => f.GPSLat)
-                .HasPrecision(10, 7);
-            modelBuilder.Entity<FileModel>()
-                .Property(f => f.GPSLon)
-                .HasPrecision(10, 7);
-            modelBuilder.Entity<FileModel>()
-                .Property(f => f.GPSAlt)
-                .HasPrecision(7, 2);
-
-
 
             // One to many from projects to files
             modelBuilder.Entity<ProjectModel>()
                 .HasMany(p => p.Files)
                 .WithOne(f => f.Project)
                 .HasForeignKey(f => f.ProjectId);
-            // generate int id for projectid
+
+            // Configuring the many-to-many relationship with IsFavourite in the join table
+            modelBuilder.Entity<UserFavouriteProject>()
+                .HasKey(ufp => new { ufp.UserId, ufp.ProjectId });
+
+            // one to many between user and files
+            modelBuilder.Entity<FileModel>()
+                .HasOne(f => f.User)
+                .WithMany(u => u.Files)
+                .HasForeignKey(f => f.UserId)
+                .IsRequired();
+            
+            // one to many between project and project tags
             modelBuilder.Entity<ProjectModel>()
-                .Property(p => p.Id)
-                .UseIdentityColumn();
-
-
+                .HasMany(p => p.Tags)
+                .WithOne(t => t.Project)
+                .HasForeignKey(t => t.ProjectId)
+                .IsRequired();
 
             // generate int for userid
             modelBuilder.Entity<UserModel>()

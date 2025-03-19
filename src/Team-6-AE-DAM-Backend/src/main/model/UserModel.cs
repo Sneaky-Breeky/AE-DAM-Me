@@ -37,18 +37,17 @@ namespace DAMBackend.Models
 
         // Set limit to 100 
         public ICollection<FileModel> Files { get; set; } = new HashSet<FileModel>();
-        public ICollection<ProjectModel> Projects { get; set; } = new HashSet<ProjectModel>();
-        
-        public ICollection<UserFavouriteProject> FavouriteProjectIds { get; set; } = new HashSet<UserFavouriteProject>();
+        public ICollection<UserFavouriteProject> UserFavouriteProjects { get; set; } = new HashSet<UserFavouriteProject>();
     }
-
+    
     public class UserFavouriteProject
     {
         public int UserId { get; set; }
         public UserModel User { get; set; } = null!;
 
         public int ProjectId { get; set; }
-        public ProjectModel Project { get; set; } = null!;
+        public ProjectModel Project { get; set; }
+        public bool IsFavourite { get; set; }
     }
 
 }

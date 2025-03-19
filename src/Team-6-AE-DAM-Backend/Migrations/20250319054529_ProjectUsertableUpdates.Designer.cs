@@ -4,6 +4,7 @@ using DAMBackend.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DAMBackend.Migrations
 {
     [DbContext(typeof(SQLDbContext))]
-    partial class SQLDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250319054529_ProjectUsertableUpdates")]
+    partial class ProjectUsertableUpdates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -202,24 +205,6 @@ namespace DAMBackend.Migrations
                     b.ToTable("BasicTags");
                 });
 
-            modelBuilder.Entity("DAMBackend.Models.UserFavouriteProject", b =>
-                {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsFavourite")
-                        .HasColumnType("bit");
-
-                    b.HasKey("UserId", "ProjectId");
-
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("UserFavouriteProjects");
-                });
-
             modelBuilder.Entity("DAMBackend.Models.UserModel", b =>
                 {
                     b.Property<int>("Id")
@@ -244,9 +229,6 @@ namespace DAMBackend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("ProjectModelId")
-                        .HasColumnType("int");
-
                     b.Property<int>("Role")
                         .HasColumnType("int");
 
@@ -254,8 +236,6 @@ namespace DAMBackend.Migrations
                         .HasColumnType("bit");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ProjectModelId");
 
                     b.ToTable("Users");
                 });
@@ -273,6 +253,36 @@ namespace DAMBackend.Migrations
                     b.HasIndex("TagId");
 
                     b.ToTable("FileTag");
+                });
+
+            modelBuilder.Entity("ProjectModelUserModel", b =>
+                {
+                    b.Property<int>("ProjectsId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UsersId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProjectsId", "UsersId");
+
+                    b.HasIndex("UsersId");
+
+                    b.ToTable("ProjectModelUserModel");
+                });
+
+            modelBuilder.Entity("ProjectModelUserModel1", b =>
+                {
+                    b.Property<int>("FavoritedByUsersId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FavouriteProjectsId")
+                        .HasColumnType("int");
+
+                    b.HasKey("FavoritedByUsersId", "FavouriteProjectsId");
+
+                    b.HasIndex("FavouriteProjectsId");
+
+                    b.ToTable("ProjectModelUserModel1");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.FileModel", b =>
@@ -314,32 +324,6 @@ namespace DAMBackend.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("DAMBackend.Models.UserFavouriteProject", b =>
-                {
-                    b.HasOne("DAMBackend.Models.ProjectModel", "Project")
-                        .WithMany("UserAccess")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DAMBackend.Models.UserModel", "User")
-                        .WithMany("UserFavouriteProjects")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("DAMBackend.Models.UserModel", b =>
-                {
-                    b.HasOne("DAMBackend.Models.ProjectModel", null)
-                        .WithMany("Users")
-                        .HasForeignKey("ProjectModelId");
-                });
-
             modelBuilder.Entity("FileTag", b =>
                 {
                     b.HasOne("DAMBackend.Models.FileModel", null)
@@ -355,6 +339,36 @@ namespace DAMBackend.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ProjectModelUserModel", b =>
+                {
+                    b.HasOne("DAMBackend.Models.ProjectModel", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAMBackend.Models.UserModel", null)
+                        .WithMany()
+                        .HasForeignKey("UsersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ProjectModelUserModel1", b =>
+                {
+                    b.HasOne("DAMBackend.Models.UserModel", null)
+                        .WithMany()
+                        .HasForeignKey("FavoritedByUsersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAMBackend.Models.ProjectModel", null)
+                        .WithMany()
+                        .HasForeignKey("FavouriteProjectsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("DAMBackend.Models.FileModel", b =>
                 {
                     b.Navigation("mTags");
@@ -365,17 +379,11 @@ namespace DAMBackend.Migrations
                     b.Navigation("Files");
 
                     b.Navigation("Tags");
-
-                    b.Navigation("UserAccess");
-
-                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.UserModel", b =>
                 {
                     b.Navigation("Files");
-
-                    b.Navigation("UserFavouriteProjects");
                 });
 #pragma warning restore 612, 618
         }

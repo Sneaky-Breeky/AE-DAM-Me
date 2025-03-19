@@ -75,15 +75,19 @@ namespace DAMBackend.Controllers
 
             return NoContent();
         }
+        
 
-
-
-        // private readonly AppDbContext _context;
-
-        // public ProjectsController(AppDbContext context)
-        // {
-        //     _context = context;
-        // }
+        // GET: api/Projects/AccessList/{id}
+        
+        [HttpGet("AccessList/{id}")]
+        public async Task<ActionResult<IEnumerable<Project>>> GetProjects(int userId)
+        {
+            var projects = await _context.UserFavouriteProjects
+                .Where(ufp => ufp.UserId == userId)
+                .Select(ufp => ufp.Project)
+                .ToListAsync();
+            return Ok(projects);
+        }
 
     //     // GET: api/Projects/5
     //     [HttpGet("{id}")]
