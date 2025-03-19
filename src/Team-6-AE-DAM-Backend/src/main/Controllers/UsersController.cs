@@ -23,13 +23,13 @@ namespace DAMBackend.Controllers
 
         // GET: api/Users
         [HttpGet]
-        public async Task<ActionResult<List<UserModel>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<UserModel>>> GetUsers()
         {
             var users = await _context.Users.ToListAsync();
             return Ok(users); // Returns HTTP 200 OK with the list
         }
 
-        // GET: api/Users/5
+        // GET: api/Users/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(int id)
         {
