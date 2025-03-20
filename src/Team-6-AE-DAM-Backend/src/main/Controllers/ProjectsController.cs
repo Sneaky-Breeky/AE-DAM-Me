@@ -86,6 +86,21 @@ namespace DAMBackend.Controllers
             return Ok(access);
         }
 
+        // GET: api/Projects
+        [HttpGet]
+        public async Task<ActionResult<List<Project>>> GetAllProjects()
+        {
+            var projects = await _context.Projects.ToListAsync();
+
+            if (projects == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(projects);
+        }
+        
+        
         // GET: api/Projects/id
         [HttpGet("{id}")]
         public async Task<ActionResult<Project>> GetProject(int id)
