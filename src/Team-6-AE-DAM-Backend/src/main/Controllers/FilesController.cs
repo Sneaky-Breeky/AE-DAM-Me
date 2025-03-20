@@ -47,7 +47,7 @@ namespace DAMBackend.Controllers
         // PUT: api/Files/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutFile(Guid id, File @file)
+        public async Task<IActionResult> PutFile(int id, File @file)
         {
             if (id != @file.Id)
             {
@@ -104,7 +104,7 @@ namespace DAMBackend.Controllers
             return NoContent();
         }
 
-        private bool FileExists(Guid id)
+        private bool FileExists(int id)
         {
             return _context.Files.Any(e => e.Id == id);
         }

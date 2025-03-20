@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "backendTests", "tests\backe
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A2DD92D2-11BA-4630-B5C4-56154297EFD8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "backend", "src\backend\backend.csproj", "{DBE3BD8C-7686-4E08-AA49-264B79A7BC8A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "backend", "src\Team-6-AE-DAM-Backend\DAMBackend.csproj", "{DBE3BD8C-7686-4E08-AA49-264B79A7BC8A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

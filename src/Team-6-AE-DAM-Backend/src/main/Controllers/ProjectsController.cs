@@ -11,7 +11,7 @@ using DAMBackend.services;
 
 namespace DAMBackend.Controllers
 {
-    [Route("api/projects")]
+    [Route("api/damprojects")]
     [ApiController]
     public class ProjectsController : ControllerBase
     {
@@ -23,7 +23,7 @@ namespace DAMBackend.Controllers
         }
 
         // GET: api/Projects
-        [HttpGet("")]
+        [HttpGet("getprojs")]
         public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjects()
         {
             var projects = _context.Projects.ToListAsync();
@@ -31,7 +31,7 @@ namespace DAMBackend.Controllers
         }
 
         // POST response for api/Projects"
-        [HttpPost]
+        [HttpPost("postproj")]
         public async Task<ActionResult<ProjectModel>> PostProject([FromBody] ProjectModel projectData)
         {
             if (projectData == null)
@@ -43,7 +43,7 @@ namespace DAMBackend.Controllers
 
             // You can now pass the incoming data to the addProject method
             var newProject = await engine.addProject(
-                projectData.Id,
+                projectData.Name,
                 projectData.Status,
                 projectData.Location,
                 projectData.ImagePath,
@@ -142,7 +142,7 @@ namespace DAMBackend.Controllers
         }
 
         // GET: api/Projects
-        [HttpGet]
+        [HttpGet("getallprojs")]
         public async Task<ActionResult<List<Project>>> GetAllProjects()
         {
             var projects = await _context.Projects.ToListAsync();
@@ -232,8 +232,7 @@ namespace DAMBackend.Controllers
          
          */
 
-        [HttpPost]
-
+        [HttpPost("addprojtag")]
         public async Task<IActionResult> AddProjectTag(
             [FromQuery] int ProjectId, 
             [FromQuery] string Key, 
