@@ -38,7 +38,8 @@ namespace backend.auth
             return Ok(new { message = "Login successful", role = "user" });
         }
 
-        [HttpGet("fetchuser")]
+        [HttpGet("fetchusers")]
+
         public async Task<IActionResult> FetchUsers()
         {
             var result = await _authService.fetchUsersAsync();
