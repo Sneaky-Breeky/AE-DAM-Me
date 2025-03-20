@@ -4,34 +4,39 @@ namespace DAMBackend.Models
 
 
 {
-
     public enum AccessLevel {
         Admin,
-        Everyone
+        Everyone,
+        Selected_Users
     }
-    public class ProjectModel 
 
+    public class ProjectModel
     {
-        public Guid Id { get; set; }
+        
+        public int Id { get; set; }
+
+        public required string Description {get; set;}
 
         public required string Name { get; set; }
 
-        public required string Status { get; set; }
+        public string Status { get; set; }
 
-        public string? location { get; set; }
+        public string? Location { get; set; }
 
-        public string? imagePath {get; set; }
+        public string? ImagePath {get; set; }
 
-        public required AccessLevel accessLevel {get; set;}
+        public AccessLevel AccessLevel {get; set;}
 
-        public required string Phase { get; set;}
+        public string Phase { get; set;}
 
-        public required DateTime LastUpdate { get; set; }
+        public DateTime LastUpdate { get; set; }
         // change in ER diagram
 
         public ICollection<FileModel> Files { get; set;} = new HashSet<FileModel>();
 
         public ICollection<UserModel> Users { get; set;} = new HashSet<UserModel>();
 
+        public ICollection<ProjectTagModel> Tags { get; set; } = new HashSet<ProjectTagModel>();
+        public ICollection<UserProjectRelation> UserProjectRelations { get; set; } = new HashSet<UserProjectRelation>();
     }
 }

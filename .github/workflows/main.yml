@@ -1,0 +1,35 @@
+name: Deploy Backend to Azure
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0'
+
+      - name: Restore dependencies
+        run: dotnet restore src/Team-6-AE-DAM-Backend
+
+      - name: Build
+        run: dotnet build --configuration Release src/Team-6-AE-DAM-Backend
+
+      - name: Publish
+        run: dotnet publish -c Release -o app_publish src/Team-6-AE-DAM-Backend
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'AE-DAM-BE'
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          package: app_publish

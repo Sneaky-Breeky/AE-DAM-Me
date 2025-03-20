@@ -1,12 +1,24 @@
 // *** Not using Data Annotations currently as am not sure how the searching 
 // will work, fluent API is supposedly better, will ask team
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
 
 namespace DAMBackend.Models
+
+/* 
+    ***INSTRUCTIONS FOR USE***
+
+EXIF parsed data to fill out fields
+A list of both metadata and regular tags
+User that added the file with their id
+Project that it was added to with id
+
+*/
 {
     // some of the data might not be found on exif, so i changed some collumn to be nullable
     public class FileModel 
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
         public required string Name { get; set; }
         public required string Extension { get; set; }
         public string? Description { get; set; }
@@ -26,14 +38,18 @@ namespace DAMBackend.Models
         public int? FocalLength { get; set; }
         public float? Aperture { get; set; }
         public string? Copyright { get; set; }
-        public List<TagModel> Tags { get; set; } = new List<TagModel>();
-        public Guid? ProjectId { get; set; }
+
+        public ICollection<MetadataTagModel> mTags { get; set; } = new HashSet<MetadataTagModel>();
+        public ICollection<TagBasicModel> bTags { get; set;} = new HashSet<TagBasicModel>();
+        
+        public int? ProjectId { get; set; }
         public ProjectModel? Project { get; set; }
 
         public int UserId { get; set; }
         // change to be required 
-
         public UserModel User { get; set; }
+
+        public bool Palette {get; set;}
       // public class FileModel 
 
     // EXIF QUALITIES

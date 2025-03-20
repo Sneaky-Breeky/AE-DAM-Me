@@ -85,3 +85,26 @@ VALUES ('user', 'mock', 'user@gmail.com', @UserHashBase64, 0, 1);
 INSERT INTO Users (FirstName, LastName, Email, PasswordHash, Role, Status)
 VALUES ('admin', 'mock', 'admin@gmail.com', @AdminHashBase64, 1, 1);
 
+-- connect to Dhruv's database:
+-- sqlcmd -S dam-dev.database.windows.net -U dkhanna -P Thisis@strongpaswd -d dam-dev
+
+-- ALTER TABLE Projects NOCHECK CONSTRAINT ALL;
+INSERT INTO Projects (Name, Description, Location, Status, Phase, LastUpdate, AccessLevel, ImagePath)
+VALUES
+    ('Bridge Construction', 'Construction of a new bridge in Toronto.', 'Toronto', 'Active', 2, '2025-01-18 00:16:01', 0, '/images/bridge.webp'),
+    ('High-Rise Development', 'Development of a 50-story skyscraper.', 'Vancouver', 'Active', 1, '2025-01-12 00:16:01', 1, '/images/highrise.jpg'),
+    ('Highway Expansion', 'Expanding highway lanes to reduce congestion.', 'Montreal', 'Inactive', 3, '2025-01-10 00:16:01', 2, '/images/highway.jpg'),
+    ('Oil Pipeline Repair', 'Maintenance and repair of the oil pipeline.', 'Alberta', 'Active', 1, '2025-01-05 00:16:01', 1, '/images/pipeline.jpg'),
+    ('Park Restoration', 'Restoring historical park infrastructure.', 'Ottawa', 'Active', 2, '2025-01-20 00:16:01', 1, '/images/park.jpeg'),
+    ('School Construction', 'New elementary school development.', 'Quebec City', 'Active', 1, '2025-01-08 00:16:01', 1, '/images/school.png'),
+    ('Airport Expansion', 'Expansion of Calgary airport facilities.', 'Calgary', 'Active', 2, '2025-01-15 00:16:01', 0, '/images/airport.webp'),
+    ('Hospital Renovation', 'Upgrading old hospital infrastructure.', 'Winnipeg', 'Inactive', 1, '2025-01-10 00:16:01', 2, '/images/hospital.jpg'),
+    ('Railway Modernization', 'Upgrading railway tracks and stations.', 'Halifax', 'Active', 2, '2025-01-12 00:16:01', 1, '/images/railway.jpeg'),
+    ('Water Treatment Plant', 'New water purification plant.', 'Regina', 'Inactive', 3, '2025-01-10 00:16:01', 2, '/images/waterTreatment.webp'),
+    ('Underground Parking Facility', 'New underground parking structure.', 'Mississauga', 'Active', 1, '2025-01-08 00:16:01', 1, '/images/undergroundParking.jpg'),
+    ('Renewable Energy Farm', 'Development of a solar and wind energy farm.', 'Saskatoon', 'Active', 2, '2025-01-05 00:16:01', 1, '/images/energyFarm.png');
+
+GO
+
+-- ALTER TABLE Projects WITH CHECK CHECK CONSTRAINT ALL;
+

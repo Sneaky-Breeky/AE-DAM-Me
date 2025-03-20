@@ -35,7 +35,20 @@ namespace DAMBackend.Models
         [Required]
         public bool Status { get; set; } = true;
 
+        // Set limit to 100 
         public ICollection<FileModel> Files { get; set; } = new HashSet<FileModel>();
-        public ICollection<ProjectModel> Projects { get; set; } = new HashSet<ProjectModel>();
+        public ICollection<UserProjectRelation> UserProjectRelations { get; set; } = new HashSet<UserProjectRelation>();
     }
+    
+    public class UserProjectRelation
+    {
+        public int UserId { get; set; }
+        public UserModel User { get; set; } 
+
+        public int ProjectId { get; set; }
+        public ProjectModel Project { get; set; }
+        public bool IsFavourite { get; set; }
+        public bool WorkingOn { get; set; }
+    }
+
 }

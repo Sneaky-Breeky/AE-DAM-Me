@@ -10,11 +10,25 @@ namespace DAMBackend.auth
 {
     public class AuthService
     {
-        private readonly AppDbContext _context;
+        private readonly SQLDbContext _context;
 
-        public AuthService(AppDbContext context)
+        public AuthService(SQLDbContext context)
         {
             _context = context;
+        }
+
+      
+      public async Task<List<dynamic>> fetchUsersAsync()
+        {
+            var userList = await _context.Users.FromSqlRaw("SELECT * FROM Users").ToListAsync();
+            
+            return userList.Select(user => (dynamic)new {
+                id = user.Id,
+                name = user.FirstName + " " + user.LastName,
+                email = user.Email,
+                role = user.Role,
+                status = user.Status ? "Active" : "Inactive"
+            }).ToList();
         }
 
         public async Task<bool> RegisterUserAsync(string email, string password)
@@ -44,9 +58,34 @@ namespace DAMBackend.auth
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
 
             if (user == null) return false; // User not found
-            Console.WriteLine($"Hashed Password for {email}: {HashPassword(password)}, {user.PasswordHash}");
+            // Console.WriteLine($"Hashed Password for {email}: {HashPassword(password)}, {user.PasswordHash}");
 
             return VerifyPassword(password, user.PasswordHash);
+        }
+
+        public async Task<bool> AddUserAsync(UserModel user)
+        {
+            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
+            
+            if (existingUser != null)
+                return false; // Email already exists
+
+            user.PasswordHash = HashPassword(user.PasswordHash);
+            
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+            
+            return true;
+        }
+
+        public async Task<bool> DeleteUserAsync(string email) 
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null) return false;
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
         private static string HashPassword(string password)

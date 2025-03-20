@@ -1,8 +1,9 @@
 import React, { useState, useRef, useCallback } from 'react';
 import Box from '@mui/material/Box';
-import { Input, Typography, DatePicker, Button, Form, Select, Tag, Flex, Image, Modal, Slider, message } from "antd";
+import { Input, Typography, DatePicker, Button, Form, Select, Tag, Flex, Image, Modal, Slider, message, Result } from "antd";
 import { PlusOutlined, RotateLeftOutlined, RotateRightOutlined, ExclamationCircleOutlined, CalendarOutlined, DownOutlined, CloseOutlined } from '@ant-design/icons';
 import Cropper from 'react-easy-crop';
+import dayjs from 'dayjs';
 import { projects, users } from '../../utils/dummyData.js';
 
 const { Title } = Typography;
@@ -25,6 +26,8 @@ export default function UserUpload() {
     const MAX_FILES = 100;
     const [taggingMode, setTaggingMode] = useState(false);
     const [selectedFiles, setSelectedFiles] = useState(new Set());
+    const [userFiles, setUserFiles] = useState([]);
+
 
 
     const [project, setProject] = useState(null);
@@ -32,8 +35,9 @@ export default function UserUpload() {
     const [metadataTags, setMetadataTags] = useState([]);
     const [tagApplications, setTagApplications] = useState([]);
     const [location, setLocation] = useState(null);
-    const [selectedDate, setSelectedDate] = useState(null);
+    const [selectedDate, setSelectedDate] = useState(dayjs().format('YYYY-MM-DD'));
     const fileInputRef = useRef(null);
+    const [uploadSuccess, setUploadSuccess] = useState(false);
     const metadataBoxStyle = {
         textAlign: 'left',
         backgroundColor: '#f5f5f5',
@@ -67,7 +71,8 @@ export default function UserUpload() {
             preview: URL.createObjectURL(file),
             metadata: [],
             date: selectedDate || null,
-            location: location || ""
+            location: location || "",
+            projectId: project !== null ? project.id : null
         }));
 
         setFiles((prevFiles) => {
@@ -95,6 +100,7 @@ export default function UserUpload() {
                 showDuplicateAlert(duplicateFiles);
             }
 
+            setUserFiles((prevUserFiles) => [...prevUserFiles, ...newFiles]);
             return [...prevFiles, ...newFiles];
         });
     };
@@ -138,7 +144,15 @@ export default function UserUpload() {
             const updatedFiles = prevFiles.filter(file => file.file.name !== fileName);
             return [...updatedFiles];
         });
+        setUserFiles(prevFiles => prevFiles.filter(file => file.file.name !== fileName));
     };
+
+    const handleProjectChange = (value) => {
+        const selectedProject = projects.find(proj => proj.id === value);
+        setProject(selectedProject);
+        setFiles(prevFiles => prevFiles.map(file => ({ ...file, projectId: selectedProject.id })));
+    };
+
 
     const handleToggleTagging = () => {
         setTaggingMode((prev) => !prev);
@@ -167,7 +181,6 @@ export default function UserUpload() {
     };
 
     const handleSubmitTagInfo = () => {
-        // TODO: add this project to the user's "workingProjs" if its not already there
         if (selectedFiles.size === 0 || metadataTags.length === 0) return;
 
         setFiles(prevFiles =>
@@ -223,13 +236,20 @@ export default function UserUpload() {
 
     const handleUploadFilesToProject = () => {
         // TODO: add "files" to current "project"'s "files" variable, and other associated info
+        // TODO: update user's activity log that they added files to this certain project
         console.log("Uploading files:", files);
         setFiles([]);
+        setUserFiles([]);
         setTagApplications([]);
         setProject(null);
         setMetadataTags([]);
-        setSelectedDate(null);
+        setSelectedDate(dayjs().format('YYYY-MM-DD'));
         setLocation(null);
+        setUploadSuccess(true);
+    };
+
+    const resetUploadState = () => {
+        setUploadSuccess(false);
     };
 
 
@@ -333,11 +353,24 @@ export default function UserUpload() {
                     )}
                 </Modal>
 
-                {/* Upload button */}
+                {/* Upload button w success popup*/}
                 <Box sx={{ textAlign: 'center', marginTop: '20px' }}>
-                    <Button type="primary" color="cyan" variant="solid" onClick={handleUploadFilesToProject} disabled={files.length === 0}>
-                        Upload Files to Project
-                    </Button>
+                    {uploadSuccess ? (
+                        <Result
+                            status="success"
+                            title="Files Successfully Uploaded!"
+                            subTitle={"Your files have been added!"}
+                            extra={[
+                                <Button key="uploadAgain" onClick={resetUploadState}>
+                                    Return
+                                </Button>,
+                            ]}
+                        />
+                    ) : (
+                        <Button type="primary" color="cyan" variant="solid" onClick={handleUploadFilesToProject} disabled={files.length === 0 || project === null}>
+                            Upload Files to Project
+                        </Button>
+                    )}
                 </Box>
 
             </Box>
@@ -356,8 +389,9 @@ export default function UserUpload() {
                             value: proj.id,
                             label: `${proj.id}: ${proj.name}`
                         }))}
-                        onChange={(value) => setProject(value)}
+                        onChange={handleProjectChange}
                         style={{ width: '100%' }}
+                        value={project !== null ? project.id : undefined}
                     />
                 </Box>
 
@@ -435,6 +469,7 @@ export default function UserUpload() {
                         onChange={handleDateChange}
                         suffixIcon={<CalendarOutlined />}
                         style={{ width: '100%' }}
+                        value={selectedDate ? dayjs(selectedDate) : null}
                     />
                 </Box>
 

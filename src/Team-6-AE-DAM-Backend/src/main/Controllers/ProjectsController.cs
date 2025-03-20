@@ -7,85 +7,60 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DAMBackend.Data;
 using DAMBackend.Models;
+using DAMBackend.services;
 
 namespace DAMBackend.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/projects")]
     [ApiController]
     public class ProjectsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly SQLDbContext _context;
 
-        public ProjectsController(AppDbContext context)
+        public ProjectsController(SQLDbContext context)
         {
             _context = context;
         }
 
         // GET: api/Projects
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Project>>> GetProjects()
+        [HttpGet("")]
+        public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjects()
         {
             var projects = _context.Projects.ToListAsync();
             return Ok(projects);
         }
 
-        // GET: api/Projects/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Project>> GetProject(int id)
-        {
-            var projects = await _context.Projects.FindAsync(id);
-
-            if (projects == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(projects);
-        }
-
-        // PUT: api/Projects/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutProject(Guid id, Project project)
-        {
-            if (id != project.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(project).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ProjectExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/Projects
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // POST response for api/Projects"
         [HttpPost]
-        public async Task<ActionResult<ProjectModel>> PostProject(ProjectModel projectmodel)
+        public async Task<ActionResult<ProjectModel>> PostProject([FromBody] ProjectModel projectData)
         {
-            _context.Projects.Add(projectmodel);
-            await _context.SaveChangesAsync();
+            if (projectData == null)
+            {
+                return BadRequest("Invalid project data.");
+            }
 
-            return CreatedAtAction("GetProject", new { id = projectmodel.Id }, projectmodel);
+            var engine = new SQLEntryEngine(_context);
+
+            // You can now pass the incoming data to the addProject method
+            var newProject = await engine.addProject(
+                projectData.Id,
+                projectData.Status,
+                projectData.Location,
+                projectData.ImagePath,
+                projectData.Phase,
+                projectData.AccessLevel,
+                projectData.LastUpdate,
+                projectData.Description
+            );
+
+            // Store the new project to the list or your database
+            // _projects.Add(newProject);
+
+            // Return a success response with the created project
+            return CreatedAtAction(nameof(PostProject), new { id = newProject.Id }, newProject);
         }
 
-        // DELETE: api/Projects/5
+        // DELETE: api/projects/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProject(int id)
         {
@@ -100,10 +75,222 @@ namespace DAMBackend.Controllers
 
             return NoContent();
         }
+        
 
-        private bool ProjectExists(Guid id)
+        // GET: api/Projects/AccessList/{userId}
+        
+        [HttpGet("AccessList/{userId}")]
+        public async Task<ActionResult<IEnumerable<Project>>> GetProjects(int userId)
         {
-            return _context.Projects.Any(e => e.Id == id);
+            var projects = await _context.UserProjectRelations
+                .Where(upr => upr.UserId == userId)
+                .Select(upr => upr.Project)
+                .ToListAsync();
+            
+            return Ok(new { data = projects });
+        }
+        
+        // POST: api/Projects/GiveAccess/{userId}/{pId}
+
+        [HttpPost("AccessList/{userId}/{pId}")]
+        public async Task<ActionResult<UserProjectRelation>> GiveAccess(int userId, int pId)
+        {
+            var access = new UserProjectRelation
+            {
+                UserId = userId,
+                ProjectId = pId,
+                IsFavourite = false
+            };
+            _context.UserProjectRelations.Add(access);
+            await _context.SaveChangesAsync();
+            
+            return Ok(access);
+        }
+        
+        [HttpGet("FavProjects/{userId}")]
+        public async Task<ActionResult<List<ProjectModel>>> GetFavProjects(int userId)
+        {
+            var projects = await _context.UserProjectRelations
+                .Where(upr => upr.UserId == userId && upr.IsFavourite)
+                .Select(upr => upr.Project)
+                .ToListAsync();
+            
+            
+            if (projects.Count == 0)
+            {
+                return NotFound("No fav projects found.");
+            }
+            
+            return Ok(projects);
+        }
+        
+        [HttpGet("WorkingProjects/{userId}")]
+        public async Task<ActionResult<List<ProjectModel>>> GetWorkingProjects(int userId)
+        {
+            var projects = await _context.UserProjectRelations
+                .Where(upr => upr.UserId == userId && upr.WorkingOn)
+                .Select(upr => upr.Project)
+                .ToListAsync();
+            
+            
+            if (projects.Count == 0)
+            {
+                return NotFound("No working projects found.");
+            }
+            
+            return Ok(projects);
+        }
+
+        // GET: api/Projects
+        [HttpGet]
+        public async Task<ActionResult<List<Project>>> GetAllProjects()
+        {
+            var projects = await _context.Projects.ToListAsync();
+
+            if (projects == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(projects);
+        }
+        
+        
+        // GET: api/Projects/id
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Project>> GetProject(int id)
+        {
+            var project = await _context.Projects.FindAsync(id);
+
+            if (project == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(project);
+        }
+
+        // PUT: api/Projects/{id}
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutProject(int id, [FromBody] ProjectModel projectData)
+        {
+            
+            if (id != projectData.Id)
+            {
+                return BadRequest("Project ID in URL does not match project ID in body.");
+            }
+            
+            var currentProject = await _context.Projects.FindAsync(id);
+            
+            if (currentProject == null)
+            {
+                return NotFound();
+            }
+
+            _context.Entry(currentProject).CurrentValues.SetValues(projectData);
+            currentProject.LastUpdate = DateTime.UtcNow;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return StatusCode(500, "Error updating project.");
+            }
+
+            return NoContent();
+        }
+
+    
+
+        // DELETE: api/Projects/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteProject(int id)
+        {
+            var project = await _context.Projects.FindAsync(id);
+            if (project == null)
+            {
+                return NotFound();
+            }
+
+            _context.Projects.Remove(project);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+        
+        // POST: api/Projects/Tag
+        /* Input format should be:
+            {
+              "ProjectId": 1,
+              "Key": "TagName",
+              "Value": "Hello" or 3902 // Depends on type
+              "type": 0 // for String or 1 for "Integer", depending on the value type
+            }
+         
+         */
+
+        [HttpPost]
+
+        public async Task<IActionResult> AddProjectTag(
+            [FromQuery] int ProjectId, 
+            [FromQuery] string Key, 
+            [FromQuery] object Value, 
+            [FromQuery] value_type type)
+        {
+            
+            var engine = new SQLEntryEngine(_context);
+            
+            var project = await _context.Projects.FindAsync(ProjectId);
+            
+            if (project == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var tag = engine.addProjectTag(
+                    project,
+                    Key,
+                    Value,
+                    type
+                );
+                return Ok(tag);
+            }
+            catch (ArgumentException ex)
+            {
+                // Handle the specific exception and return a meaningful response to the client
+                return BadRequest(ex.Message); // You can customize this message as needed
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
+
+            
+
+        }
+        
+        // DELETE: api/Projects/Tags/{key}/{pId}
+        [HttpDelete("{key}/{pId}")]
+        public async Task<IActionResult> DeleteProject(string key, int pId)
+        {
+            var tag = await _context.ProjectTags
+                .Where(pt => pt.Key == key && pt.ProjectId == pId)
+                .FirstOrDefaultAsync();
+            
+            if (tag == null)
+            {
+                return NotFound(); 
+            }
+        
+            _context.ProjectTags.Remove(tag);
+            await _context.SaveChangesAsync();
+        
+            return NoContent();
         }
     }
 }
