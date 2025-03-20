@@ -17,11 +17,12 @@ namespace DAMBackend.auth
             _context = context;
         }
 
-        public async Task<List<dynamic>> fetchUserAsync()
+        public async Task<List<dynamic>> fetchUsersAsync()
         {
             var userList = await _context.Users.FromSqlRaw("SELECT * FROM Users").ToListAsync();
             
             return userList.Select(user => (dynamic)new {
+                id = user.Id,
                 name = user.FirstName + " " + user.LastName,
                 email = user.Email,
                 role = user.Role,
