@@ -35,6 +35,8 @@ export async function fetchUsers() {
             }
         });
 
+        console.log(`${AUTH_URL}/fetchusers`);
+
         if (!response.ok) {
             // Try to parse error response JSON, but catch errors safely
             const errorText = await response.text();
