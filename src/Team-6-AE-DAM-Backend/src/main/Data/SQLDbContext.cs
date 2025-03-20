@@ -19,7 +19,7 @@ namespace DAMBackend.Models
         
         public DbSet<ProjectTagModel> ProjectTags { get; set; }
         
-        public DbSet<UserFavouriteProject> UserFavouriteProjects { get; set; }
+        public DbSet<UserProjectRelation> UserProjectRelations { get; set; }
         
         
 
@@ -80,21 +80,21 @@ namespace DAMBackend.Models
                 .WithOne(f => f.Project)
                 .HasForeignKey(f => f.ProjectId);
 
-            // Configuring the many-to-many relationship with IsFavourite in the join table
-            modelBuilder.Entity<UserFavouriteProject>()
+            // Configuring the many-to-many relationship with User and Project in the join table
+            modelBuilder.Entity<UserProjectRelation>()
                 .HasKey(ufp => new { ufp.UserId, ufp.ProjectId });
             
-            // Configure the relationship between User and UserFavouriteProject
-            modelBuilder.Entity<UserFavouriteProject>()
+            // Configure the relationship between User and UserProjectRelation
+            modelBuilder.Entity<UserProjectRelation>()
                 .HasOne(ufp => ufp.User)  
-                .WithMany(u => u.UserFavouriteProjects) 
+                .WithMany(u => u.UserProjectRelations) 
                 .HasForeignKey(ufp => ufp.UserId)
                 .OnDelete(DeleteBehavior.Cascade); // Cascade delete for User
 
-            // Configure the relationship between Project and UserFavouriteProject
-            modelBuilder.Entity<UserFavouriteProject>()
+            // Configure the relationship between Project and UserProjectRelation
+            modelBuilder.Entity<UserProjectRelation>()
                 .HasOne(ufp => ufp.Project) 
-                .WithMany(p => p.UserAccess) 
+                .WithMany(p => p.UserProjectRelations) 
                 .HasForeignKey(ufp => ufp.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
 
