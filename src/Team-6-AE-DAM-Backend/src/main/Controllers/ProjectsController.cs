@@ -43,7 +43,7 @@ namespace DAMBackend.Controllers
 
             // You can now pass the incoming data to the addProject method
             var newProject = await engine.addProject(
-                projectData.Id,
+                projectData.Name,
                 projectData.Status,
                 projectData.Location,
                 projectData.ImagePath,

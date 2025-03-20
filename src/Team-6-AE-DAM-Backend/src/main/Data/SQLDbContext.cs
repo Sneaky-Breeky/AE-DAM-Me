@@ -26,10 +26,9 @@ namespace DAMBackend.Models
         protected override void OnModelCreating(ModelBuilder modelBuilder) 
 
         {
-
-            modelBuilder.Entity<UserFavouriteProject>()
+            modelBuilder.Entity<UserProjectRelation>()
                 .HasOne(ufp => ufp.User)
-                .WithMany(u => u.FavouritedByUsers)
+                .WithMany(u => u.UserProjectRelations)
                 .HasForeignKey(ufp => ufp.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -43,7 +42,7 @@ namespace DAMBackend.Models
 
             // Key for metadata tag model
             modelBuilder.Entity<MetadataTagModel>()
-            .HasKey(m => new { m.FileId, m.Key });
+                .HasKey(m => new { m.FileId, m.Key });
             
             // Key for project tag model
             modelBuilder.Entity<ProjectTagModel>()
@@ -73,12 +72,11 @@ namespace DAMBackend.Models
                     j => j.HasOne<TagBasicModel>().WithMany().HasForeignKey("TagId"),
                     j => j.HasOne<FileModel>().WithMany().HasForeignKey("FileId")
                 );
+            modelBuilder.Entity<FileModel>()
+                .Property(f => f.Id)
+                .ValueGeneratedOnAdd();
 
-            // One to many from projects to files
-            modelBuilder.Entity<ProjectModel>()
-                .HasMany(p => p.Files)
-                .WithOne(f => f.Project)
-                .HasForeignKey(f => f.ProjectId);
+
 
             // Configuring the many-to-many relationship with User and Project in the join table
             modelBuilder.Entity<UserProjectRelation>()
@@ -111,12 +109,20 @@ namespace DAMBackend.Models
                 .WithOne(t => t.Project)
                 .HasForeignKey(t => t.ProjectId)
                 .IsRequired();
+            modelBuilder.Entity<ProjectModel>()
+                .Property(p => p.Id)
+                .ValueGeneratedOnAdd();
+            // One to many from projects to files
+            modelBuilder.Entity<ProjectModel>()
+                .HasMany(p => p.Files)
+                .WithOne(f => f.Project)
+                .HasForeignKey(f => f.ProjectId);
+
 
             // generate int for userid
             modelBuilder.Entity<UserModel>()
                 .Property(u => u.Id)
                 .ValueGeneratedOnAdd();
-
         }
     }
 }
