@@ -39,6 +39,7 @@ namespace backend.auth
         }
 
         [HttpGet("fetchusers")]
+
         public async Task<IActionResult> FetchUsers()
         {
             var result = await _authService.fetchUsersAsync();

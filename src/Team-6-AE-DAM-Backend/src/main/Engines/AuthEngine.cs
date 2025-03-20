@@ -17,7 +17,8 @@ namespace DAMBackend.auth
             _context = context;
         }
 
-        public async Task<List<dynamic>> fetchUsersAsync()
+      
+      public async Task<List<dynamic>> fetchUsersAsync()
         {
             var userList = await _context.Users.FromSqlRaw("SELECT * FROM Users").ToListAsync();
             

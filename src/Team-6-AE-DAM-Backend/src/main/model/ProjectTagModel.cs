@@ -20,17 +20,21 @@ Project and Projectid assigned to know which file is referenced
         // Metadata
 
     {
-        public required int ProjectId { get; set; }
+        [Required]
+        public int ProjectId { get; set; }
         
-        public required string Key { get; set; }
-
-        public required ProjectModel Project { get; set; }
+        [Required]
+        public ProjectModel Project { get; set; }
+        
+        [Required]
+        public string Key { get; set; }
 
         public string sValue {get; set;}
 
         public int iValue {get; set;}
 
-        public required value_type type {get; set;}
+        [Required]
+        public value_type type {get; set;}
 
     }
 }
