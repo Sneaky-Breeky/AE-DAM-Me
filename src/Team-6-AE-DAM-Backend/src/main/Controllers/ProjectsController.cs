@@ -61,9 +61,9 @@ namespace DAMBackend.Controllers
         [HttpGet("AccessList/{userId}")]
         public async Task<ActionResult<IEnumerable<Project>>> GetProjects(int userId)
         {
-            var projects = await _context.UserFavouriteProjects
-                .Where(ufp => ufp.UserId == userId)
-                .Select(ufp => ufp.Project)
+            var projects = await _context.UserProjectRelations
+                .Where(upr => upr.UserId == userId)
+                .Select(upr => upr.Project)
                 .ToListAsync();
             
             return Ok(new { data = projects });
@@ -72,18 +72,52 @@ namespace DAMBackend.Controllers
         // POST: api/Projects/GiveAccess/{userId}/{pId}
 
         [HttpPost("AccessList/{userId}/{pId}")]
-        public async Task<ActionResult<UserFavouriteProject>> GiveAccess(int userId, int pId)
+        public async Task<ActionResult<UserProjectRelation>> GiveAccess(int userId, int pId)
         {
-            var access = new UserFavouriteProject
+            var access = new UserProjectRelation
             {
                 UserId = userId,
                 ProjectId = pId,
                 IsFavourite = false
             };
-            _context.UserFavouriteProjects.Add(access);
+            _context.UserProjectRelations.Add(access);
             await _context.SaveChangesAsync();
             
             return Ok(access);
+        }
+        
+        [HttpGet("FavProjects/{userId}")]
+        public async Task<ActionResult<List<ProjectModel>>> GetFavProjects(int userId)
+        {
+            var projects = await _context.UserProjectRelations
+                .Where(upr => upr.UserId == userId && upr.IsFavourite)
+                .Select(upr => upr.Project)
+                .ToListAsync();
+            
+            
+            if (projects.Count == 0)
+            {
+                return NotFound("No fav projects found.");
+            }
+            
+            return Ok(projects);
+        }
+        
+        [HttpGet("WorkingProjects/{userId}")]
+        public async Task<ActionResult<List<ProjectModel>>> GetWorkingProjects(int userId)
+        {
+            var projects = await _context.UserProjectRelations
+                .Where(upr => upr.UserId == userId && upr.WorkingOn)
+                .Select(upr => upr.Project)
+                .ToListAsync();
+            
+            
+            if (projects.Count == 0)
+            {
+                return NotFound("No working projects found.");
+            }
+            
+            return Ok(projects);
         }
 
         // GET: api/Projects
