@@ -39,7 +39,9 @@ namespace backend.auth
         }
 
         [HttpGet("fetchusers")]
-        public async Task<ActionResult<IEnumerable<UserModel>>> FetchUsers()
+
+
+        public async Task<IActionResult> FetchUsers()
         {
             var result = await _authService.fetchUsersAsync();
 
