@@ -1,12 +1,12 @@
 import Box from '@mui/material/Box';
 import { Typography, Row, Col } from 'antd';
-import { PlusOutlined, UserOutlined, SettingOutlined, LockOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { FolderOutlined, UserOutlined, SettingOutlined, LockOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
 const { Title } = Typography;
 
 const pages = [
-  { title: 'Create Project Directories', icon: PlusOutlined, url: '/admin/projectCreation', menu: 1 },
+  { title: 'Manage Project Directories', icon: FolderOutlined, url: '/admin/projectManagement', menu: 1 },
   { title: 'User Management', icon: UserOutlined, url: '/admin/userManagement', menu: 2 },
   { title: 'Metadata Management', icon: SettingOutlined, url: '/admin/metadataManagement', menu: 3 },
   { title: 'File Metadata Management', icon: UnorderedListOutlined, url: '/admin/fileManagement', menu: 4 },
