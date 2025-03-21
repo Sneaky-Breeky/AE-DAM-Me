@@ -83,8 +83,7 @@ namespace DAMBackend.Controllers
             return Ok(new { data = projects });
         }
         
-        // POST: api/Projects/GiveAccess/{userId}/{pId}
-
+        //POST
         [HttpPost("AccessList/{userId}/{pId}")]
         public async Task<ActionResult<UserProjectRelation>> GiveAccess(int userId, int pId)
         {
