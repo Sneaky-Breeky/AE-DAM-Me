@@ -247,23 +247,41 @@ namespace DAMBackend.Controllers
         public async Task<IActionResult> AddProjectTag(
             [FromQuery] int ProjectId, 
             [FromQuery] string Key, 
-            [FromQuery] string sValue,
+            [FromQuery] string? sValue,
             [FromQuery] int? iValue,
-            [FromQuery] value_type type)
+            [FromQuery] string type)
         {
             var engine = new SQLEntryEngine(_context);
             var project = await _context.Projects.FindAsync(ProjectId);
 
             if (project == null)
             {
-                return NotFound();
+                return NotFound("Project not found.");
+            }
+
+            
+            if (!Enum.TryParse<value_type>(type, true, out var parsedType))
+            {
+                return BadRequest("Invalid type value. Must be 'String' or 'Integer'.");
+            }
+            
+            object value;
+            if (parsedType == value_type.Integer)
+            {
+                if (iValue == null) return BadRequest("iValue must be provided for Integer type.");
+                value = iValue.Value;
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(sValue)) return BadRequest("sValue must be provided for String type.");
+                value = sValue;
             }
 
             try
             {
-                object value = type == value_type.Integer ? (object)iValue : sValue;
+                Console.WriteLine($"[INFO] Adding tag: ProjectId={ProjectId}, Key={Key}, Value={value}, Type={parsedType}");
 
-                var tag = engine.addProjectTag(project, Key, value, type);
+                var tag = engine.addProjectTag(project, Key, value, parsedType);
                 return Ok(tag);
             }
             catch (ArgumentException ex)
