@@ -30,6 +30,6 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'AE-DAM-BE'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          app-name: 'DAMBE'
+          publish-profile: ${{ secrets.DAMBE }}
           package: app_publish

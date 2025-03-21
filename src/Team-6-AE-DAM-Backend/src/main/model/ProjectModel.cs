@@ -4,13 +4,13 @@ namespace DAMBackend.Models
 
 
 {
-
     public enum AccessLevel {
         Admin,
-        Everyone
+        Everyone,
+        Selected_Users
     }
-    public class ProjectModel 
 
+    public class ProjectModel
     {
         
         public int Id { get; set; }

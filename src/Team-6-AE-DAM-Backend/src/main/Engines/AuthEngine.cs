@@ -18,18 +18,22 @@ namespace DAMBackend.auth
         }
 
       
-      public async Task<List<dynamic>> fetchUsersAsync()
+        public async Task<List<object>> fetchUsersAsync()
         {
-            var userList = await _context.Users.FromSqlRaw("SELECT * FROM Users").ToListAsync();
-            
-            return userList.Select(user => (dynamic)new {
+            var userList = await _context.Users
+                .AsNoTracking() // Improves performance if no changes are made
+                .ToListAsync();
+
+            return userList.Select(user => new
+            {
                 id = user.Id,
-                name = user.FirstName + " " + user.LastName,
+                name = $"{user.FirstName} {user.LastName}",
                 email = user.Email,
                 role = user.Role,
                 status = user.Status ? "Active" : "Inactive"
-            }).ToList();
+            }).Cast<object>().ToList();
         }
+
 
         public async Task<bool> RegisterUserAsync(string email, string password)
         {

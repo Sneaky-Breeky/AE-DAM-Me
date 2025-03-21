@@ -4,13 +4,13 @@ using DAMBackend.Data;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace DAMBackend.services
 
 /*
 
 ON DELETE CASCADE where appropriate s
 */
 
+namespace DAMBackend.services
 {
     public class SQLEntryEngine
     {

@@ -1,9 +1,10 @@
 import React, { useState, useEffect  } from 'react';
 import Box from '@mui/material/Box';
-import { Typography, Button, Input, Form, Space, DatePicker } from 'antd';
+import { Typography, Button, Input, Form, Space, DatePicker, Spin } from 'antd';
 import { SearchOutlined, CloseOutlined, MinusCircleOutlined, PlusOutlined, CalendarOutlined} from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { projects } from '../../utils/dummyData.js';
+import { fetchProjects } from '../../api/projectApi';
+// import { projects } from '../../utils/dummyData.js';
 
 const { Title } = Typography;
 
@@ -11,24 +12,47 @@ export default function AdminMetadataManage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isPopupFormOpen, setPopupFormOpen] = useState(false);
   const [isEditOpen, setEditOpen] = useState(false);
+  const [fetchedProjects, setFetchedProjects] = useState([]);
   const [project, setProject] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const [form] = Form.useForm();
 
-  useEffect(() => {
-    if (project && project.fields) {  // check if project is null before running?
-      const convertedFields = project.fields.map(fieldObj => ({
-        field: fieldObj.field,
-        fieldMD: fieldObj.fieldMD
-      }));
-      form.setFieldsValue({name: project.name, 
-        location: project.location, 
-        date: project.date, 
-        status: project.status, 
-        phase: project.phase, 
-        fields: convertedFields });
-    }
-  }, [project, isEditOpen]); // runs when project or isEditOpen changes
+  // useEffect(() => {
+  //   if (project && project.fields) {  // check if project is null before running?
+  //     const convertedFields = project.fields.map(fieldObj => ({
+  //       field: fieldObj.field,
+  //       fieldMD: fieldObj.fieldMD
+  //     }));
+  //     form.setFieldsValue({name: project.name, 
+  //       location: project.location, 
+  //       date: project.date, 
+  //       status: project.status, 
+  //       phase: project.phase, 
+  //       fields: convertedFields });
+  //   }
+  // }, [project, isEditOpen]); // runs when project or isEditOpen changes
+
+
+    // Fetch projects
+    useEffect(() => {
+        const getProjects = async () => {
+            setLoading(true);
+            const response = await fetchProjects();
+
+            if (response.error) {
+                console.error("Error fetching projects:", response.error);
+                setFetchedProjects([]);
+            } else {
+                console.log("Fetched Projects:", response);
+                setFetchedProjects(response);
+            }
+
+            setLoading(false);
+        };
+
+        getProjects();
+    }, []);
 
   const handleMDEdits = (values) => {
     console.log("input values: ", values);
@@ -91,6 +115,7 @@ export default function AdminMetadataManage() {
       value={searchQuery}
       onChange={(e) => setSearchQuery(e.target.value)}
       style={{ width: '300px' }}
+      disabled={loading}
     />
 
     <Box
@@ -112,22 +137,35 @@ export default function AdminMetadataManage() {
     >
 
     <div style={{overflowY: 'auto', width: '100%', height: '100%'}}>
-    <table style={{width: '100%', borderCollapse: 'collapse'}}>
-        <tr>
-            <th colspan="2" style={{height: '40px', textAlign: 'center', borderBottom:'1px solid black', padding: '0px'}} ><h3>Projects</h3></th>
-        </tr>
-        {(projects.filter(p => {return p.name.toLowerCase().includes(searchQuery.toLowerCase())})).map((p) => (
-          <tr onClick={() => {
-            setPopupFormOpen(true);
-            setEditOpen(false);
-            setProject(p);
-          }} style={{height: '50px'}}
-            onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#fcfcfc';}}
-            onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '';}}>
-            <td style={{ fontSize: '12px', textAlign: 'left', borderBottom:'1px solid black'}} >{p.name}</td>
-          </tr>
-        ))}
-    </table>
+        {loading ? (
+            <div style={{ textAlign: 'center', padding: '20px' }}>
+                <Spin size="large" />
+                <p>Loading projects...</p>
+            </div>
+        ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <tr>
+                    <th colSpan="2" style={{ height: '40px', textAlign: 'center', borderBottom: '1px solid black', padding: '0px' }}>
+                        <h3>Projects</h3>
+                    </th>
+                </tr>
+                {(fetchedProjects.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))).map((p) => (
+                    <tr
+                        key={p.id}
+                        onClick={() => {
+                            setPopupFormOpen(true);
+                            setEditOpen(false);
+                            setProject(p);
+                        }}
+                        style={{ height: '50px' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fcfcfc'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = ''; }}
+                    >
+                        <td style={{ fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black' }}>{p.name}</td>
+                    </tr>
+                ))}
+            </table>
+        )}
     </div>
 
   </Box>
