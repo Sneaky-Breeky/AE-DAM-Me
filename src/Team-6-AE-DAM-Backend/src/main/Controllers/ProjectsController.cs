@@ -270,8 +270,9 @@ namespace DAMBackend.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Console.WriteLine($"[ERROR] AddProjectTag: {e}");
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
