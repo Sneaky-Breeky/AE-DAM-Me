@@ -94,7 +94,9 @@ function PopupAccess(adminChecked, setAdminChecked, allChecked, setAllChecked, s
   );
 }
 
-function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, allChecked, setAllChecked, selectedChecked, setSelectedChecked, listUsers, setListUsers) {
+function popupForm(project, setPopupFormOpen, 
+  adminChecked, setAdminChecked, allChecked, setAllChecked, selectedChecked, setSelectedChecked, 
+  listUsers, setListUsers) {
 
   return (
     <Box
@@ -104,9 +106,10 @@ function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, all
         justifyContent: 'flex-start',
         alignItems: 'left',
         width: '80%',
-        height: '100%',
+        //height: '100%',
+        height: '40%',
         margin: '20px auto',
-        marginTop: '0',
+        marginTop: '20%',
         backgroundColor: '#f5f5f5',
         borderRadius: '10px',
         padding: '20px',
@@ -140,7 +143,7 @@ function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, all
                 
               }</td>
           </tr>
-        {metadata.map((md) => (
+          {/* {metadata.map((md) => (
           <tr style={{height: '50px'}}>
             <td style={{ fontSize: '12px', textAlign: 'left', borderBottom:'1px solid black'}} >{md}</td>
             <td style={{ fontSize: '12px', width: '5%', textAlign: 'center', borderBottom:'1px solid black'}} >{
@@ -157,7 +160,8 @@ function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, all
               </Popover>          
               }</td>
           </tr>
-        ))}
+        ))}*/}
+        
     </table>
     <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', margin: '20px auto', marginBottom: '0'}}>
         <Button color="default" variant="text" size={"default"} icon={<CloseOutlined/>}
