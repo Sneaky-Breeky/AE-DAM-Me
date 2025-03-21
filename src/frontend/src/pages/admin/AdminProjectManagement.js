@@ -398,7 +398,10 @@ export default function ProjectManagement() {
                                         
                                         style={{ height: '50px' }}
                                     >
-                                        <td style={{ fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black' }}>{p.name}</td>
+                                        <td style={{ fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black' }}>
+                                            {p.id} <span style={{ color: 'gray', fontStyle: 'italic' }}> - {p.name}</span>
+                                        </td>
+
 
                                         <td style={{ fontSize: '12px', textAlign: 'center', borderBottom: '1px solid black' }}>
                                         <Popconfirm
