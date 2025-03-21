@@ -78,11 +78,11 @@ ON DELETE CASCADE where appropriate s
 
         public MetadataTagModel addTags(FileModel file, string key, object value, value_type v_type)
         {
-            if (!IsValidValue(value, v_type))
-            {
-                throw new ArgumentException(
-                    $"Invalid value type for key {key}. Expected {v_type}, but got {value.GetType().Name}.");
-            }
+            // if (!IsValidValue(value, v_type))
+            // {
+            //     throw new ArgumentException(
+            //         $"Invalid value type for key {key}. Expected {v_type}, but got {value.GetType().Name}.");
+            // }
 
             var tag = new MetadataTagModel
             {
@@ -114,16 +114,6 @@ ON DELETE CASCADE where appropriate s
             // database.Tags.Add(tag);
             // await database.SaveChanges();
             return tag;
-        }
-
-        private bool IsValidValue(object value, value_type expectedType)
-        {
-            return expectedType switch
-            {
-                value_type.String => value is string, // Check if value is a string
-                value_type.Integer => value is int, // Check if value is an integer
-                _ => false // If the type doesn't match, return false
-            };
         }
 
         public TagBasicModel addTags(FileModel file, string value)
@@ -169,26 +159,31 @@ ON DELETE CASCADE where appropriate s
         }
 
         // Prereq: ProjectId references a valid Project
-        public async Task<ProjectTagModel> addProjectTag(ProjectModel Project, string Key, object Value, value_type v_type)
+        public async Task<ProjectTagModel> addProjectTag(ProjectModel Project, string Key, string Value, value_type v_type)
         {
             
-            if (!IsValidValue(Value, v_type)) {
-                throw new ArgumentException($"Invalid value type for key {Key}. Expected {v_type}, but got {Value.GetType().Name}.");
-            }
             
             var tag = new ProjectTagModel 
             {   
+                Project = Project,
                 Key = Key,
                 type = v_type,
-                ProjectId = Project.Id,
-                Project = Project
+                ProjectId = Project.Id
             };
 
-            if (v_type == value_type.String) {
-                tag.sValue = Value as string;
+            if (v_type == value_type.String)
+            {
+                tag.sValue = Value;
             } else
             {
-                tag.iValue = Convert.ToInt32(Value);
+                try
+                {
+                    tag.iValue = Int32.Parse(Value);
+                }
+                catch (FormatException)
+                {
+                    Console.WriteLine($"Unable to parse '{Value}'");
+                }
             }
             
             Project.Tags.Add(tag);

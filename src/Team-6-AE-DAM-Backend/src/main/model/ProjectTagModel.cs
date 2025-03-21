@@ -2,6 +2,8 @@ using Microsoft.Identity.Client;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
+
 
 namespace DAMBackend.Models
 
@@ -23,15 +25,16 @@ Project and Projectid assigned to know which file is referenced
         [Required]
         public int ProjectId { get; set; }
         
-        [Required]
+        [JsonIgnore]
         public ProjectModel Project { get; set; }
+        
         
         [Required]
         public string Key { get; set; }
 
-        public string sValue {get; set;}
+        public string? sValue {get; set;}
 
-        public int iValue {get; set;}
+        public int? iValue {get; set;}
 
         [Required]
         public value_type type {get; set;}
