@@ -267,6 +267,7 @@ export default function UserDashboard() {
                         <Form.Item>
                             <DatePicker
                                 placeholder="Select date"
+                                maxDate={dayjs()}
                                 onChange={(date, dateString) => setSelectedDate(dateString)}
                                 suffixIcon={<CalendarOutlined />}
                             />
