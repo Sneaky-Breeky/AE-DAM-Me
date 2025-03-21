@@ -199,6 +199,7 @@ export default function UserProjectOverview() {
 
                     <Form.Item>
                         <DatePicker
+                            maxDate={dayjs()}
                             placeholder="Select date"
                             onChange={(date, dateString) => setSelectedDate(dateString)}
                             suffixIcon={<CalendarOutlined />}

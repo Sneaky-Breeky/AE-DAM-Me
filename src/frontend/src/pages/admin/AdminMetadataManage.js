@@ -259,10 +259,11 @@ export default function AdminMetadataManage() {
           label={<p style={{fontWeight:"bold"}}>Date</p>}
         >
           {isEditOpen ? <DatePicker
-                        placeholder= {dayjs(project.date).format('MMM DD, YYYY')}
-                        suffixIcon={<CalendarOutlined />}
-                        style={{ width: '100%' }}
-                    />
+              maxDate={dayjs()}
+              placeholder= {dayjs(project.date).format('MMM DD, YYYY')}
+              suffixIcon={<CalendarOutlined />}
+              style={{ width: '100%' }}
+          />
           : dayjs(project.date).format('MMM DD, YYYY')}
         </Form.Item>
 
