@@ -26,7 +26,8 @@ namespace DAMBackend.Controllers
 
         private SQLEntryEngine engine;
 
-        // POST response for api/Projects"
+        // POST response for api/Projects
+        // Enters a project into the database
         [HttpPost]
         public async Task<ActionResult<ProjectModel>> PostProject([FromBody] ProjectModel projectData)
         {
@@ -57,7 +58,7 @@ namespace DAMBackend.Controllers
         
 
         // GET: api/Projects/AccessList/{userId}
-        
+        // Get a list of projects a user has access to
         [HttpGet("AccessList/{id}")]
         public async Task<ActionResult<IEnumerable<Project>>> GetProjects(int userId)
         {
@@ -69,7 +70,7 @@ namespace DAMBackend.Controllers
         }
         
         // POST: api/Projects/GiveAccess/{userId}/{pId}
-
+        // Give access to a project for a user
         [HttpPost("AccessList/{userId}/{pId}")]
         public async Task<ActionResult<UserProjectRelation>> GiveAccess(int userId, int pId)
         {
@@ -85,6 +86,8 @@ namespace DAMBackend.Controllers
             return Ok(access);
         }
         
+        // GET: FavProjects/{userId}
+        // Get a list of favourite projects for a user
         [HttpGet("FavProjects/{userId}")]
         public async Task<ActionResult<List<ProjectModel>>> GetFavProjects(int userId)
         {
@@ -102,6 +105,8 @@ namespace DAMBackend.Controllers
             return Ok(projects);
         }
         
+        // GET: WorkingProjects/{userId}
+        // Get a list of working projects for a user
         [HttpGet("WorkingProjects/{userId}")]
         public async Task<ActionResult<List<ProjectModel>>> GetWorkingProjects(int userId)
         {
