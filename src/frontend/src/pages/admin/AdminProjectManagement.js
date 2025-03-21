@@ -6,7 +6,7 @@ import CreateNewFolderOutlinedIcon from '@mui/icons-material/CreateNewFolderOutl
 import FolderDeleteOutlinedIcon from '@mui/icons-material/FolderDeleteOutlined';
 import dayjs from 'dayjs';
 import { projects, files, logs } from '../../utils/dummyData.js';
-import { fetchProjects } from '../../api/projectApi';
+import {fetchProjects, postProject} from '../../api/projectApi';
 
 const { Title } = Typography;
 
@@ -25,62 +25,55 @@ export default function ProjectManagement() {
 
 
     // Fetch projects
-        useEffect(() => {
-            const getProjects = async () => {
-                setLoading(true);
-                const response = await fetchProjects();
-    
-                if (response.error) {
-                    console.error("Error fetching projects:", response.error);
-                    setFetchedProjects([]);
-                } else {
-                    console.log("Fetched Projects:", response);
-                    setFetchedProjects(response);
-                }
-    
-                setLoading(false);
-            };
-    
-            getProjects();
-        }, []);
+    const getProjects = async () => {
+        setLoading(true);
+        const response = await fetchProjects();
+
+        if (response.error) {
+            console.error("Error fetching projects:", response.error);
+            setFetchedProjects([]);
+        } else {
+            console.log("Fetched Projects:", response);
+            setFetchedProjects(response);
+        }
+
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        getProjects();
+    }, []);
 
 
     const handleAddProjectButton = async (values) => {
         console.log("Submitting data:", values);
-    
+
         const projectData = {
             name: values.projectName,
             description: values.description,
             status: "Active",
-            location: values.location || "Unknown",
+            location: values.location || "",
             imagePath: null,
-            phase: "Planning",
+            phase: "",
             accessLevel: 0,
-            lastUpdated: new Date().toISOString(),  // current time
+            lastUpdated: new Date().toISOString(),
             files: [],
             users: []
         };
-    
+
         try {
-            const response = await fetch('http://localhost:5146/api/Projects', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(projectData),
-            });
-    
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
+            const result = await postProject(projectData);
+
+            if (result.error) {
+                throw new Error(result.error);
             }
-    
-            const result = await response.json();
+
             console.log("Project successfully added:", result);
             message.success("Project added successfully");
-    
-            // Reset form
             form.resetFields();
-    
+
+            await getProjects();
+
         } catch (error) {
             console.error("Error adding project:", error);
             message.error("Failed to add project");
