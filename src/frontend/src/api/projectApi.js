@@ -116,6 +116,33 @@ export async function putProject(projectId, updatedProjectData) {
     }
 }
 
+export async function deleteProject(projectId) {
+    try {
+        const response = await fetch(`${PROJECTS_URL}/${projectId}`, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            try {
+                const errorData = JSON.parse(errorText);
+                return { error: errorData.message || "Unknown error" };
+            } catch {
+                return { error: `HTTP Error ${response.status}: ${errorText}` };
+            }
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error("Network or fetch error:", error);
+        return { error: "Network error or server unreachable", message: error.message };
+    }
+}
+
+
 
 
 export async function addProjectTag(ProjectId, Key, Value, type) {
