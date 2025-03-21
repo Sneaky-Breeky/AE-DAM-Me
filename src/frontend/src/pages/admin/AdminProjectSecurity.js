@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import { Typography, Button, Popover, Radio, Form, Input, Checkbox } from 'antd';
 import { SearchOutlined, EditOutlined, CloseOutlined} from '@ant-design/icons';
 import { projects, files, users } from '../../utils/dummyData.js';
+import { fetchProjects, fetchUsersForProject } from '../../api/projectApi';
 
 const { Title } = Typography;
 
@@ -182,11 +183,33 @@ export default function AdminProjectSecurity() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isPopupFormOpen, setPopupFormOpen] = useState(false);
   const [project, setProject] = useState(null);
+  const [fetchedProjects, setFetchedProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [adminChecked, setAdminChecked] = useState(false);
   const [allChecked, setAllChecked] = useState(false);
   const [selectedChecked, setSelectedChecked] = useState(false);
   const [listUsers, setListUsers] = useState([]);
 
+    // Fetch projects
+    useEffect(() => {
+        const getProjects = async () => {
+            setLoading(true);
+            const response = await fetchProjects();
+
+            if (response.error) {
+                console.error("Error fetching projects:", response.error);
+                setFetchedProjects([]);
+            } else {
+                console.log("Fetched Projects:", response);
+                setFetchedProjects(response); 
+            }
+
+            setLoading(false);
+        };
+
+        getProjects();
+    }, []);
+    
   return (
     <Box
       sx={{
@@ -267,7 +290,7 @@ export default function AdminProjectSecurity() {
           <th style={{ width: '25%', textAlign: 'left', borderBottom:'1px solid black'}} >Project</th>
           <th colSpan="2" style={{ width: '15%', textAlign: 'left', borderBottom:'1px solid black'}} >Access Level</th>
       </tr>
-          {(projects.filter(p => {return p.name.toLowerCase().includes(searchQuery.toLowerCase())})).map((p) => (
+          {(fetchedProjects.filter(p => {return p.name.toLowerCase().includes(searchQuery.toLowerCase())})).map((p) => (
               <tr onClick={() => {
                 setProject(p);
                 setPopupFormOpen(true);
