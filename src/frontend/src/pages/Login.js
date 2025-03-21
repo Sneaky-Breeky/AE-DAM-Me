@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
@@ -14,7 +14,7 @@ import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import {authenticateUser, isAdmin} from '../utils/auth';
-import { loginUser, fetchUsers } from '../api/authApi';
+import { loginUser } from '../api/authApi';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -47,43 +47,15 @@ export default function Login({setLoggedIn}) {
   const [emailErrorMessage, setEmailErrorMessage] = useState('');
   const [passwordError, setPasswordError] = useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
-  const [userList, setUserList] = useState([]);
-  const [usersLoaded, setUsersLoaded] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchUsersList = async () => {
-      try {
-        const users = await fetchUsers();
-        if (Array.isArray(users)) {
-          setUserList(users);
-          setUsersLoaded(true);
-        } else {
-          console.error("Expected an array but got:", users);
-          setUserList([]);
-        }
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        setUserList([]);
-      }
-    };
-
-    fetchUsersList();
-  }, []);
-
-    
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-    if (!usersLoaded) {
-      console.error("Users are not loaded yet! Try again.");
-      return;
-    }
   
     const userData = new FormData(event.currentTarget);
     const email = userData.get('email');
     const password = userData.get('password');
-
+  
     const user = authenticateUser(email, password);
     setPasswordErrorMessage('');
     setEmailErrorMessage('');
@@ -104,18 +76,8 @@ export default function Login({setLoggedIn}) {
         return;
       }
 
-      const foundUser = userList.find((u) => u.email === email);
-
-      if (!foundUser) {
-        setEmailError(true);
-        setEmailErrorMessage("User not found in the database.");
-        return;
-      }
-      
       localStorage.setItem("loggedIn", "true");
       localStorage.setItem("userRole", response.role);
-      localStorage.setItem("userId", foundUser.id);
-      localStorage.setItem("userEmail", foundUser.email);
 
       setLoggedIn(true);
       navigate(isAdmin() ? "/admin/dashboard" : "/user/dashboard");
