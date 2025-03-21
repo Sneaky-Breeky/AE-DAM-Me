@@ -247,14 +247,13 @@ namespace DAMBackend.Controllers
         public async Task<IActionResult> AddProjectTag(
             [FromQuery] int ProjectId, 
             [FromQuery] string Key, 
-            [FromQuery] object Value, 
+            [FromQuery] string sValue,
+            [FromQuery] int? iValue,
             [FromQuery] value_type type)
         {
-            
             var engine = new SQLEntryEngine(_context);
-            
             var project = await _context.Projects.FindAsync(ProjectId);
-            
+
             if (project == null)
             {
                 return NotFound();
@@ -262,27 +261,21 @@ namespace DAMBackend.Controllers
 
             try
             {
-                var tag = engine.addProjectTag(
-                    project,
-                    Key,
-                    Value,
-                    type
-                );
+                object value = type == value_type.Integer ? (object)iValue : sValue;
+
+                var tag = engine.addProjectTag(project, Key, value, type);
                 return Ok(tag);
             }
             catch (ArgumentException ex)
             {
-                // Handle the specific exception and return a meaningful response to the client
-                return BadRequest(ex.Message); // You can customize this message as needed
+                return BadRequest(ex.Message);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return StatusCode(500, "An error occurred while processing your request.");
             }
-
-            
-
         }
+
         
         // DELETE: api/Projects/Tags/{key}/{pId}
         [HttpDelete("{key}/{pId}")]
