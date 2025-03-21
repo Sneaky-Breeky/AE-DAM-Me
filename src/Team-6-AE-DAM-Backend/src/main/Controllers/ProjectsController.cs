@@ -22,13 +22,6 @@ namespace DAMBackend.Controllers
             _context = context;
         }
 
-        // GET: api/Projects
-        [HttpGet("getprojs")]
-        public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjects()
-        {
-            var projects = _context.Projects.ToListAsync();
-            return Ok(projects);
-        }
 
         // POST response for api/Projects"
         [HttpPost("postproj")]
