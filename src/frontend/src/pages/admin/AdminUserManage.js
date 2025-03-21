@@ -181,16 +181,16 @@ export default function AdminUserManage() {
     fetchUsersList();
   }, []);
 
+  /* REMOVE
+  const save = () => {
+    message.success("Changes saved successfully!");
+  };
+  */
+
   const handleEditUser = (values) => {
     console.log("pass edited: " + values.editPass);
     console.log("status edited: " + values.editStatus);
   };
-
-  // remove? or edit??
-  const save = () => {
-    message.success("Changes saved successfully!");
-  };
-  // REMOVE ABOVE
 
   const handleDeleteUser = async (email) => {
     try {
