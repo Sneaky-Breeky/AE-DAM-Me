@@ -246,7 +246,7 @@ namespace DAMBackend.Controllers
         public async Task<IActionResult> AddProjectTag(
             [FromQuery] int ProjectId, 
             [FromQuery] string Key, 
-            [FromQuery] object Value, 
+            [FromQuery] string Value, 
             [FromQuery] value_type type)
         {
             
@@ -261,7 +261,7 @@ namespace DAMBackend.Controllers
 
             try
             {
-                var tag = engine.addProjectTag(
+                var tag = await engine.addProjectTag(
                     project,
                     Key,
                     Value,
@@ -276,7 +276,7 @@ namespace DAMBackend.Controllers
             }
             catch (Exception e)
             {
-                return StatusCode(500, "An error occurred while processing your request.");
+                return StatusCode(500, $"An error occurred: {e.InnerException?.Message ?? e.Message} \n {e.StackTrace}");
             }
         }
 
