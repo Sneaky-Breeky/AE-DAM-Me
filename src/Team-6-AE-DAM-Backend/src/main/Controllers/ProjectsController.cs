@@ -22,13 +22,6 @@ namespace DAMBackend.Controllers
             _context = context;
         }
 
-        // GET: api/Projects
-        [HttpGet("getprojs")]
-        public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjects()
-        {
-            var projects = _context.Projects.ToListAsync();
-            return Ok(projects);
-        }
 
         // POST response for api/Projects"
         [HttpPost("postproj")]
@@ -106,6 +99,24 @@ namespace DAMBackend.Controllers
             
             return Ok(access);
         }
+        
+        // GET
+        [HttpGet("{projectId}/users")]
+        public async Task<ActionResult<IEnumerable<UserModel>>> GetUsersForProject(int projectId)
+        {
+            var users = await _context.UserProjectRelations
+                .Where(ufp => ufp.ProjectId == projectId)
+                .Select(ufp => ufp.User)
+                .ToListAsync();
+
+            if (!users.Any())
+            {
+                return NotFound(new { message = "No users found for this project." });
+            }
+
+            return Ok(users);
+        }
+
         
         [HttpGet("FavProjects/{userId}")]
         public async Task<ActionResult<List<ProjectModel>>> GetFavProjects(int userId)
