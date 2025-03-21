@@ -35,7 +35,7 @@ export default function UserProjectOverview() {
     const [current, setCurrent] = React.useState(0);
     const { state } = useLocation();
     const [imageList, setImageList] = useState(state.project.files);
-    const [isEditMode, setIsEditMode] = useState(false);
+
     const [selectedImages, setSelectedImages] = useState(new Set());
     const [selectedStatus, setSelectedStatus] = useState("");
 
@@ -104,30 +104,6 @@ export default function UserProjectOverview() {
                 link.remove();
             });
     };
-
-    const toggleEditMode = () => {
-        setIsEditMode((prev) => !prev);
-        setSelectedImages(new Set());
-    };
-
-    const toggleSelectImage = (index) => {
-        if (!isEditMode) return;
-
-        const updatedSelection = new Set(selectedImages);
-        if (updatedSelection.has(index)) {
-            updatedSelection.delete(index);
-        } else {
-            updatedSelection.add(index);
-        }
-        setSelectedImages(updatedSelection);
-    };
-
-    const deleteSelectedImages = () => {
-        setImageList(imageList.filter((_, index) => !selectedImages.has(index)));
-        setSelectedImages(new Set());
-        setIsEditMode(false);
-    };
-
 
     return (
         <Box
@@ -223,6 +199,7 @@ export default function UserProjectOverview() {
 
                     <Form.Item>
                         <DatePicker
+                            maxDate={dayjs()}
                             placeholder="Select date"
                             onChange={(date, dateString) => setSelectedDate(dateString)}
                             suffixIcon={<CalendarOutlined />}
@@ -247,103 +224,38 @@ export default function UserProjectOverview() {
 
             {/* Main content */}
             <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-                {/* Edit button */}
-                <Box sx={{ display: 'flex', justifyContent: 'flex-start', padding: 2, paddingLeft: '60px', gap: '10px' }}>
-                    <Button
-                        onClick={toggleEditMode}
-                        danger={isEditMode}
-                        icon={<EditOutlined />}
-                    >
-                        {isEditMode ? "Cancel Edit Mode" : "Edit Gallery"}
-                    </Button>
-                    {/* Delete button */}
-                    {isEditMode && selectedImages.size > 0 && (
-                        <Popconfirm
-                            title="Delete Images"
-                            description="Are you sure you want to delete the selected images?"
-                            onConfirm={deleteSelectedImages}
-                            icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
-                            okText="Yes"
-                            cancelText="No"
-                        >
-                            <Button type="primary" danger icon={<DeleteOutlined />}>
-                                Delete
-                            </Button>
-                        </Popconfirm>
-                    )}
-                </Box>
-
                 {/* Image gallery*/}
                 <Box sx={{ display: 'flex', justifyContent: 'center', padding: 2 }}>
-                    {isEditMode ? (
+                    <Image.PreviewGroup
+                        preview={{
+                            toolbarRender: (_, { transform: { scale }, actions }) => (
+                                <Space size={12} className="toolbar-wrapper">
+                                    <LeftOutlined onClick={() => actions.onActive?.(-1)} />
+                                    <RightOutlined onClick={() => actions.onActive?.(1)} />
+                                    <DownloadOutlined onClick={onDownload} />
+                                    <SwapOutlined rotate={90} onClick={actions.onFlipY} />
+                                    <SwapOutlined onClick={actions.onFlipX} />
+                                    <RotateLeftOutlined onClick={actions.onRotateLeft} />
+                                    <RotateRightOutlined onClick={actions.onRotateRight} />
+                                    <ZoomOutOutlined disabled={scale === 1} onClick={actions.onZoomOut} />
+                                    <ZoomInOutlined disabled={scale === 50} onClick={actions.onZoomIn} />
+                                    <UndoOutlined onClick={actions.onReset} />
+                                </Space>
+                            ),
+                            onChange: (index) => setCurrent(index),
+                        }}
+                    >
                         <Space wrap size={16} style={{ justifyContent: 'center' }}>
+
                             {imageList.map((file) => (
-                                <div
+                                <Image
                                     key={file.Id}
-                                    style={{ position: 'relative', cursor: 'pointer' }}
-                                    onClick={() => toggleSelectImage(file.Id)}
-                                >
-                                    <Image
-                                        src={file.FilePath}
-                                        width={200}
-                                        preview={false}
-                                        style={{
-                                            border: selectedImages.has(file.Id) ? '4px solid red' : 'none',
-                                            borderRadius: '8px',
-                                            transition: '0.2s ease-in-out',
-                                        }}
-                                    />
-                                    {selectedImages.has(file.Id) && (
-                                        <DeleteOutlined
-                                            style={{
-                                                position: 'absolute',
-                                                top: 5,
-                                                right: 5,
-                                                color: 'white',
-                                                background: 'red',
-                                                borderRadius: '50%',
-                                                padding: '5px',
-                                                cursor: 'pointer',
-                                                fontSize: '16px',
-                                            }}
-                                        />
-                                    )}
-                                </div>
+                                    src={file.FilePath}
+                                    width={200}
+                                />
                             ))}
-
                         </Space>
-                    ) : (
-                        <Image.PreviewGroup
-                            preview={{
-                                toolbarRender: (_, { transform: { scale }, actions }) => (
-                                    <Space size={12} className="toolbar-wrapper">
-                                        <LeftOutlined onClick={() => actions.onActive?.(-1)} />
-                                        <RightOutlined onClick={() => actions.onActive?.(1)} />
-                                        <DownloadOutlined onClick={onDownload} />
-                                        <SwapOutlined rotate={90} onClick={actions.onFlipY} />
-                                        <SwapOutlined onClick={actions.onFlipX} />
-                                        <RotateLeftOutlined onClick={actions.onRotateLeft} />
-                                        <RotateRightOutlined onClick={actions.onRotateRight} />
-                                        <ZoomOutOutlined disabled={scale === 1} onClick={actions.onZoomOut} />
-                                        <ZoomInOutlined disabled={scale === 50} onClick={actions.onZoomIn} />
-                                        <UndoOutlined onClick={actions.onReset} />
-                                    </Space>
-                                ),
-                                onChange: (index) => setCurrent(index),
-                            }}
-                        >
-                            <Space wrap size={16} style={{ justifyContent: 'center' }}>
-
-                                {imageList.map((file) => (
-                                    <Image
-                                        key={file.Id}
-                                        src={file.FilePath}
-                                        width={200}
-                                    />
-                                ))}
-                            </Space>
-                        </Image.PreviewGroup>
-                    )}
+                    </Image.PreviewGroup>
                 </Box>
             </Box>
         </Box>

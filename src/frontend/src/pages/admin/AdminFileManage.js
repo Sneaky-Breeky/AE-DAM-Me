@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import { Typography, Input, Space, Image, Button, Popconfirm, Form} from 'antd';
+import { Typography, Input, Space, Image, Button, Popconfirm, Form, Tooltip} from 'antd';
 import { SearchOutlined, DeleteOutlined, CloseOutlined, EditOutlined, QuestionCircleOutlined} from '@ant-design/icons';
 import { projects } from '../../utils/dummyData.js';
 
@@ -252,8 +252,8 @@ export default function AdminFileManage() {
                     onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.5)';}}
                     onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '';}}
                 >
-                  
-                    <Image
+                  <Tooltip title="Edit Tags">
+                  <Image
                         src={file.FilePath}
                         width={150}
                         preview={false}
@@ -262,6 +262,8 @@ export default function AdminFileManage() {
                             transition: '0.2s ease-in-out',
                         }}
                     />
+                  </Tooltip>
+                    
                     {selectedImages.has(file.Id) && (
                         <DeleteOutlined
                             style={{

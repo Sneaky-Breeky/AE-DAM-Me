@@ -9,7 +9,7 @@ import UserDashboard from './pages/user/UserDashboard';
 import UserUpload from './pages/user/UserUpload';
 import ProjectDirectory from './pages/user/UserProjectDir';
 import ProjectOverview from './pages/user/UserProjectOverview';
-import ProjectCreation from './pages/admin/AdminProjectCreation';
+import ProjectManagement from './pages/admin/AdminProjectManagement';
 import AdminProjectSecurity from './pages/admin/AdminProjectSecurity';
 import ActivityLog from './pages/user/UserActivityLog';
 import { isAdmin, isLoggedIn } from './utils/auth';
@@ -55,7 +55,7 @@ function AppContent({ loggedIn, setLoggedIn }) {
 
           {/* admin */}
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/projectCreation" element={<ProjectCreation />} />
+          <Route path="/admin/projectManagement" element={<ProjectManagement />} />
           <Route path="/admin/userManagement" element={<AdminUserManage />} />
           <Route path="/admin/metadataManagement" element={<AdminMetadataManage />} />
           <Route path="/admin/fileManagement" element={<AdminFileManage />} />
