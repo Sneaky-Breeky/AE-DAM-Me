@@ -27,7 +27,7 @@ export async function loginUser(email, password) {
 }
 
 export async function fetchUsers() {
-    const response = await fetch(`${AUTH_URL}/fetchuser`, {
+    const response = await fetch(`${AUTH_URL}/fetchusers`, { 
         method: "GET",
         headers: {
             "Content-Type": "application/json"
@@ -35,7 +35,6 @@ export async function fetchUsers() {
     });
 
     if (!response.ok) {
-        // Handle errors and parse JSON safely
         const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
         return errorData;
     }
