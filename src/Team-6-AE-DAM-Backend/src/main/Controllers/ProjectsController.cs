@@ -87,6 +87,14 @@ namespace DAMBackend.Controllers
         [HttpPost("AccessList/{userId}/{pId}")]
         public async Task<ActionResult<UserProjectRelation>> GiveAccess(int userId, int pId)
         {
+            // check if access already exists
+            var existingRelation = await _context.UserProjectRelations
+                .FirstOrDefaultAsync(rel => rel.UserId == userId && rel.ProjectId == pId);
+
+            if (existingRelation != null)
+            {
+                return Ok(existingRelation);
+            }
             var access = new UserProjectRelation
             {
                 UserId = userId,
@@ -98,6 +106,20 @@ namespace DAMBackend.Controllers
             
             return Ok(access);
         }
+        
+        
+        [HttpDelete("AccessList/{projectId}")]
+        public async Task<IActionResult> RemoveAllAccessForProject(int projectId)
+        {
+            var existingRelations = _context.UserProjectRelations
+                .Where(rel => rel.ProjectId == projectId);
+
+            _context.UserProjectRelations.RemoveRange(existingRelations);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
         
         // GET
         [HttpGet("{projectId}/users")]
