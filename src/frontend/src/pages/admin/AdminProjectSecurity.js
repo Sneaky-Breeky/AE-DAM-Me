@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Box from '@mui/material/Box';
-import { Typography, Button, Popover, Radio, Form, Input, Checkbox, Spin } from 'antd';
+import { Typography, Button, Popover, Radio, Form, Input, Checkbox } from 'antd';
 import { SearchOutlined, EditOutlined, CloseOutlined} from '@ant-design/icons';
 import { projects, files, users } from '../../utils/dummyData.js';
+
 import { fetchProjects, fetchUsersForProject } from '../../api/projectApi';
 import { fetchUsers } from '../../api/authApi';
 import {giveUserAccess} from "../../api/userApi";
@@ -223,6 +224,7 @@ overflow: 'auto'
 }
 
 export default function AdminProjectSecurity() {
+
 const [searchQuery, setSearchQuery] = useState('');
 const [isPopupFormOpen, setPopupFormOpen] = useState(false);
 const [project, setProject] = useState(null);
@@ -313,6 +315,7 @@ sx={{
 <Title level={1}>Project Security</Title>
 </Box>
 
+
 <Box
 sx={{
   display: 'flex',
@@ -335,7 +338,6 @@ sx={{
   />
 </Box>
 
-
 <Box
 sx={{
     display: 'flex',
@@ -355,6 +357,7 @@ sx={{
 {/* left container with users */}
 <Box
     sx={{
+
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'flex-start',
@@ -382,6 +385,7 @@ sx={{
             overflow: 'auto',
         }}
     >
+
 
         {loading ? (
             <Spin size="large" style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }} />
@@ -437,6 +441,8 @@ sx={{
             </div>
         )}
     </Box>
+
+    
 
 
 </Box>

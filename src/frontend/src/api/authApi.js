@@ -27,35 +27,21 @@ export async function loginUser(email, password) {
 }
 
 export async function fetchUsers() {
-    try {
-        const response = await fetch(`${AUTH_URL}/fetchusers`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json"
-            }
-        });
-
-        console.log(`${AUTH_URL}/fetchusers`);
-
-        if (!response.ok) {
-            // Try to parse error response JSON, but catch errors safely
-            const errorText = await response.text();
-            try {
-                const errorData = JSON.parse(errorText);
-                return { error: errorData.message || "Unknown error" };
-            } catch {
-                return { error: `HTTP Error ${response.status}: ${errorText}` };
-            }
+    const response = await fetch(`${AUTH_URL}/fetchuser`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
         }
+    });
 
-        // Try parsing JSON safely
-        return await response.json();
-    } catch (error) {
-        console.error("Network or fetch error:", error);
-        return { error: "Network error or server unreachable", message : error.message };
+    if (!response.ok) {
+        // Handle errors and parse JSON safely
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+        return errorData;
     }
-}
 
+    return response.json();
+}
 
 export async function addUser(values) {
     try {
