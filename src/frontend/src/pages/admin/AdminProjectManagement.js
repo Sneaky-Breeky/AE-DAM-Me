@@ -4,9 +4,7 @@ import Box from '@mui/material/Box';
 import { CloseOutlined, SearchOutlined, DeleteOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import CreateNewFolderOutlinedIcon from '@mui/icons-material/CreateNewFolderOutlined';
 import FolderDeleteOutlinedIcon from '@mui/icons-material/FolderDeleteOutlined';
-import dayjs from 'dayjs';
-import { projects, files, logs } from '../../utils/dummyData.js';
-import {fetchProjects, postProject} from '../../api/projectApi';
+import {fetchProjects, postProject, deleteProject} from '../../api/projectApi';
 
 const { Title } = Typography;
 
@@ -81,87 +79,20 @@ export default function ProjectManagement() {
     };
 
     const handleDeleteProject = async (p) => {
-        console.log(p);
-        console.log(p.id);
+        try {
+            const result = await deleteProject(p.id);
 
-        /*  try {
-            const response = await fetch(`http://localhost:5146/api/Projects/${p.id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-    
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
+            if (result.error) {
+                throw new Error(result.error);
             }
-    
-            const result = await response.json();
-            console.log("Project successfully deleted:", result);
-            message.success("Project deleted successfully");
 
+            message.success("Project deleted successfully");
+            await getProjects();
         } catch (error) {
             console.error("Error deleting project:", error);
             message.error("Failed to delete project");
-        }*/
-
-       
+        }
     };
-    
-
-
-
-    // const handleAddProjectButton = (values) => {
-    //     // send project info to backend here
-    //     console.log("Submitting data:", values);
-
-    //     const projectData = {
-    //         ...values, // projectName, description, location
-    //         metadataFields: defaultMetadataFields,
-    //         metadataTags: defaultMetadataTags,
-    //     };
-
-    //     const project = {
-    //         id: projects.length,
-    //         name: values.projectName, 
-    //         location: values.location, 
-    //         date: dayjs(),
-    //         thumbnail: null, 
-    //         accessLevel: 'Admins Only', 
-    //         listUsers: [], 
-    //         status: null,
-    //         phase: null,
-    //         lastUpdated: dayjs(),
-    //         files: files
-    //     };
-
-    //     const projectFile = {
-    //         Id: files.length, 
-    //         FileName: project.name, 
-    //         FilePath: null, 
-    //         Metadata: defaultMetadataTags, 
-    //         ProjectId: project.id, 
-    //         Status: "Active", 
-    //         Date: dayjs() 
-    //    };
-
-    //    const projectLog = {
-    //         time: dayjs(), 
-    //         action: 'Project created' 
-    //    };
-
-    //    projects.push(project);
-    //    files.push(projectFile);
-    //    logs.push(projectLog);
-    //     //
-
-    //     console.log("Final Project Data:", projects.at(-1));
-    //     success();
-
-    //     form.resetFields();
-    //     setDefaultMetadataFields([]);
-    //     setDefaultMetadataTags([]);
-    // };
 
     return (
         <Box
@@ -206,12 +137,11 @@ export default function ProjectManagement() {
                     }}
                 >
                 
-                    {/*Create Project*/}
+                    {/*Create a project*/}
                     <Box
                         onClick={() => {
                             setDeleteOpen(false);
                             setCreateOpen(!createOpen);
-                            console.log("create");
                         }}
                         sx={{
                         textAlign: 'center',
@@ -232,12 +162,11 @@ export default function ProjectManagement() {
                         <h4  style={{ margin: '0', marginBottom: '10%'}}>{!createOpen ? "Create Project" : "Close"}</h4>
                     </Box>
 
-                    {/*Delete Project*/}
+                    {/*Delete a project*/}
                     <Box
                         onClick={() => {
                             setCreateOpen(false);
                             setDeleteOpen(!deleteOpen);
-                            console.log("delete");
                         }}
                         sx={{
                         textAlign: 'center',
@@ -385,7 +314,10 @@ export default function ProjectManagement() {
                             </div>
                         ) : (
                             <table style={{ width: '100%', borderCollapse: 'collapse', borderTop: '1px solid black'}}>
-                                {(fetchedProjects.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))).map((p) => (
+                                {(fetchedProjects.filter((p) =>
+                                    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                    p.id.toString().includes(searchQuery)
+                                )).map((p) => (
                                     <tr
                                         key={p.id}
                                         

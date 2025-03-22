@@ -1,9 +1,10 @@
 import React, { useState, useEffect  } from 'react';
 import Box from '@mui/material/Box';
-import { Typography, Button, Input, Form, Space, DatePicker } from 'antd';
+import { Typography, Button, Input, Form, Space, DatePicker, Spin, message } from 'antd';
 import { SearchOutlined, CloseOutlined, MinusCircleOutlined, PlusOutlined, CalendarOutlined} from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { projects } from '../../utils/dummyData.js';
+import { fetchProjects, putProject, deleteProjectTag, addProjectTag } from '../../api/projectApi';
+
 
 const { Title } = Typography;
 
@@ -15,28 +16,82 @@ export default function AdminMetadataManage() {
 
   const [form] = Form.useForm();
 
-  useEffect(() => {
-    if (project && project.fields) {  // check if project is null before running?
-      const convertedFields = project.fields.map(fieldObj => ({
-        field: fieldObj.field,
-        fieldMD: fieldObj.fieldMD
-      }));
-      form.setFieldsValue({name: project.name, 
-        location: project.location, 
-        date: project.date, 
-        status: project.status, 
-        phase: project.phase, 
-        fields: convertedFields });
-    }
-  }, [project, isEditOpen]); // runs when project or isEditOpen changes
 
-  const handleMDEdits = (values) => {
-    console.log("input values: ", values);
-    // filter out empty fields
-    console.log("filtered fields values: ", (values.fields).filter((f) => f.field));
-    console.log("null name: ", !values.name ); // if name is empty, returns true
-    form.resetFields();
-  };
+    // Fetch projects
+    const getProjects = async () => {
+        setLoading(true);
+        const response = await fetchProjects();
+
+        if (response.error) {
+            console.error("Error fetching projects:", response.error);
+            setFetchedProjects([]);
+        } else {
+            console.log("Fetched Projects:", response);
+            setFetchedProjects(response);
+        }
+
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        getProjects();
+    }, []);
+
+
+    //TODO: only allow Status to be "Active" or "Inactive"
+    const handleMDEdits = async (values) => {
+        if (!project) return;
+
+        try {
+            const updatedFields = {};
+
+            // compare original project info with current form info
+            if (values.name && values.name !== project.name) updatedFields.name = values.name;
+            if (values.location && values.location !== project.location) updatedFields.location = values.location;
+            if (values.date && (!project.date || !dayjs(project.date).isSame(dayjs(values.date), 'day'))) {
+                updatedFields.date = values.date.format('YYYY-MM-DD');
+            }
+            if (values.status && values.status !== project.status) updatedFields.status = values.status;
+            if (values.phase && values.phase !== project.phase) updatedFields.phase = values.phase;
+
+            // if any fields change then update project
+            if (Object.keys(updatedFields).length > 0) {
+                const updatedProject = { ...project, ...updatedFields };
+                const putRes = await putProject(project.id, updatedProject);
+                if (putRes.error) throw new Error(putRes.error);
+            }
+
+            // handle metadata tag changes
+            const oldTags = project.tags || [];
+            const oldTagKeys = oldTags.map(tag => tag.key);
+            const newTags = values.fields?.filter(f => f.field && f.fieldMD) || [];
+            const newTagKeys = newTags.map(tag => tag.field);
+
+            // add new tags
+            for (const tag of newTags) {
+                if (!oldTagKeys.includes(tag.field)) {
+                    const type = typeof tag.fieldMD === 'number' ? 1 : 0; // 1 = Integer, 0 = String
+                    await addProjectTag(project.id, tag.field, tag.fieldMD, type);
+                }
+            }
+
+            // remove deleted tags
+            for (const oldTag of oldTags) {
+                if (!newTags.find(tag => tag.field === oldTag.key)) {
+                    await deleteProjectTag(oldTag.key, project.id);
+                }
+            }
+
+            message.success("Project updated successfully");
+            setEditOpen(false);
+            setPopupFormOpen(false);
+            form.resetFields();
+            await getProjects();
+        } catch (err) {
+            console.error("Error updating project:", err);
+            message.error("Failed to update project");
+        }
+    };
 
   return (
     <Box
@@ -194,13 +249,21 @@ export default function AdminMetadataManage() {
           name="md_edits"
           layout="horizontal"
           autoComplete="off"
-          onFinish={handleMDEdits}
+          onFinish={(values) => handleMDEdits(values)}
           style={{margin: '10px auto'}}
           onKeyDown={(e) => {
               if (e.key === "Enter") {
                   e.preventDefault();
               }
-          }}>
+          }}
+            initialValues={{
+                name: project?.name || '',
+                location: project?.location || '',
+                date: project?.date ? dayjs(project.date) : null,
+                status: project?.status || '',
+                phase: project?.phase || '',
+                fields: project?.tags || [],
+            }}>
 
         <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
           name="name"
