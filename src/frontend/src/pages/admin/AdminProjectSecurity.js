@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
-import { Typography, Button, Popover, Radio, Form, Input, Checkbox, Spin } from 'antd';
+import { Typography, Button, Popover, Radio, Form, Input, Checkbox, Spin} from 'antd';
 import { SearchOutlined, EditOutlined, CloseOutlined} from '@ant-design/icons';
 import { projects, files, users } from '../../utils/dummyData.js';
+
 import { fetchProjects, fetchUsersForProject } from '../../api/projectApi';
 import { fetchUsers } from '../../api/authApi';
 import {giveUserAccess} from "../../api/userApi";
@@ -22,8 +23,6 @@ const users = [
 {name: 'Sarah Brown', role: 'Admin', status: 'Active'},
 {name: 'Michael Johnson', role: 'User', status: 'Inactive'}
 ];*/
-
-const metadata = ["Project Name", "Location", "Date", "Image Description", "Tags"];
 
 function PopupAccess(adminChecked, setAdminChecked, allChecked, setAllChecked, selectedChecked, setSelectedChecked, listUsers, setListUsers, fetchedUsersForAProject, setFetchedUsersForProject, originalUsersForProject, setOriginalUsersForProject) {
 /*const [adminChecked, setAdminChecked] = useState(project.accessLevel === 'Admins Only');
@@ -146,7 +145,7 @@ flexDirection: 'column',
 justifyContent: 'flex-start',
 alignItems: 'left',
 width: '80%',
-height: '100%',
+height: '50%',
 margin: '20px auto',
 marginTop: '0',
 backgroundColor: '#f5f5f5',
@@ -182,24 +181,7 @@ overflow: 'auto'
 
         }</td>
     </tr>
-    {metadata.map((md) => (
-        <tr style={{height: '50px'}}>
-            <td style={{ fontSize: '12px', textAlign: 'left', borderBottom:'1px solid black'}} >{md}</td>
-            <td style={{ fontSize: '12px', width: '5%', textAlign: 'center', borderBottom:'1px solid black'}} >{
-                // reload if status input differs from original user.status
-                <Popover
-                    content={
-                        <Radio.Group style={{ display: 'flex', flexDirection: 'column', marginTop: "0px" }}>
-                            <Radio value="admin"> <p style={{fontSize:'12px', margin: '0px'}}>Admin Only</p> </Radio>
-                            <Radio value="everyone"> <p style={{fontSize:'12px', margin: '0px'}}>Everyone</p> </Radio>
-                        </Radio.Group>}
-                    trigger="click"
-                >
-                    <Button color="default" variant="text" size={"default"} icon={<EditOutlined />}/>
-                </Popover>
-            }</td>
-        </tr>
-    ))}
+    
 </table>
 <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', margin: '20px auto', marginBottom: '0'}}>
     <Button color="default" variant="text" size={"default"} icon={<CloseOutlined/>}
@@ -242,6 +224,7 @@ overflow: 'auto'
 }
 
 export default function AdminProjectSecurity() {
+
 const [searchQuery, setSearchQuery] = useState('');
 const [isPopupFormOpen, setPopupFormOpen] = useState(false);
 const [project, setProject] = useState(null);
@@ -335,6 +318,28 @@ sx={{
 
 <Box
 sx={{
+  display: 'flex',
+  flexDirection: 'row',
+  justifyContent: 'flex-start',
+  alignItems: 'left',
+  padding: '20px',
+  paddingBottom: 0,
+  margin: '10px auto',
+  marginBottom: '0',
+}}
+>
+  <Input
+    placeholder="Search for a project.."
+    prefix={<SearchOutlined />}
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    style={{ width: '300px' }}
+    disabled={loading}
+  />
+</Box>
+
+<Box
+sx={{
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'flex-start',
@@ -352,24 +357,17 @@ sx={{
 {/* left container with users */}
 <Box
     sx={{
+
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'flex-start',
         alignItems: 'left',
         width: '50%',
         margin: '20px auto',
+        marginTop: '0',
         borderRadius: '10px',
     }}
 >
-
-    <Input
-        placeholder="Search for a project.."
-        prefix={<SearchOutlined />}
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        style={{ width: '300px' }}
-        disabled={loading}
-    />
 
     <Box
         sx={{
@@ -387,6 +385,7 @@ sx={{
             overflow: 'auto',
         }}
     >
+
 
         {loading ? (
             <Spin size="large" style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }} />
@@ -443,6 +442,8 @@ sx={{
         )}
     </Box>
 
+    
+
 
 </Box>
 
@@ -455,8 +456,9 @@ sx={{
         alignItems: 'center',
         width: '40%',
         padding: '20px',
+        margin: '20px auto',
+        marginTop: '0',
         paddingBottom: '10',
-        paddingTop: '0'
     }}
 >
     {isPopupFormOpen && popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, allChecked, setAllChecked, selectedChecked, setSelectedChecked, listUsers, setListUsers, fetchedUsersForAProject, setFetchedUsersForProject, originalUsersForProject, setOriginalUsersForProject)}
