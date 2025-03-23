@@ -14,14 +14,14 @@ public class LogImage
         UserType = userType;
         TypeOfLog = typeOfLog;
     }
-    public List<Log> GetLogsByImageId(int imageId)
+    public List<Log> GetLogsByImageId(int userId)
     {
-        var logsForImage = logs.Where(log => log.ImageId == imageId).ToList();
+        var logsForImage = logs.Where(log => log.userId == userId).ToList();
         return logsForImage;
     }
-    public List<Log> GetLogsByImageIdForUser(int imageId, string userType)
+    public List<Log> GetLogsByImageIdForUser(int userId, string userType)
         {
-            var logsForImage = logs.Where(log => log.ImageId == imageId && log.UserType == userType).ToList();
+            var logsForImage = logs.Where(log => log.userId == userId && log.UserType == userType).ToList();
             return logsForImage;
         }
 }
