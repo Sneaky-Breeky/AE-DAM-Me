@@ -192,7 +192,6 @@ function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, all
                     <Button type="primary" size={"default"}
                             onClick={async (e) => {
                                 e.stopPropagation();
-                                setPopupFormOpen(false);
                                 await handleAccessUpdate({
                                     project,
                                     adminChecked,
@@ -315,8 +314,6 @@ export default function AdminProjectSecurity() {
             }
 
             setOriginalUsersForProject(usersToGrantAccess);
-
-            setPopupFormOpen(false);
             await getProjects();
             message.success("Project access updated!");
         } catch (err) {
