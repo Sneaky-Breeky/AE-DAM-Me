@@ -4,6 +4,7 @@ using DAMBackend.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DAMBackend.Migrations
 {
     [DbContext(typeof(SQLDbContext))]
-    partial class SQLDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250320050147_ProjectUserRelations")]
+    partial class ProjectUserRelations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -177,10 +180,11 @@ namespace DAMBackend.Migrations
                     b.Property<string>("Key")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int?>("iValue")
+                    b.Property<int>("iValue")
                         .HasColumnType("int");
 
                     b.Property<string>("sValue")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("type")

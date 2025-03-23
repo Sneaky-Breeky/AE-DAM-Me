@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import { Typography, Input, Space, Image, Button, Popconfirm, Form} from 'antd';
+import { Typography, Input, Space, Image, Button, Popconfirm, Form, Tooltip} from 'antd';
 import { SearchOutlined, DeleteOutlined, CloseOutlined, EditOutlined, QuestionCircleOutlined} from '@ant-design/icons';
 import { projects } from '../../utils/dummyData.js';
 
@@ -148,8 +148,11 @@ export default function AdminFileManage() {
         <tr>
             <th colspan="2" style={{height: '40px', textAlign: 'center', borderBottom:'1px solid black', padding: '0px'}} ><h3>Projects</h3></th>
         </tr>
-        {(projects.filter(p => {return p.name.toLowerCase().includes(searchQuery.toLowerCase())})).map((p) => (
-          <tr onClick={() => {
+        {projects.filter(p =>
+            p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            p.id.toString().includes(searchQuery)
+        ).map((p) => (
+            <tr onClick={() => {
             setPopupFormOpen(true);
             setEditOpen(false);
             setImageList(p.files);
@@ -157,7 +160,10 @@ export default function AdminFileManage() {
           }} style={{height: '50px'}}
             onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#fcfcfc';}}
             onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '';}}>
-            <td style={{ fontSize: '12px', textAlign: 'left', borderBottom:'1px solid black'}} >{p.name}</td>
+              <td style={{ fontSize: '12px', textAlign: 'left', borderBottom:'1px solid black' }}>
+                  <span>{p.id} - </span>
+                  <span style={{ fontStyle: 'italic', color: 'gray' }}>{p.name}</span>
+              </td>
           </tr>
         ))}
     </table>
@@ -252,8 +258,8 @@ export default function AdminFileManage() {
                     onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.5)';}}
                     onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '';}}
                 >
-                  
-                    <Image
+                  <Tooltip title="Edit Tags">
+                  <Image
                         src={file.FilePath}
                         width={150}
                         preview={false}
@@ -262,6 +268,8 @@ export default function AdminFileManage() {
                             transition: '0.2s ease-in-out',
                         }}
                     />
+                  </Tooltip>
+                    
                     {selectedImages.has(file.Id) && (
                         <DeleteOutlined
                             style={{

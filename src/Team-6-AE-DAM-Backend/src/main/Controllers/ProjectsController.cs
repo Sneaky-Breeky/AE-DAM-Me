@@ -11,7 +11,7 @@ using DAMBackend.services;
 
 namespace DAMBackend.Controllers
 {
-    [Route("api/Projects")]
+    [Route("api/damprojects")]
     [ApiController]
     public class ProjectsController : ControllerBase
     {
@@ -22,19 +22,17 @@ namespace DAMBackend.Controllers
             _context = context;
         }
 
-        private static List<ProjectModel> _projects = new List<ProjectModel>();
 
-        private SQLEntryEngine engine;
-
-        // POST response for api/Projects"
-        [HttpPost]
+        // POST response for api/damprojects"
+        [HttpPost("postproj")]
         public async Task<ActionResult<ProjectModel>> PostProject([FromBody] ProjectModel projectData)
         {
-            engine = new SQLEntryEngine(_context);
             if (projectData == null)
             {
                 return BadRequest("Invalid project data.");
             }
+
+            var engine = new SQLEntryEngine(_context);
 
             // You can now pass the incoming data to the addProject method
             var newProject = await engine.addProject(
@@ -52,40 +50,142 @@ namespace DAMBackend.Controllers
             // _projects.Add(newProject);
 
             // Return a success response with the created project
-            return CreatedAtAction(nameof(PostProject), new { id = newProject.Name }, newProject);
+            return CreatedAtAction(nameof(PostProject), new { id = newProject.Id }, newProject);
         }
+
+        // DELETE: api/projects/{id}
+        // [HttpDelete("{id}")]
+        // public async Task<IActionResult> DeleteProject(int id)
+        // {
+        //     var project = await _context.Projects.FindAsync(id);
+        //     if (project == null)
+        //     {
+        //         return NotFound();
+        //     }
+
+        //     _context.Projects.Remove(project);
+        //     await _context.SaveChangesAsync();
+
+        //     return NoContent();
+        // }
         
 
-        // GET: api/Projects/AccessList/{userId}
-        
-        [HttpGet("AccessList/{id}")]
+        // GET: api/damprojects/AccessList/{userId}
+        [HttpGet("AccessList/{userId}")]
         public async Task<ActionResult<IEnumerable<Project>>> GetProjects(int userId)
         {
-            var projects = await _context.UserFavouriteProjects
-                .Where(ufp => ufp.UserId == userId)
-                .Select(ufp => ufp.Project)
+            var projects = await _context.UserProjectRelations
+                .Where(upr => upr.UserId == userId)
+                .Select(upr => upr.Project)
                 .ToListAsync();
-            return Ok(projects);
+            
+            return Ok(new { data = projects });
         }
         
-        // POST: api/Projects/GiveAccess/{userId}/{pId}
-
+        //POST
         [HttpPost("AccessList/{userId}/{pId}")]
-        public async Task<ActionResult<UserFavouriteProject>> GiveAccess(int userId, int pId)
+        public async Task<ActionResult<UserProjectRelation>> GiveAccess(int userId, int pId)
         {
-            var access = new UserFavouriteProject
+            var existingRelation = await _context.UserProjectRelations
+                .FirstOrDefaultAsync(rel => rel.UserId == userId && rel.ProjectId == pId);
+
+            if (existingRelation != null)
+            {
+                return Ok(existingRelation);
+            }
+            var access = new UserProjectRelation
             {
                 UserId = userId,
                 ProjectId = pId,
                 IsFavourite = false
             };
-            _context.UserFavouriteProjects.Add(access);
+            _context.UserProjectRelations.Add(access);
             await _context.SaveChangesAsync();
             
             return Ok(access);
         }
+        
+        
+        [HttpDelete("AccessList/{projectId}")]
+        public async Task<IActionResult> RemoveAllAccessForProject(int projectId)
+        {
+            var existingRelations = _context.UserProjectRelations
+                .Where(rel => rel.ProjectId == projectId);
 
-        // GET: api/Projects/id
+            _context.UserProjectRelations.RemoveRange(existingRelations);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        
+        [HttpGet("{projectId}/users")]
+        public async Task<ActionResult<IEnumerable<UserModel>>> GetUsersForProject(int projectId)
+        {
+            var users = await _context.UserProjectRelations
+                .Where(ufp => ufp.ProjectId == projectId)
+                .Select(ufp => ufp.User)
+                .ToListAsync();
+
+            if (!users.Any())
+            {
+                return NotFound(new { message = "No users found for this project." });
+            }
+
+            return Ok(users);
+        }
+
+        
+        [HttpGet("FavProjects/{userId}")]
+        public async Task<ActionResult<List<ProjectModel>>> GetFavProjects(int userId)
+        {
+            var projects = await _context.UserProjectRelations
+                .Where(upr => upr.UserId == userId && upr.IsFavourite)
+                .Select(upr => upr.Project)
+                .ToListAsync();
+            
+            
+            if (projects.Count == 0)
+            {
+                return NotFound("No fav projects found.");
+            }
+            
+            return Ok(projects);
+        }
+        
+        [HttpGet("WorkingProjects/{userId}")]
+        public async Task<ActionResult<List<ProjectModel>>> GetWorkingProjects(int userId)
+        {
+            var projects = await _context.UserProjectRelations
+                .Where(upr => upr.UserId == userId && upr.WorkingOn)
+                .Select(upr => upr.Project)
+                .ToListAsync();
+            
+            
+            if (projects.Count == 0)
+            {
+                return NotFound("No working projects found.");
+            }
+            
+            return Ok(projects);
+        }
+
+        // GET: api/damprojects/getallprojs
+        [HttpGet("getallprojs")]
+        public async Task<ActionResult<List<Project>>> GetAllProjects()
+        {
+            var projects = await _context.Projects.ToListAsync();
+
+            if (projects == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(projects);
+        }
+        
+        
+        // GET: api/damprojects/id
         [HttpGet("{id}")]
         public async Task<ActionResult<Project>> GetProject(int id)
         {
@@ -99,7 +199,7 @@ namespace DAMBackend.Controllers
             return Ok(project);
         }
 
-        // PUT: api/Projects/{id}
+        // PUT: api/damprojects/{id}
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProject(int id, [FromBody] ProjectModel projectData)
@@ -134,7 +234,7 @@ namespace DAMBackend.Controllers
 
     
 
-        // DELETE: api/Projects/{id}
+        // DELETE: api/damprojects/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProject(int id)
         {
@@ -150,6 +250,25 @@ namespace DAMBackend.Controllers
             return NoContent();
         }
         
+        [HttpGet("{projectId}/tags")]
+        public async Task<IActionResult> GetTagsForProject(int projectId)
+        {
+            var tags = await _context.ProjectTags
+                .Where(tag => tag.ProjectId == projectId)
+                .Select(tag => new
+                {
+                    tag.Key,
+                    tag.sValue,
+                    tag.iValue,
+                    tag.type
+                })
+                .ToListAsync();
+
+            return Ok(tags);
+        }
+
+        
+        
         // POST: api/Projects/Tag
         /* Input format should be:
             {
@@ -160,13 +279,11 @@ namespace DAMBackend.Controllers
             }
          
          */
-
-        [HttpPost]
-
+        [HttpPost("addprojtag")]
         public async Task<IActionResult> AddProjectTag(
             [FromQuery] int ProjectId, 
             [FromQuery] string Key, 
-            [FromQuery] object Value, 
+            [FromQuery] string Value, 
             [FromQuery] value_type type)
         {
             
@@ -181,7 +298,7 @@ namespace DAMBackend.Controllers
 
             try
             {
-                var tag = engine.addProjectTag(
+                var tag = await engine.addProjectTag(
                     project,
                     Key,
                     Value,
@@ -196,14 +313,12 @@ namespace DAMBackend.Controllers
             }
             catch (Exception e)
             {
-                return StatusCode(500, "An error occurred while processing your request.");
+                return StatusCode(500, $"An error occurred: {e.InnerException?.Message ?? e.Message} \n {e.StackTrace}");
             }
-
-            
-
         }
+
         
-        // DELETE: api/Projects/Tags/{key}/{pId}
+        // DELETE: api/damprojects/{key}/{pId}
         [HttpDelete("{key}/{pId}")]
         public async Task<IActionResult> DeleteProject(string key, int pId)
         {
