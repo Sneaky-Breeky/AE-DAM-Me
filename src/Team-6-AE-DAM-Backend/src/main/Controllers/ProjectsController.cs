@@ -253,6 +253,25 @@ namespace DAMBackend.Controllers
             return NoContent();
         }
         
+        [HttpGet("{projectId}/tags")]
+        public async Task<IActionResult> GetTagsForProject(int projectId)
+        {
+            var tags = await _context.ProjectTags
+                .Where(tag => tag.ProjectId == projectId)
+                .Select(tag => new
+                {
+                    tag.Key,
+                    tag.sValue,
+                    tag.iValue,
+                    tag.type
+                })
+                .ToListAsync();
+
+            return Ok(tags);
+        }
+
+        
+        
         // POST: api/Projects/Tag
         /* Input format should be:
             {
