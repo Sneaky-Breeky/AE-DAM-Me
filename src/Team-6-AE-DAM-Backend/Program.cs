@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using DAMBackend.auth;
 using DAMBackend.Models;
+using DAMBackend.blob;
+using Azure.Storage.Blobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,10 +37,14 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddSingleton(x => 
+    new BlobServiceClient(builder.Configuration.GetConnectionString("StorageAccount")));
+
 builder.Services.AddDbContext<SQLDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddSingleton<AzureBlobService>();
 
 var app = builder.Build();
 
@@ -60,6 +66,17 @@ using (var scope = app.Services.CreateScope())
         else
         {
             Console.WriteLine("Connection to Azure SQL Database failed.");
+        }
+
+        
+        try
+        {
+            var blobService = scope.ServiceProvider.GetRequiredService<AzureBlobService>();
+            Console.WriteLine("Successfully initialized Azure Blob Storage!");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to initialize Azure Blob Storage: {ex.Message}");
         }
     }
     catch (Exception ex)
