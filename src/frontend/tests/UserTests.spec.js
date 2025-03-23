@@ -136,16 +136,6 @@ describe("LOG - Log generation", function () {
     });
 });
 
-describe("LOG - Log generation", function () {
-    it("LOG-001 - Single action log", async function () {
-        assert.fail("Test not implemented");
-    });
-
-    it("LOG-002 - Multiple action log", async function () {
-        assert.fail("Test not implemented");
-    });
-});
-
 describe("TAG - Image tagging", function () {
     it("TAG-001 - Assign tags to images", async function () {
         assert.fail("Test not implemented");
