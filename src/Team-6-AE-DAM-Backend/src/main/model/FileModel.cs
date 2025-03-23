@@ -18,7 +18,7 @@ Project that it was added to with id
     // some of the data might not be found on exif, so i changed some collumn to be nullable
     public class FileModel 
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public required string Name { get; set; }
         public required string Extension { get; set; }
         public string? Description { get; set; }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
-import { Typography, Button, Popover, Radio, Form, Input, message } from 'antd';
-import { PlusOutlined, EditOutlined, CloseOutlined } from '@ant-design/icons';
+import { Typography, Button, Popover, Radio, Form, Input, message, Popconfirm } from 'antd';
+import { PlusOutlined, EditOutlined, CloseOutlined, DeleteOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { users } from '../../utils/dummyData.js';
 import { fetchUsers, addUser, deleteUser } from '../../api/authApi.js';
 
@@ -11,6 +11,7 @@ const { Title } = Typography;
 
 function PopupForm({ visible, onClose, refreshUsers }) {
   const [form] = Form.useForm();
+
   const handleSubmit = async (values) => {
     try {
       await addUser(values);
@@ -157,6 +158,7 @@ function PopupForm({ visible, onClose, refreshUsers }) {
 }
 
 export default function AdminUserManage() {
+  const [editForm] = Form.useForm();
   const [isPopupFormOpen, setPopupFormOpen] = useState(false);
   const [userList, setUserList] = useState([]);
 
@@ -179,8 +181,15 @@ export default function AdminUserManage() {
     fetchUsersList();
   }, []);
 
+  /* REMOVE
   const save = () => {
     message.success("Changes saved successfully!");
+  };
+  */
+
+  const handleEditUser = (values) => {
+    console.log("pass edited: " + values.editPass);
+    console.log("status edited: " + values.editStatus);
   };
 
   const handleDeleteUser = async (email) => {
@@ -192,6 +201,20 @@ export default function AdminUserManage() {
       message.error("Failed to delete user");
     }
   };
+
+  const formReset = (user) => {
+    console.log(user);
+    editForm.resetFields();
+    editForm.setFieldsValue({
+      editName: user.name,
+      editEmail: user.email,
+      editRole: user.role === 0 ? 'user' : 'admin',
+      editStatus: user.status === 'Active' ? 'active' : 'deactive',
+      editPass: user.password
+    });
+    
+  };
+  
 
   return (
     <Box
@@ -262,32 +285,106 @@ export default function AdminUserManage() {
                     <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.status}</td>
                     <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>
                       <Popover
+                        placement="right"
                         content={
+                          <Form
+                            form={editForm}
+                            name="editUserForm"
+                            layout="vertical"
+                            initialValues={{
+                              remember: true,
+                            }}
+                            size='small'
+                            autoComplete="off"
+                            onFinish={handleEditUser}
+                          >
                           <div>
-                            {/* Activate/Deactivate */}
+                            {/* Edit First Name 
+                            <Form.Item
+                              label="Edit Name"
+                              name="editName"
+                              layout="horizontal"
+                              >
+                                <Input/>
+                            </Form.Item>*/}
+
+                             {/*Edit Email 
+                            <Form.Item
+                              label="Edit Email"
+                              name="editEmail"
+                              layout="horizontal"
+                              >
+                                <Input/>
+                            </Form.Item> */}
+
+                            {/* Edit Password */}
+                            <Form.Item
+                              label="Edit Password"
+                              name="editPass"
+                              layout="horizontal"
+                              >
+                                <Input/>
+                            </Form.Item>
+
+                            {/* User/Admin 
+                            <Form.Item
+                              label="Edit Role"
+                              name="editRole"
+                              layout="horizontal"
+                              >
                             <Radio.Group
-                              defaultValue={user.status === 'Active' ? '1' : '2'}
+                              onChange={(e) => console.log('Role changed:', e.target.value)}
+                            >
+                              <Radio value="user">User</Radio>
+                              <Radio value="admin">Admin</Radio>
+                            </Radio.Group>
+                            </Form.Item>*/}
+
+                            {/* Activate/Deactivate */}
+                            <Form.Item
+                              label="Edit Status"
+                              name="editStatus"
+                              layout="horizontal"
+                              >
+                            <Radio.Group
                               onChange={(e) => console.log('Status changed:', e.target.value)}
                             >
-                              <Radio value="1">Activate</Radio>
-                              <Radio value="2">Deactivate</Radio>
+                              <Radio value="active">Activate</Radio>
+                              <Radio value="deactive">Deactivate</Radio>
                             </Radio.Group>
+                            </Form.Item>
 
-                            {/* Delete Button inside Popover */}
-                            <Button
-                              type="primary"
-                              danger
-                              style={{ marginTop: '10px', width: '100%' }}
-                              onClick={() => handleDeleteUser(user.email)}
-                            >
-                              Delete User
-                            </Button>
+                            {/* Save edit user changes */}
+                            <Form.Item
+                              label={null}
+                              style={{ marginBottom: "5px" }}>
+                              <Button type="primary" htmlType="submit" style={{ marginTop: '10px', width: '100%' }}>
+                                Save Changes
+                              </Button>
+                            </Form.Item >
+
+                            {/* Delete popconfirm Button inside Popover */}
+
+                            <Popconfirm
+                              title="Delete User"
+                              description="Are you sure you want to delete the selected user?"
+                              onConfirm={() => handleDeleteUser(user.email)}
+                              icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+                              okText="Yes"
+                              cancelText="No"
+                          >
+                              <Button type="primary" danger style={{ marginTop: '10px', width: '100%' }} icon={<DeleteOutlined />}>
+                                  Delete User
+                              </Button>
+                          </Popconfirm>
                           </div>
+                          </Form>
                         }
-                        title={user.status === 'Active' ? "User Activated" : "User Deactivated"}
+                        //title={user.status === 'Active' ? "User Activated" : "User Deactivated"}
+                        title={<h3 style={{marginTop:'0'}}>Edit User</h3>}
                         trigger="click"
                       >
-                        <Button color="default" variant="text" icon={<EditOutlined />} />
+                        <Button color="default" variant="text" icon={<EditOutlined />} onClick={() => formReset(user)}/>
                       </Popover>
                     </td>
                     {/* <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>
@@ -298,6 +395,8 @@ export default function AdminUserManage() {
             </table>
 
           </div>
+
+          {/* REMOVE LATER 
           <div style={{
             display: 'flex',
             flexDirection: 'row',
@@ -310,6 +409,9 @@ export default function AdminUserManage() {
               Save
             </Button>
           </div>
+           REMOVE ABOVE LATER */}
+
+
         </Box>
 
         {/* right container with new users */}

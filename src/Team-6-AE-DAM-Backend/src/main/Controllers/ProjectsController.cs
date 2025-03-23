@@ -83,11 +83,18 @@ namespace DAMBackend.Controllers
             return Ok(new { data = projects });
         }
         
-        // POST: api/Projects/GiveAccess/{userId}/{pId}
-
+        //POST
         [HttpPost("AccessList/{userId}/{pId}")]
         public async Task<ActionResult<UserProjectRelation>> GiveAccess(int userId, int pId)
         {
+            // check if access already exists
+            var existingRelation = await _context.UserProjectRelations
+                .FirstOrDefaultAsync(rel => rel.UserId == userId && rel.ProjectId == pId);
+
+            if (existingRelation != null)
+            {
+                return Ok(existingRelation);
+            }
             var access = new UserProjectRelation
             {
                 UserId = userId,
@@ -99,6 +106,20 @@ namespace DAMBackend.Controllers
             
             return Ok(access);
         }
+        
+        
+        [HttpDelete("AccessList/{projectId}")]
+        public async Task<IActionResult> RemoveAllAccessForProject(int projectId)
+        {
+            var existingRelations = _context.UserProjectRelations
+                .Where(rel => rel.ProjectId == projectId);
+
+            _context.UserProjectRelations.RemoveRange(existingRelations);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
         
         // GET
         [HttpGet("{projectId}/users")]
@@ -247,51 +268,37 @@ namespace DAMBackend.Controllers
         public async Task<IActionResult> AddProjectTag(
             [FromQuery] int ProjectId, 
             [FromQuery] string Key, 
-            [FromQuery] string? sValue,
-            [FromQuery] int? iValue,
-            [FromQuery] string type)
+            [FromQuery] string Value, 
+            [FromQuery] value_type type)
         {
+            
             var engine = new SQLEntryEngine(_context);
+            
             var project = await _context.Projects.FindAsync(ProjectId);
-
+            
             if (project == null)
             {
-                return NotFound("Project not found.");
-            }
-
-            
-            if (!Enum.TryParse<value_type>(type, true, out var parsedType))
-            {
-                return BadRequest("Invalid type value. Must be 'String' or 'Integer'.");
-            }
-            
-            object value;
-            if (parsedType == value_type.Integer)
-            {
-                if (iValue == null) return BadRequest("iValue must be provided for Integer type.");
-                value = iValue.Value;
-            }
-            else
-            {
-                if (string.IsNullOrEmpty(sValue)) return BadRequest("sValue must be provided for String type.");
-                value = sValue;
+                return NotFound();
             }
 
             try
             {
-                Console.WriteLine($"[INFO] Adding tag: ProjectId={ProjectId}, Key={Key}, Value={value}, Type={parsedType}");
-
-                var tag = engine.addProjectTag(project, Key, value, parsedType);
+                var tag = await engine.addProjectTag(
+                    project,
+                    Key,
+                    Value,
+                    type
+                );
                 return Ok(tag);
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                // Handle the specific exception and return a meaningful response to the client
+                return BadRequest(ex.Message); // You can customize this message as needed
             }
             catch (Exception e)
             {
-                Console.WriteLine($"[ERROR] AddProjectTag: {e}");
-                return StatusCode(500, "An error occurred while processing your request.");
+                return StatusCode(500, $"An error occurred: {e.InnerException?.Message ?? e.Message} \n {e.StackTrace}");
             }
         }
 

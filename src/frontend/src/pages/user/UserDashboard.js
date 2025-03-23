@@ -1,6 +1,6 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import Box from '@mui/material/Box';
-import {Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Tooltip, message} from 'antd';
+import {Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Tooltip} from 'antd';
 import {
     SearchOutlined,
     CalendarOutlined,
@@ -22,42 +22,9 @@ export default function UserDashboard() {
     const [selectedDate, setSelectedDate] = useState(null);
     const navigate = useNavigate();
     const currentUser = users.find((user) => user.name === "John Doe"); // assume John Doe is logged in
-    const [filteredProjects, setFilteredProjects] = useState([]);
+    const [filteredProjects, setFilteredProjects] = useState(projects);
+    //TODO: check each project to see if the current user has access to it, then modify it accordingly
     const [favProjects, setFavProjects] = useState(new Set(currentUser.favProjs));
-
-    //TODO: get user id by email, and then send it to api below instead of 5 VVV
-    useEffect(() => {
-        const fetchUserProjects = async () => {
-            const userId = localStorage.getItem("userId");
-            const userEmail = localStorage.getItem("userEmail");
-            const userName = localStorage.getItem("userName");
-            
-            if (!userId) {
-                console.error("No user ID found in localStorage!");
-                return;
-            }
-            
-            
-            try {
-                const response = await fetch(`http://localhost:5146/api/Projects/AccessList/${userId}`);
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-
-                const jsonResponse = await response.json();
-                const userProjectsList = Array.isArray(jsonResponse.data) ? jsonResponse.data : [];
-                setFilteredProjects(userProjectsList);
-                
-            } catch (error) {
-                console.error("Error fetching projects:", error);
-            }
-        };
-
-        fetchUserProjects();
-    }, []);
-
-
 
     const handleSearch = () => {
         let filtered = [...projects];
@@ -83,6 +50,7 @@ export default function UserDashboard() {
 
 
         setFilteredProjects([...filtered]);
+        console.log("Filtered projects:", filtered);
     };
 
     const handleClearFilters = () => {
@@ -100,6 +68,7 @@ export default function UserDashboard() {
         }
         setFavProjects(updatedFavs);
         currentUser.favProjs = Array.from(updatedFavs);
+        console.log("Updated Favorites:", currentUser.favProjs);
     };
 
     return (
@@ -153,6 +122,7 @@ export default function UserDashboard() {
                     <Form.Item>
                         <DatePicker
                             placeholder="Select date"
+                            maxDate={dayjs()}
                             onChange={(date, dateString) => setSelectedDate(dateString)}
                             suffixIcon={<CalendarOutlined/>}
                         />

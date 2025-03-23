@@ -8,7 +8,7 @@ import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import BackupTableIcon from '@mui/icons-material/BackupTable';
 import PeopleRoundedIcon from '@mui/icons-material/PeopleRounded';
-import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
+import FolderIcon from '@mui/icons-material/Folder';
 import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import PostAddIcon from '@mui/icons-material/PostAdd';
@@ -27,7 +27,7 @@ var userPages = [
 
 var adminPages = [
   { text: 'Dashboard', url: 'dashboard', icon: <HomeRoundedIcon /> },
-  { text: 'Project Creation', url: 'projectCreation', icon: <CreateNewFolderIcon /> },
+  { text: 'Project Management', url: 'projectManagement', icon: <FolderIcon /> },
   { text: 'User Management', url: 'userManagement', icon: <ManageAccountsIcon /> },
   { text: 'Metadata Management', url: 'metadataManagement', icon: <PostAddIcon /> },
   { text: 'File Metadata Management', url: 'fileManagement', icon: <FormatListBulletedIcon /> },
