@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
-import { Typography, Button, Popover, Radio, Form, Input, Checkbox, Spin} from 'antd';
+import { Typography, Button, Popover, Radio, Form, Input, Checkbox, Spin, message} from 'antd';
 import { SearchOutlined, EditOutlined, CloseOutlined} from '@ant-design/icons';
 import { projects, files, users } from '../../utils/dummyData.js';
 
-import { fetchProjects, fetchUsersForProject } from '../../api/projectApi';
+import { fetchProjects, fetchUsersForProject, putProject } from '../../api/projectApi';
 import { fetchUsers } from '../../api/authApi';
-import {giveUserAccess} from "../../api/userApi";
+import {giveUserAccess, removeAllUserAccess} from "../../api/userApi";
 
 
 const { Title } = Typography;
@@ -24,7 +24,7 @@ const users = [
 {name: 'Michael Johnson', role: 'User', status: 'Inactive'}
 ];*/
 
-function PopupAccess(adminChecked, setAdminChecked, allChecked, setAllChecked, selectedChecked, setSelectedChecked, listUsers, setListUsers, fetchedUsersForAProject, setFetchedUsersForProject, originalUsersForProject, setOriginalUsersForProject) {
+function PopupAccess(adminChecked, setAdminChecked, allChecked, setAllChecked, selectedChecked, setSelectedChecked, listUsers, setListUsers, fetchedUsersForAProject, setFetchedUsersForProject, originalUsersForProject, setOriginalUsersForProject, handleAccessUpdate) {
 /*const [adminChecked, setAdminChecked] = useState(project.accessLevel === 'Admins Only');
 const [allChecked, setAllChecked] = useState(project.accessLevel === 'Everyone');
 const [selectedChecked, setSelectedChecked] = useState(project.accessLevel === 'Selected Users');
@@ -77,21 +77,26 @@ setFetchedUsersForProject([]);
 
 
 
-const toggleUserChecked = (e, user) => {
-const isChecked = e.target.checked;
+    const toggleUserChecked = (e, user) => {
+        const isChecked = e.target.checked;
 
-let updatedUsers;
-if (isChecked) {
-updatedUsers = [...fetchedUsersForAProject, user];
-} else {
-updatedUsers = fetchedUsersForAProject.filter((u) => u.id !== user.id);
-}
+        if (!Array.isArray(fetchedUsersForAProject)) {
+            setFetchedUsersForProject([user]); // start with one
+            return;
+        }
 
-setFetchedUsersForProject(updatedUsers);
-setSelectedChecked(true);
-setAdminChecked(false);
-setAllChecked(false);
-};
+        let updatedUsers;
+        if (isChecked) {
+            updatedUsers = [...fetchedUsersForAProject, user];
+        } else {
+            updatedUsers = fetchedUsersForAProject.filter((u) => u.id !== user.id);
+        }
+
+        setFetchedUsersForProject(updatedUsers);
+        setSelectedChecked(true);
+        setAdminChecked(false);
+        setAllChecked(false);
+    };
 
 
 
@@ -135,7 +140,7 @@ return (
 );
 }
 
-function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, allChecked, setAllChecked, selectedChecked, setSelectedChecked, listUsers, setListUsers, fetchedUsersForAProject, setFetchedUsersForProject, originalUsersForProject, setOriginalUsersForProject) {
+function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, allChecked, setAllChecked, selectedChecked, setSelectedChecked, listUsers, setListUsers, fetchedUsersForAProject, setFetchedUsersForProject, originalUsersForProject, setOriginalUsersForProject, handleAccessUpdate, setLoading, getProjects) {
 
 return (
 <Box
@@ -172,7 +177,7 @@ overflow: 'auto'
                 content={PopupAccess(adminChecked, setAdminChecked,
                     allChecked, setAllChecked,
                     selectedChecked, setSelectedChecked,
-                    listUsers, setListUsers, fetchedUsersForAProject, setFetchedUsersForProject, originalUsersForProject, setOriginalUsersForProject)}
+                    listUsers, setListUsers, fetchedUsersForAProject, setFetchedUsersForProject, originalUsersForProject, setOriginalUsersForProject, handleAccessUpdate, setLoading, getProjects)}
 
                 trigger="click"
             >
@@ -193,22 +198,7 @@ overflow: 'auto'
             onClick={async (e) => {
                 e.stopPropagation();
                 setPopupFormOpen(false);
-
-                const originalUserIds = new Set(originalUsersForProject.map(u => u.id));
-                const updatedUserIds = new Set(fetchedUsersForAProject.map(u => u.id));
-
-                // Find newly added users (users in updated list but not in original)
-                const newUsers = fetchedUsersForAProject.filter(user => !originalUserIds.has(user.id));
-
-                console.log("New users being added:", newUsers);
-
-                // Call giveUserAccess for each new user
-                for (const user of newUsers) {
-                    await giveUserAccess(user.id, project.id);
-                }
-
-                // Update original users so next time it's correct
-                setOriginalUsersForProject(fetchedUsersForAProject);
+                await handleAccessUpdate({project, adminChecked, allChecked, fetchedUsersForAProject, originalUsersForProject, setOriginalUsersForProject, setPopupFormOpen, setLoading, getProjects});
             }}
     >
         Submit
@@ -238,44 +228,45 @@ const [listUsers, setListUsers] = useState([]);
 const [originalUsersForProject, setOriginalUsersForProject] = useState([]);
 
 // Fetch users
-useEffect(() => {
-const getUsers = async () => {
-try {
-const users = await fetchUsers();
-if (Array.isArray(users)) {
-    setListUsers(users);
-} else {
-    console.error("Expected an array but got:", users);
-    setListUsers([]);
-}
-} catch (error) {
-console.error("Error fetching users:", error);
-setListUsers([]);
-}
-};
+    const getUsers = async () => {
+        try {
+            const users = await fetchUsers();
+            if (Array.isArray(users)) {
+                setListUsers(users);
+            } else {
+                console.error("Expected an array but got:", users);
+                setListUsers([]);
+            }
+        } catch (error) {
+            console.error("Error fetching users:", error);
+            setListUsers([]);
+        }
+    };
 
-getUsers();
-}, []);
+    useEffect(() => {
+        getUsers();
+    }, []);
+
 
 // Fetch projects
-useEffect(() => {
-const getProjects = async () => {
-setLoading(true);
-const response = await fetchProjects();
+    const getProjects = async () => {
+        setLoading(true);
+        const response = await fetchProjects();
 
-if (response.error) {
-console.error("Error fetching projects:", response.error);
-setFetchedProjects([]);
-} else {
-console.log("Fetched Projects:", response);
-setFetchedProjects(response);
-}
+        if (response.error) {
+            console.error("Error fetching projects:", response.error);
+            setFetchedProjects([]);
+        } else {
+            //console.log("Fetched Projects:", response);
+            setFetchedProjects(response);
+        }
 
-setLoading(false);
-};
+        setLoading(false);
+    };
 
-getProjects();
-}, []);
+    useEffect(() => {
+        getProjects();
+    }, []);
 
 
 const getUsersForProject = async (projectId) => {
@@ -293,10 +284,61 @@ setFetchedUsersForProject(response);
 setLoading(false);
 };
 
+    async function handleAccessUpdate({
+                                          project,
+                                          adminChecked,
+                                          allChecked,
+                                          fetchedUsersForAProject,
+                                          originalUsersForProject,
+                                          setOriginalUsersForProject,
+                                          setPopupFormOpen,
+                                          setLoading,
+                                          getProjects
+                                      }) {
+        try {
+            setLoading(true);
+
+            let newAccessLevel = 2; // Default to Selected Users
+            if (adminChecked) newAccessLevel = 0;
+            else if (allChecked) newAccessLevel = 1;
+
+            const updatedProjectData = {
+                ...project,
+                accessLevel: newAccessLevel,
+            };
+
+            const updateResult = await putProject(project.id, updatedProjectData);
+            if (updateResult.error) {
+                throw new Error(updateResult.error);
+            }
+
+            if (newAccessLevel === 2) {
+                await removeAllUserAccess(project.id);
+
+                // Add the currently selected users
+                for (const user of fetchedUsersForAProject) {
+                    await giveUserAccess(user.id, project.id);
+                }
+
+                // Update original users list
+                setOriginalUsersForProject(fetchedUsersForAProject);
+            }
+
+            setPopupFormOpen(false);
+            await getProjects();
+            message.success("Project access updated!");
+        } catch (err) {
+            console.error("Failed to update access:", err);
+            message.error("Failed to update project access.");
+        } finally {
+            setLoading(false);
+        }
+    }
 
 
 
-return (
+
+    return (
 <Box
 sx={{
 display: 'flex',
@@ -414,10 +456,13 @@ sx={{
                                     existingUsers = listUsers.filter((user) => user.role === 1);
                                 } else if (p.accessLevel === 1) {  // Everyone
                                     setAllChecked(true);
-                                    existingUsers = [...listUsers];
+                                    //existingUsers = [...listUsers];
+                                    existingUsers = await getUsersForProject(p.id);
                                 } else if (p.accessLevel === 2) {  // Selected Users
                                     setSelectedChecked(true);
                                     existingUsers = await getUsersForProject(p.id);
+                                    setOriginalUsersForProject(Array.isArray(existingUsers) ? existingUsers : []);
+                                    setFetchedUsersForProject(Array.isArray(existingUsers) ? existingUsers : []);
                                 }
 
                                 // Save original users list BEFORE updating fetched users
@@ -432,7 +477,9 @@ sx={{
                             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fcfcfc'; }}
                             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = ''; }}>
                             <td style={{ fontSize: '12px', width: '40%', textAlign: 'left', borderBottom: '1px solid black' }}>{p.name}</td>
-                            <td style={{ fontSize: '12px', width: '30%', textAlign: 'left', borderBottom: '1px solid black' }}>{p.accessLevel}</td>
+                            <td style={{ fontSize: '12px', width: '30%', textAlign: 'left', borderBottom: '1px solid black' }}>
+                                {p.accessLevel === 0 ? 'Admins Only' : p.accessLevel === 1 ? 'Everyone' : 'Selected Users'}
+                            </td>
                             <td style={{ fontSize: '12px', width: '5%', textAlign: 'left', borderBottom: '1px solid black' }}></td>
                         </tr>
 
@@ -461,7 +508,7 @@ sx={{
         paddingBottom: '10',
     }}
 >
-    {isPopupFormOpen && popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, allChecked, setAllChecked, selectedChecked, setSelectedChecked, listUsers, setListUsers, fetchedUsersForAProject, setFetchedUsersForProject, originalUsersForProject, setOriginalUsersForProject)}
+    {isPopupFormOpen && popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, allChecked, setAllChecked, selectedChecked, setSelectedChecked, listUsers, setListUsers, fetchedUsersForAProject, setFetchedUsersForProject, originalUsersForProject, setOriginalUsersForProject, handleAccessUpdate, setLoading, getProjects)}
 
 </Box>
 </Box>

@@ -28,3 +28,29 @@ export async function giveUserAccess(userId, projectId) {
         return { error: "Network error or server unreachable", message: error.message };
     }
 }
+
+export async function removeAllUserAccess(projectId) {
+    try {
+        const response = await fetch(`${PROJECTS_URL}/AccessList/${projectId}`, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            try {
+                const errorData = JSON.parse(errorText);
+                return { error: errorData.message || "Unknown error" };
+            } catch {
+                return { error: `HTTP Error ${response.status}: ${errorText}` };
+            }
+        }
+
+        return { message: "All access removed." };
+    } catch (error) {
+        console.error("Error removing all access:", error);
+        return { error: "Network error or server unreachable", message: error.message };
+    }
+}
