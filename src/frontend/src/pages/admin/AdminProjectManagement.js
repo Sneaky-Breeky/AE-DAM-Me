@@ -5,6 +5,8 @@ import { CloseOutlined, SearchOutlined, DeleteOutlined, QuestionCircleOutlined }
 import CreateNewFolderOutlinedIcon from '@mui/icons-material/CreateNewFolderOutlined';
 import FolderDeleteOutlinedIcon from '@mui/icons-material/FolderDeleteOutlined';
 import {fetchProjects, postProject, deleteProject} from '../../api/projectApi';
+import { fetchUsers } from '../../api/authApi';
+import { giveUserAccess } from '../../api/userApi';
 
 const { Title } = Typography;
 
@@ -65,13 +67,20 @@ export default function ProjectManagement() {
             if (result.error) {
                 throw new Error(result.error);
             }
+            
+            // give admin access to this project
+            const users = await fetchUsers();
+            const admins = users.filter((user) => user.role === 1);
+            
+            for (const admin of admins) {
+                await giveUserAccess(admin.id, result.id);
+            }
 
             console.log("Project successfully added:", result);
             message.success("Project added successfully");
             form.resetFields();
 
             await getProjects();
-
         } catch (error) {
             console.error("Error adding project:", error);
             message.error("Failed to add project");
