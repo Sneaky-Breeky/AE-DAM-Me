@@ -144,7 +144,7 @@ function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, all
                             borderBottom: '1px solid black',
                             padding: '0px'
                         }}>
-                            <h4>Edit {project.name} Project's Metadata Viewing</h4></th>
+                            <h4>Edit {project.name} Project's Access Level</h4></th>
                     </tr>
                     <tr style={{height: '50px'}}>
                         <td style={{
