@@ -75,10 +75,10 @@ export default function Login({setLoggedIn}) {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!usersLoaded) {
-      console.error("Users are not loaded yet! Try again.");
-      return;
-    }
+    // if (!usersLoaded) {
+    //   console.error("Users are not loaded yet! Try again.");
+    //   return;
+    // }
   
     const userData = new FormData(event.currentTarget);
     const email = userData.get('email');
