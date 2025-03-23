@@ -210,7 +210,10 @@ sx={{
                     <h3>Projects</h3>
                 </th>
             </tr>
-            {(fetchedProjects.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))).map((p) => (
+            {fetchedProjects.filter((p) =>
+                p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p.id.toString().includes(searchQuery)
+            ).map((p) => (
                 <tr
                     key={p.id}
                     onClick={async () => {
@@ -222,7 +225,9 @@ sx={{
                     }} style={{ height: '50px' }}
                     onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fcfcfc'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = ''; }}>
-                    <td style={{ fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black' }}>{p.name}</td>
+                    <td style={{ fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black' }}>
+                        <strong>{p.id}</strong> - <span style={{ color: 'grey', fontStyle: 'italic' }}>{p.name}</span>
+                    </td>
                 </tr>
             ))}
         </table>
@@ -281,7 +286,10 @@ editNameOpen, setEditNameOpen, editLocOpen, setEditLocOpen, editDateOpen, setEdi
             </tr>
             <tr style={{paddingTop: '0'}}>
                 <th colspan="3" style={{height: '40px', textAlign: 'center', borderBottom:'1px solid black', padding: '0px'}} ><h4 style={{ margin:'0'}}>
-                    {project.name + " Project"}
+                    <span>
+                      <strong>{project.id}</strong> - <span style={{ color: 'grey', fontStyle: 'italic' }}>{project.name}</span>
+                    </span>
+
 
                 </h4></th>
             </tr>
