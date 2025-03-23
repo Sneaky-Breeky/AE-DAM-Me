@@ -181,12 +181,6 @@ export default function AdminUserManage() {
     fetchUsersList();
   }, []);
 
-  /* REMOVE
-  const save = () => {
-    message.success("Changes saved successfully!");
-  };
-  */
-
   const handleEditUser = (values) => {
     console.log("pass edited: " + values.editPass);
     console.log("status edited: " + values.editStatus);
@@ -279,7 +273,7 @@ export default function AdminUserManage() {
               <tbody>
                 {userList.map((user, idx) => (
                   <tr key={user.email || idx} style={{ height: '50px' }}>
-                    <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.name}</td>
+                    <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.firstName + ' ' + user.lastName}</td>
                     <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.email}</td>
                     <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.role == "0"? "User" : "Admin"}</td>
                     <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.status}</td>
