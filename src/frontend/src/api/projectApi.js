@@ -143,6 +143,35 @@ export async function deleteProject(projectId) {
 }
 
 
+export async function fetchTagsForProject(projectId) {
+    try {
+        const url = `${PROJECTS_URL}/${projectId}/tags`;
+
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            try {
+                const errorData = JSON.parse(errorText);
+                return { error: errorData.message || "Unknown error" };
+            } catch {
+                return { error: `HTTP Error ${response.status}: ${errorText}` };
+            }
+        }
+
+        return await response.json(); // array of tag objects
+    } catch (error) {
+        console.error("Network or fetch error:", error);
+        return { error: "Network error or server unreachable", message: error.message };
+    }
+}
+
+
 
 
 export async function addProjectTag(ProjectId, Key, Value, type) {

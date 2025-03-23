@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import { Typography, Button, Input, Form, Space, DatePicker, Spin, message } from 'antd';
 import { SearchOutlined, CloseOutlined, MinusCircleOutlined, PlusOutlined, CalendarOutlined} from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { fetchProjects, putProject, deleteProjectTag, addProjectTag } from '../../api/projectApi';
+import { fetchProjects, putProject, deleteProjectTag, addProjectTag, fetchTagsForProject } from '../../api/projectApi';
 
 
 const { Title } = Typography;
@@ -20,25 +20,40 @@ const [form] = Form.useForm();
 
 
 // Fetch projects
-const getProjects = async () => {
-setLoading(true);
-const response = await fetchProjects();
+    const getProjects = async () => {
+        setLoading(true);
+        const response = await fetchProjects();
 
-if (response.error) {
-console.error("Error fetching projects:", response.error);
-setFetchedProjects([]);
-} else {
-console.log("Fetched Projects:", response);
-setFetchedProjects(response);
-}
+        if (response.error) {
+            console.error("Error fetching projects:", response.error);
+            setFetchedProjects([]);
+            setLoading(false);
+            return [];
+        }
 
-setLoading(false);
-};
+        setFetchedProjects(response);
+        setLoading(false);
+        return response; // return the updated list
+    };
+
 
 useEffect(() => {
 getProjects();
 }, []);
 
+
+    useEffect(() => {
+        if (project && project.tags) {
+            const convertedTags = project.tags.map(tag => ({
+                field: tag.key,
+                fieldMD: tag.type === 0 ? tag.sValue : tag.iValue
+            }));
+            form.setFieldsValue({ fields: convertedTags });
+        }
+    }, [project, isEditOpen]);
+
+    
+    
 //TODO: only allow Status to be "Active" or "Inactive"
 const handleMDEdits = async (values) => {
 if (!project) return;
@@ -85,7 +100,6 @@ await deleteProjectTag(oldTag.key, project.id);
 
 message.success("Project updated successfully");
 setEditOpen(false);
-setPopupFormOpen(false);
 form.resetFields();
 await getProjects();
 } catch (err) {
@@ -184,10 +198,12 @@ sx={{
             {(fetchedProjects.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))).map((p) => (
                 <tr
                     key={p.id}
-                    onClick={() => {
-                        setPopupFormOpen(true);
+                    onClick={async () => {
                         setEditOpen(false);
-                        setProject(p);
+                        const tags = await fetchTagsForProject(p.id);
+                        const fullProject = { ...p, tags };
+                        setProject(fullProject);
+                        setPopupFormOpen(true);
                     }} style={{ height: '50px' }}
                     onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fcfcfc'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = ''; }}>
@@ -275,7 +291,11 @@ editNameOpen, setEditNameOpen, editLocOpen, setEditLocOpen, editDateOpen, setEdi
                 date: project?.date ? dayjs(project.date) : null,
                 status: project?.status || '',
                 phase: project?.phase || '',
-                fields: project?.tags || [],
+                fields: project?.tags?.map(tag => ({
+                    field: tag.key,
+                    fieldMD: tag.type === 0 ? tag.sValue : tag.iValue
+                })) || [],
+
             }}>
 
             <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
@@ -399,12 +419,14 @@ editNameOpen, setEditNameOpen, editLocOpen, setEditLocOpen, editDateOpen, setEdi
 
 
                 {isEditOpen ?
-                    (<Button htmlType="submit" type="primary" size={"default"}
-                             onClick={() => {
-                                 form.validateFields()
-                                 form.submit();
-                                 setPopupFormOpen(false);
-                             }}>Submit</Button>)
+                    (<Button type="primary" size={"default"} onClick={() => {
+                        form
+                            .validateFields()
+                            .then(handleMDEdits)
+                            .catch((error) => console.log("Validation failed:", error));
+                    }}>
+                        Submit
+                    </Button>)
                     : (<Button type="primary" disabled size={"default"}>Submit</Button>)
                 }
 
