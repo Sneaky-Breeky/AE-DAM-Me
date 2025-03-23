@@ -1,9 +1,9 @@
 import React, { useState, useEffect  } from 'react';
 import Box from '@mui/material/Box';
-import { Typography, Button, Input, Form, Space, DatePicker, Spin, message } from 'antd';
+import { Typography, Button, Input, Form, Space, DatePicker, Spin, message, Popconfirm } from 'antd';
 import { SearchOutlined, CloseOutlined, MinusCircleOutlined, PlusOutlined, CalendarOutlined} from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { fetchProjects, putProject, deleteProjectTag, addProjectTag } from '../../api/projectApi';
+import { fetchProjects, putProject, addProjectTag, deleteProjectTag, fetchTagsForProject } from '../../api/projectApi';
 
 
 const { Title } = Typography;
@@ -20,25 +20,40 @@ const [form] = Form.useForm();
 
 
 // Fetch projects
-const getProjects = async () => {
-setLoading(true);
-const response = await fetchProjects();
+    const getProjects = async () => {
+        setLoading(true);
+        const response = await fetchProjects();
 
-if (response.error) {
-console.error("Error fetching projects:", response.error);
-setFetchedProjects([]);
-} else {
-console.log("Fetched Projects:", response);
-setFetchedProjects(response);
-}
+        if (response.error) {
+            console.error("Error fetching projects:", response.error);
+            setFetchedProjects([]);
+            setLoading(false);
+            return [];
+        }
 
-setLoading(false);
-};
+        setFetchedProjects(response);
+        setLoading(false);
+        return response; 
+    };
+
 
 useEffect(() => {
 getProjects();
 }, []);
 
+
+    useEffect(() => {
+        if (project && project.tags) {
+            const convertedTags = project.tags.map(tag => ({
+                field: tag.key,
+                fieldMD: tag.type === 0 ? tag.sValue : tag.iValue
+            }));
+            form.setFieldsValue({ fields: convertedTags });
+        }
+    }, [project, isEditOpen]);
+
+    
+    
 //TODO: only allow Status to be "Active" or "Inactive"
 const handleMDEdits = async (values) => {
 if (!project) return;
@@ -73,19 +88,33 @@ for (const tag of newTags) {
 if (!oldTagKeys.includes(tag.field)) {
 const type = typeof tag.fieldMD === 'number' ? 1 : 0; // 1 = Integer, 0 = String
 await addProjectTag(project.id, tag.field, tag.fieldMD, type);
-}
-}
+}}
 
 // remove deleted tags
-for (const oldTag of oldTags) {
-if (!newTags.find(tag => tag.field === oldTag.key)) {
-await deleteProjectTag(oldTag.key, project.id);
-}
-}
+    for (const oldTag of oldTags) {
+        if (!newTags.find(tag => tag.field === oldTag.key)) {
+            const res = await deleteProjectTag(oldTag.key, project.id);
+            if (!res.error) {
+                message.success(`Deleted tag: ${oldTag.key}`);
+            } else {
+                message.error(`Failed to delete tag: ${oldTag.key}`);
+                console.error(res.error);
+            }
+        }
+    }
+
+// update local tags state
+    const updatedTags = oldTags.filter(oldTag =>
+        newTags.find(tag => tag.field === oldTag.key)
+    );
+    setProject(prev => ({
+        ...prev,
+        tags: updatedTags
+    }));
+
 
 message.success("Project updated successfully");
 setEditOpen(false);
-setPopupFormOpen(false);
 form.resetFields();
 await getProjects();
 } catch (err) {
@@ -181,17 +210,24 @@ sx={{
                     <h3>Projects</h3>
                 </th>
             </tr>
-            {(fetchedProjects.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))).map((p) => (
+            {fetchedProjects.filter((p) =>
+                p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p.id.toString().includes(searchQuery)
+            ).map((p) => (
                 <tr
                     key={p.id}
-                    onClick={() => {
-                        setPopupFormOpen(true);
+                    onClick={async () => {
                         setEditOpen(false);
-                        setProject(p);
+                        const tags = await fetchTagsForProject(p.id);
+                        const fullProject = { ...p, tags };
+                        setProject(fullProject);
+                        setPopupFormOpen(true);
                     }} style={{ height: '50px' }}
                     onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fcfcfc'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = ''; }}>
-                    <td style={{ fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black' }}>{p.name}</td>
+                    <td style={{ fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black' }}>
+                        <strong>{p.id}</strong> - <span style={{ color: 'grey', fontStyle: 'italic' }}>{p.name}</span>
+                    </td>
                 </tr>
             ))}
         </table>
@@ -250,7 +286,10 @@ editNameOpen, setEditNameOpen, editLocOpen, setEditLocOpen, editDateOpen, setEdi
             </tr>
             <tr style={{paddingTop: '0'}}>
                 <th colspan="3" style={{height: '40px', textAlign: 'center', borderBottom:'1px solid black', padding: '0px'}} ><h4 style={{ margin:'0'}}>
-                    {project.name + " Project"}
+                    <span>
+                      <strong>{project.id}</strong> - <span style={{ color: 'grey', fontStyle: 'italic' }}>{project.name}</span>
+                    </span>
+
 
                 </h4></th>
             </tr>
@@ -275,7 +314,11 @@ editNameOpen, setEditNameOpen, editLocOpen, setEditLocOpen, editDateOpen, setEdi
                 date: project?.date ? dayjs(project.date) : null,
                 status: project?.status || '',
                 phase: project?.phase || '',
-                fields: project?.tags || [],
+                fields: project?.tags?.map(tag => ({
+                    field: tag.key,
+                    fieldMD: tag.type === 0 ? tag.sValue : tag.iValue
+                })) || [],
+
             }}>
 
             <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
@@ -352,7 +395,17 @@ editNameOpen, setEditNameOpen, editLocOpen, setEditLocOpen, editDateOpen, setEdi
                                             <Input placeholder="Metadata" />
                                         </Form.Item>
 
-                                        <MinusCircleOutlined style={{ marginBottom: "5px", marginRight: "20px" }}onClick={() => remove(name)} />
+                                        <Popconfirm
+                                            title="Are you sure you want to delete this tag?"
+                                            onConfirm={() => remove(name)}
+                                            okText="Yes"
+                                            cancelText="No"
+                                        >
+                                            <MinusCircleOutlined
+                                                style={{ marginBottom: "5px", marginRight: "20px", color: 'red' }}
+                                            />
+                                        </Popconfirm>
+
                                     </div>
 
                                     : <Form.Item
@@ -399,12 +452,14 @@ editNameOpen, setEditNameOpen, editLocOpen, setEditLocOpen, editDateOpen, setEdi
 
 
                 {isEditOpen ?
-                    (<Button htmlType="submit" type="primary" size={"default"}
-                             onClick={() => {
-                                 form.validateFields()
-                                 form.submit();
-                                 setPopupFormOpen(false);
-                             }}>Submit</Button>)
+                    (<Button type="primary" size={"default"} onClick={() => {
+                        form
+                            .validateFields()
+                            .then(handleMDEdits)
+                            .catch((error) => console.log("Validation failed:", error));
+                    }}>
+                        Submit
+                    </Button>)
                     : (<Button type="primary" disabled size={"default"}>Submit</Button>)
                 }
 
@@ -415,8 +470,6 @@ editNameOpen, setEditNameOpen, editLocOpen, setEditLocOpen, editDateOpen, setEdi
     </div>
 </Box>
 }
-
-
 </Box>
 </Box>
 </Box>

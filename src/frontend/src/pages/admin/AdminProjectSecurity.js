@@ -192,7 +192,6 @@ function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, all
                     <Button type="primary" size={"default"}
                             onClick={async (e) => {
                                 e.stopPropagation();
-                                setPopupFormOpen(false);
                                 await handleAccessUpdate({
                                     project,
                                     adminChecked,
@@ -315,8 +314,6 @@ export default function AdminProjectSecurity() {
             }
 
             setOriginalUsersForProject(usersToGrantAccess);
-
-            setPopupFormOpen(false);
             await getProjects();
             message.success("Project access updated!");
         } catch (err) {
@@ -438,7 +435,10 @@ export default function AdminProjectSecurity() {
                                         }}>Access Level
                                         </th>
                                     </tr>
-                                    {fetchedProjects.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).map((p) => (
+                                    {fetchedProjects.filter(p =>
+                                        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                        p.id.toString().includes(searchQuery)
+                                    ).map((p) => (
                                         <tr key={p.id}
                                             onClick={async () => {
                                                 setProject(p);
@@ -489,7 +489,9 @@ export default function AdminProjectSecurity() {
                                                 width: '40%',
                                                 textAlign: 'left',
                                                 borderBottom: '1px solid black'
-                                            }}>{p.name}</td>
+                                            }}><span>{p.id} - </span>
+                                                <span style={{ fontStyle: 'italic', color: 'gray' }}>{p.name}</span>
+                                            </td>
                                             <td style={{
                                                 fontSize: '12px',
                                                 width: '30%',

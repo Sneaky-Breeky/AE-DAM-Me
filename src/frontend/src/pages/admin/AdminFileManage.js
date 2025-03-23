@@ -148,8 +148,11 @@ export default function AdminFileManage() {
         <tr>
             <th colspan="2" style={{height: '40px', textAlign: 'center', borderBottom:'1px solid black', padding: '0px'}} ><h3>Projects</h3></th>
         </tr>
-        {(projects.filter(p => {return p.name.toLowerCase().includes(searchQuery.toLowerCase())})).map((p) => (
-          <tr onClick={() => {
+        {projects.filter(p =>
+            p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            p.id.toString().includes(searchQuery)
+        ).map((p) => (
+            <tr onClick={() => {
             setPopupFormOpen(true);
             setEditOpen(false);
             setImageList(p.files);
@@ -157,7 +160,10 @@ export default function AdminFileManage() {
           }} style={{height: '50px'}}
             onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#fcfcfc';}}
             onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '';}}>
-            <td style={{ fontSize: '12px', textAlign: 'left', borderBottom:'1px solid black'}} >{p.name}</td>
+              <td style={{ fontSize: '12px', textAlign: 'left', borderBottom:'1px solid black' }}>
+                  <span>{p.id} - </span>
+                  <span style={{ fontStyle: 'italic', color: 'gray' }}>{p.name}</span>
+              </td>
           </tr>
         ))}
     </table>
