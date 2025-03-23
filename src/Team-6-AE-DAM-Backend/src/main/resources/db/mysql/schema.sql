@@ -36,11 +36,14 @@ CREATE TABLE User (
                       last_name VARCHAR(20),
                       role VARCHAR(5)
 );
-
-CREATE TABLE Logger (
-                        log_id INT PRIMARY KEY,
-                        timestamp TIMESTAMP,
-                        action VARCHAR(8)
+CREATE TABLE LogImage (
+                          LogId INT PRIMARY KEY,
+                          UserId INT,
+                          ImageId INT,
+                          TypeOfLog VARCHAR(50),
+                          LogDate DATETIME,
+                          FOREIGN KEY (UserId) REFERENCES Users(id),
+                          FOREIGN KEY (ImageId) REFERENCES Image(ImageId)
 );
 
 CREATE TABLE Palette (
