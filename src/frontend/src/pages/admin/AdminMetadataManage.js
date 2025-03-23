@@ -1,9 +1,9 @@
 import React, { useState, useEffect  } from 'react';
 import Box from '@mui/material/Box';
-import { Typography, Button, Input, Form, Space, DatePicker, Spin, message } from 'antd';
+import { Typography, Button, Input, Form, Space, DatePicker, Spin, message, Popconfirm } from 'antd';
 import { SearchOutlined, CloseOutlined, MinusCircleOutlined, PlusOutlined, CalendarOutlined} from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { fetchProjects, putProject, deleteProjectTag, addProjectTag, fetchTagsForProject } from '../../api/projectApi';
+import { fetchProjects, putProject, addProjectTag, deleteProjectTag, fetchTagsForProject } from '../../api/projectApi';
 
 
 const { Title } = Typography;
@@ -33,7 +33,7 @@ const [form] = Form.useForm();
 
         setFetchedProjects(response);
         setLoading(false);
-        return response; // return the updated list
+        return response; 
     };
 
 
@@ -88,15 +88,30 @@ for (const tag of newTags) {
 if (!oldTagKeys.includes(tag.field)) {
 const type = typeof tag.fieldMD === 'number' ? 1 : 0; // 1 = Integer, 0 = String
 await addProjectTag(project.id, tag.field, tag.fieldMD, type);
-}
-}
+}}
 
 // remove deleted tags
-for (const oldTag of oldTags) {
-if (!newTags.find(tag => tag.field === oldTag.key)) {
-await deleteProjectTag(oldTag.key, project.id);
-}
-}
+    for (const oldTag of oldTags) {
+        if (!newTags.find(tag => tag.field === oldTag.key)) {
+            const res = await deleteProjectTag(oldTag.key, project.id);
+            if (!res.error) {
+                message.success(`Deleted tag: ${oldTag.key}`);
+            } else {
+                message.error(`Failed to delete tag: ${oldTag.key}`);
+                console.error(res.error);
+            }
+        }
+    }
+
+// update local tags state
+    const updatedTags = oldTags.filter(oldTag =>
+        newTags.find(tag => tag.field === oldTag.key)
+    );
+    setProject(prev => ({
+        ...prev,
+        tags: updatedTags
+    }));
+
 
 message.success("Project updated successfully");
 setEditOpen(false);
@@ -372,7 +387,17 @@ editNameOpen, setEditNameOpen, editLocOpen, setEditLocOpen, editDateOpen, setEdi
                                             <Input placeholder="Metadata" />
                                         </Form.Item>
 
-                                        <MinusCircleOutlined style={{ marginBottom: "5px", marginRight: "20px" }}onClick={() => remove(name)} />
+                                        <Popconfirm
+                                            title="Are you sure you want to delete this tag?"
+                                            onConfirm={() => remove(name)}
+                                            okText="Yes"
+                                            cancelText="No"
+                                        >
+                                            <MinusCircleOutlined
+                                                style={{ marginBottom: "5px", marginRight: "20px", color: 'red' }}
+                                            />
+                                        </Popconfirm>
+
                                     </div>
 
                                     : <Form.Item
@@ -437,8 +462,6 @@ editNameOpen, setEditNameOpen, editLocOpen, setEditLocOpen, editDateOpen, setEdi
     </div>
 </Box>
 }
-
-
 </Box>
 </Box>
 </Box>

@@ -23,7 +23,7 @@ namespace DAMBackend.Controllers
         }
 
 
-        // POST response for api/Projects"
+        // POST response for api/damprojects"
         [HttpPost("postproj")]
         public async Task<ActionResult<ProjectModel>> PostProject([FromBody] ProjectModel projectData)
         {
@@ -70,8 +70,7 @@ namespace DAMBackend.Controllers
         // }
         
 
-        // GET: api/Projects/AccessList/{userId}
-        
+        // GET: api/damprojects/AccessList/{userId}
         [HttpGet("AccessList/{userId}")]
         public async Task<ActionResult<IEnumerable<Project>>> GetProjects(int userId)
         {
@@ -87,7 +86,6 @@ namespace DAMBackend.Controllers
         [HttpPost("AccessList/{userId}/{pId}")]
         public async Task<ActionResult<UserProjectRelation>> GiveAccess(int userId, int pId)
         {
-            // check if access already exists
             var existingRelation = await _context.UserProjectRelations
                 .FirstOrDefaultAsync(rel => rel.UserId == userId && rel.ProjectId == pId);
 
@@ -121,7 +119,6 @@ namespace DAMBackend.Controllers
         }
 
         
-        // GET
         [HttpGet("{projectId}/users")]
         public async Task<ActionResult<IEnumerable<UserModel>>> GetUsersForProject(int projectId)
         {
@@ -173,7 +170,7 @@ namespace DAMBackend.Controllers
             return Ok(projects);
         }
 
-        // GET: api/Projects
+        // GET: api/damprojects/getallprojs
         [HttpGet("getallprojs")]
         public async Task<ActionResult<List<Project>>> GetAllProjects()
         {
@@ -188,7 +185,7 @@ namespace DAMBackend.Controllers
         }
         
         
-        // GET: api/Projects/id
+        // GET: api/damprojects/id
         [HttpGet("{id}")]
         public async Task<ActionResult<Project>> GetProject(int id)
         {
@@ -202,7 +199,7 @@ namespace DAMBackend.Controllers
             return Ok(project);
         }
 
-        // PUT: api/Projects/{id}
+        // PUT: api/damprojects/{id}
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProject(int id, [FromBody] ProjectModel projectData)
@@ -237,7 +234,7 @@ namespace DAMBackend.Controllers
 
     
 
-        // DELETE: api/Projects/{id}
+        // DELETE: api/damprojects/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProject(int id)
         {
@@ -282,7 +279,6 @@ namespace DAMBackend.Controllers
             }
          
          */
-
         [HttpPost("addprojtag")]
         public async Task<IActionResult> AddProjectTag(
             [FromQuery] int ProjectId, 
@@ -322,7 +318,7 @@ namespace DAMBackend.Controllers
         }
 
         
-        // DELETE: api/Projects/Tags/{key}/{pId}
+        // DELETE: api/damprojects/{key}/{pId}
         [HttpDelete("{key}/{pId}")]
         public async Task<IActionResult> DeleteProject(string key, int pId)
         {

@@ -211,7 +211,7 @@ export async function addProjectTag(ProjectId, Key, Value, type) {
 
 export async function deleteProjectTag(key, projectId) {
     try {
-        const url = `${PROJECTS_URL}/Tags/${key}/${projectId}`;
+        const url = `${PROJECTS_URL}/${key}/${projectId}`;
         console.log(`Deleting project tag from: ${url}`);
 
         const response = await fetch(url, {
