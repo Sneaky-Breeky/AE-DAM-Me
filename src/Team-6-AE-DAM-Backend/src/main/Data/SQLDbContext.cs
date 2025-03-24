@@ -20,12 +20,15 @@ namespace DAMBackend.Models
         public DbSet<ProjectTagModel> ProjectTags { get; set; }
         
         public DbSet<UserProjectRelation> UserProjectRelations { get; set; }
+
+        public DbSet<LogImage> LogImage { get; set; }
         
         
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) 
 
         {
+
 
             // Key for basic data tag model
             modelBuilder.Entity<TagBasicModel>()
@@ -102,6 +105,11 @@ namespace DAMBackend.Models
                 .WithOne(t => t.Project)
                 .HasForeignKey(t => t.ProjectId)
                 .IsRequired();
+            // Key for basic data tag model
+            modelBuilder.Entity<LogImage>()
+            .HasKey(m =>  m.LogId ).
+            HasForeignKey(t => t.ImageId).
+            HasForeignKey(u => u.UserId);
 
             // generate int for userid
             modelBuilder.Entity<UserModel>()
