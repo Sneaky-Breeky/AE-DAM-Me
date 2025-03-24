@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Box from '@mui/material/Box';
-import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Space, Image, Popconfirm } from 'antd';
+import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Space, Image, Popconfirm, Tooltip } from 'antd';
 import {
     SearchOutlined,
     CalendarOutlined,
@@ -224,6 +224,30 @@ export default function UserProjectOverview() {
 
             {/* Main content */}
             <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+                {/* Project Metadat */}
+                <Box sx={{ 
+                    display: 'flex',
+                    flexDirection: 'column', 
+                    justifyContent: 'space-between',
+                    alignItems: 'start',
+                    width:'70%',
+                    margin: '20px auto',
+                    backgroundColor: '#f5f5f5',
+                    borderRadius: '10px',
+                    padding: '20px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+                        <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width:'100%'}}>
+                        <div><strong>Location: </strong><span>{state.project.location}</span></div>
+                        <div><strong>Date: </strong><span>{/*dayjs(state.project.date)*/}</span></div>
+                        <div><strong>State: </strong><span>{state.project.state}</span></div>
+                        <div><strong>Phase: </strong><span>{state.project.phase}</span></div>
+                        </div>
+                        <div style={{margin: '20px auto', marginBottom: '0', width:'100%'}}><strong>Metadata: </strong>{
+                            state.project.fields.map((f) => (
+                                <span>{f.field}: <span style={{ color: 'grey', fontStyle: 'italic' }}>{f.fieldMD} </span></span>
+                            ))
+                        }</div>
+                </Box>
                 {/* Image gallery*/}
                 <Box sx={{ display: 'flex', justifyContent: 'center', padding: 2 }}>
                     <Image.PreviewGroup
@@ -248,11 +272,20 @@ export default function UserProjectOverview() {
                         <Space wrap size={16} style={{ justifyContent: 'center' }}>
 
                             {imageList.map((file) => (
-                                <Image
+                                <Tooltip title={
+                                    <>{file.Metadata.map((md, index) => 
+                                        index < file.Metadata.length - 1 ? (
+                                            <span key={index}>{md}, </span>
+                                        ) : (
+                                            <span key={index}>{md}</span>
+                                        )
+                                    )}</>}>
+                                    <Image
                                     key={file.Id}
                                     src={file.FilePath}
                                     width={200}
                                 />
+                                </Tooltip>
                             ))}
                         </Space>
                     </Image.PreviewGroup>
