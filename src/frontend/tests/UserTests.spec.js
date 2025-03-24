@@ -6,12 +6,16 @@ const PASSWORD = "password"
 
 let driver;
 
-// Runs before all tests, inherently tests login
 before(async function () {
     driver = await new Builder().forBrowser("chrome").build();
     await driver.get('https://thankful-field-0410c1a1e.6.azurestaticapps.net/#/login');
     
 });
+
+async function findXPathElement(xpath) {
+    await driver.wait(until.elementLocated(By.xpath(xpath)));
+    return await driver.findElement(By.xpath(xpath));
+}
 
 function loadBeforeAndAfter(isAdmin = false) {
     before(async function () {
@@ -29,11 +33,9 @@ function loadBeforeAndAfter(isAdmin = false) {
 
     after(async function () {
         // Logout after each suite
-        await driver.wait(until.elementLocated(By.xpath("//span[text()='Logout']")));
-        const logoutButton = await driver.findElement(By.xpath("//span[text()='Logout']"));
+        const logoutButton = await findXPathElement("//span[text()='Logout']");
         logoutButton.click();
-        await driver.wait(until.elementLocated(By.xpath("//button[text()='Logout']")));
-        const logoutConfirmButton = await driver.findElement(By.xpath("//button[text()='Logout']"));
+        const logoutConfirmButton = await findXPathElement("//button[text()='Logout']");
         logoutConfirmButton.click();
         await driver.wait(until.stalenessOf(logoutConfirmButton), 2000);
     });
@@ -48,10 +50,25 @@ describe("UI - Sanity tests", function () {
         let currentUrl = await driver.getCurrentUrl();
         assert(currentUrl.includes("dashboard"));
     });
+});
 
-    it("UI-002 - User Login Sanity Test 2", async function () {
-        let currentUrl = await driver.getCurrentUrl();
-        assert(currentUrl.includes("dashboard"));
+describe("PROJ-ORG - Project organization", function () {
+    loadBeforeAndAfter();
+
+    it("PROJ-ORG-001 - Project creation", async function () {
+        assert.fail("Test not implemented");
+    });
+
+    it("PROJ-ORG-002 - Project deletion", async function () {
+        assert.fail("Test not implemented");
+    });
+
+    it("PROJ-ORG-003 - Project modification", async function () {
+        assert.fail("Test not implemented");
+    });
+
+    it("PROJ-ORG-004 - Project creation error handling", async function () {
+        assert.fail("Test not implemented");
     });
 });
 
@@ -138,24 +155,6 @@ describe("IMG-EXP - Image export", function () {
     });
 });
 
-describe("PROJ-ORG - Project organization", function () {
-    it("PROJ-ORG-001 - Project creation", async function () {
-        assert.fail("Test not implemented");
-    });
-
-    it("PROJ-ORG-002 - Project deletion", async function () {
-        assert.fail("Test not implemented");
-    });
-
-    it("PROJ-ORG-003 - Project modification", async function () {
-        assert.fail("Test not implemented");
-    });
-
-    it("PROJ-ORG-004 - Project creation error handling", async function () {
-        assert.fail("Test not implemented");
-    });
-});
-
 describe("LOG - Log generation", function () {
     it("LOG-001 - Single action log", async function () {
         assert.fail("Test not implemented");
@@ -166,35 +165,6 @@ describe("LOG - Log generation", function () {
     });
 });
 
-describe("TAG - Image tagging", function () {
-    it("TAG-001 - Assign tags to images", async function () {
-        assert.fail("Test not implemented");
-    });
-
-    it("TAG-002 - Too many tags", async function () {
-        assert.fail("Test not implemented");
-    });
-
-    it("TAG-003 - Tag deletion", async function () {
-        assert.fail("Test not implemented");
-    });
-
-    it("TAG-004 - Tag deletion", async function () {
-        assert.fail("Test not implemented");
-    });
-
-    it("TAG-005 - AI tag generation", async function () {
-        assert.fail("Test not implemented");
-    });
-
-    it("TAG-006 - AI tag retrieval", async function () {
-        assert.fail("Test not implemented");
-    });
-
-    it("TAG-007 - Invalid tag format", async function () {
-        assert.fail("Test not implemented");
-    });
-});
 
 describe("SORT - Image sorting", function () {
     it("SORT-001 - Sort images by upload date", async function () {
