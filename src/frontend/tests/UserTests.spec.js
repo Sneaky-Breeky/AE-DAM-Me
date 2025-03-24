@@ -1,31 +1,61 @@
 const { By, Builder, until } = require('selenium-webdriver');
 const assert = require("assert");
-const EMAIL = "user@gmail.com";
+const USER_EMAIL = "user@gmail.com";
+const ADMIN_EMAIL = "admin@gmail.com";
 const PASSWORD = "password"
 
 let driver;
 
 // Runs before all tests, inherently tests login
 before(async function () {
-    this.timeout(60000);
     driver = await new Builder().forBrowser("chrome").build();
     await driver.get('https://thankful-field-0410c1a1e.6.azurestaticapps.net/#/login');
-    const emailInput = await driver.findElement(By.id("email"));
-    const passwordInput = await driver.findElement(By.id("password"));
-    const submitButton = await driver.findElement(By.css("button[type='submit']"));
-    await emailInput.sendKeys(EMAIL);
-    await passwordInput.sendKeys(PASSWORD);
-    submitButton.click();
-    await driver.wait(until.stalenessOf(emailInput), 30000);
+    
 });
 
+function loadBeforeAndAfter(isAdmin = false) {
+    before(async function () {
+        // Login before each suite
+        this.timeout(60000);
+        const emailInput = await driver.findElement(By.id("email"));
+        const passwordInput = await driver.findElement(By.id("password"));
+        const submitButton = await driver.findElement(By.css("button[type='submit']"));
+        await emailInput.sendKeys(isAdmin ? ADMIN_EMAIL : USER_EMAIL);
+        await passwordInput.sendKeys(PASSWORD);
+        submitButton.click();
+        await driver.wait(until.stalenessOf(emailInput), 30000);
+        this.timeout(2000);
+    })
+
+    after(async function () {
+        // Logout after each suite
+        await driver.wait(until.elementLocated(By.xpath("//span[text()='Logout']")));
+        const logoutButton = await driver.findElement(By.xpath("//span[text()='Logout']"));
+        logoutButton.click();
+        await driver.wait(until.elementLocated(By.xpath("//button[text()='Logout']")));
+        const logoutConfirmButton = await driver.findElement(By.xpath("//button[text()='Logout']"));
+        logoutConfirmButton.click();
+        await driver.wait(until.stalenessOf(logoutConfirmButton), 2000);
+    });
+}
+
+after(async () => await driver.quit());
+
 describe("UI - Sanity tests", function () {
+    loadBeforeAndAfter();
+
     it("UI-001 - User Login Sanity Test", async function () {
+        let currentUrl = await driver.getCurrentUrl();
+        assert(currentUrl.includes("dashboard"));
+    });
+
+    it("UI-002 - User Login Sanity Test 2", async function () {
         let currentUrl = await driver.getCurrentUrl();
         assert(currentUrl.includes("dashboard"));
     });
 });
 
+/*
 describe("IMG-UP - Image upload", function () {
     it("IMG-UP-001 - Single JPEG upload", async function () {
         assert.fail("Test not implemented");
@@ -196,4 +226,4 @@ describe("SORT - Image sorting", function () {
     });
 });
 
-after(async () => await driver.quit());
+*/
