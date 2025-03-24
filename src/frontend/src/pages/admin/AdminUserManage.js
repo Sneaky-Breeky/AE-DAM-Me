@@ -295,7 +295,9 @@ export default function AdminUserManage() {
               <tbody>
                 {userList.map((user, idx) => (
                   <tr key={user.email || idx} style={{ height: '50px' }}>
-                    <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.firstName + ' ' + user.lastName}</td>
+                    <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>
+                      <span>{user.id}</span> - <span style={{ color: 'grey', fontStyle: 'italic' }}>{`${user.firstName} ${user.lastName}`}</span>
+                    </td>
                     <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.email}</td>
                     <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.role == "0"? "User" : "Admin"}</td>
                     <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.status}</td>
