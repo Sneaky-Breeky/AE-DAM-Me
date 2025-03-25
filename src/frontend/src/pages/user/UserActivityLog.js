@@ -1,12 +1,35 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import Box from '@mui/material/Box';
 import { Typography, } from 'antd';
-import { logs } from '../../utils/dummyData.js';
+// import { logs } from '../../utils/dummyData.js';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
 
 export default function ActivityLog() {
+    const [logs, setLogs] = useState([]);
+    const [ setLoading] = useState(true);
+    const [setError] = useState(null);
+
+    const userid = 'take the user id';
+
+    useEffect(() => {
+        const fetchLogs = async () => {
+            try {
+                const response = await fetch("api/log/fetch"+userid);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch logs');
+                }
+                const data = await response.json();
+                setLogs(data);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchLogs();
+    }, []);
 
   return (
     <Box
