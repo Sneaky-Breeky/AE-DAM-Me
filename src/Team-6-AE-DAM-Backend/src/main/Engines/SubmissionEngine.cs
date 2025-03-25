@@ -6,15 +6,28 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Processing;
+using Xabe.FFmpeg;
 using SixLabors.ImageSharp.Metadata;
 using SixLabors.ImageSharp.Metadata.Profiles.Exif;
-using SixLabors.ImageSharp.Processing;
 using DAMBackend.Models;
+using ImageMagick;
+using System.Diagnostics;
+using File = System.IO.File;
+
+
 
 
 namespace DAMBackend.SubmissionEngine
 {
-    public class SubmissionEngine : ControllerBase
+    public enum CompressionLevel // used for Compress method
+    {
+        Low,
+        Medium,
+        High // High means original resolution
+    }
+    public class SubmissionEngine
     {
 
         private readonly string _uploadPath = "../../../TestOutput"; //hard coded value
@@ -23,10 +36,13 @@ namespace DAMBackend.SubmissionEngine
         {
         }
       
-        // Method to upload files, extracts EXIF metadata for each file
-        [HttpPost("upload")]
-        public async Task<IActionResult> UploadFiles([FromForm] List<IFormFile> files)
+        // upload multiple files to pallete, no compression performed
+        // make use the user has access to the palette
+        // extracts EXIF metadata for each file and put 
+        public async Task<List<string>> UploadFiles(List<IFormFile> files) // string useremail
         {
+            // check if the user has access to the palette
+            
             if (!Directory.Exists(_uploadPath))
             {
                 Directory.CreateDirectory(_uploadPath);
@@ -37,144 +53,270 @@ namespace DAMBackend.SubmissionEngine
                 Console.WriteLine($"Directory already exists: {_uploadPath}");
             }
 
-            // Check if the number of files exceeds 100
             if (files.Count > 100)
             {
-                return BadRequest("You can upload a maximum of 100 files at once.");
+                throw new Exception("You can upload a maximum of 100 files at once.");
             }
-            Console.WriteLine("the length of files is: ", files.Count);
-            // Validate and process each file
+            Console.WriteLine("The length of files is: " + files.Count);
+
+            List<string> uploadedFileNames = new List<string>();
+
             foreach (var file in files)
             {
-                // Validate file extension (e.g., allow only images and videos)
-                var allowedExtensionsphoto = new[] { ".jpg", ".jpeg", ".png", ".raw", ".arw" };
-                var allowedExtensionsvideo = new[] { ".mp4" };
-                // to be supported: .tiff, .jpg, .gif, .mov 
+                var allowedExtensionsPhoto = new[] { ".jpg", ".jpeg", ".png", ".raw", ".arw" };
+                var allowedExtensionsVideo = new[] { ".mp4" };
                 var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-                if (!allowedExtensionsphoto.Contains(fileExtension) && !allowedExtensionsvideo.Contains(fileExtension))
+
+                if (!allowedExtensionsPhoto.Contains(fileExtension) && !allowedExtensionsVideo.Contains(fileExtension))
                 {
-                    return BadRequest($"File {file.FileName} has an unsupported file type.");
+                    throw new Exception($"File {file.FileName} has an unsupported file type.");
                 }
 
-                // Validate file size (e.g., 500MB limit)
-                if (file.Length > 500 * 1024 * 1024) // 100MB
+                if (file.Length > 500 * 1024 * 1024) // 500MB
                 {
-                    return BadRequest($"File {file.FileName} exceeds the maximum allowed size.");
+                    throw new Exception($"File {file.FileName} exceeds the maximum allowed size.");
                 }
 
-                // extract exif metadata of the image
+                var filePath = Path.Combine(_uploadPath, file.FileName);
 
-                // Save the file to the upload directory
-                using (var stream = System.IO.File.Create($"../../../TestOutput/{file.FileName}"))
+                using (var stream = System.IO.File.Create(filePath))
                 {
                     await file.CopyToAsync(stream);
                 }
+                uploadedFileNames.Add(file.FileName);
             }
 
-            return Ok("All files uploaded successfully.");
+            if (uploadedFileNames.Count == 0)
+            {
+                throw new Exception("No valid files were uploaded.");
+            }
+
+
+            // perform the query to the database for 
+
+            return uploadedFileNames;
         }
-        
-        public FileModel ExtractExifMetadata(string imagePath)
+
+        // compress jpg and png image based on the compression option
+        public async Task<string> UploadJpgPng(IFormFile file, CompressionLevel option)
         {
-            var fileModel = new FileModel
+            if (file == null || file.Length == 0)
             {
-                Name = System.IO.Path.GetFileName(imagePath),
-                Extension = System.IO.Path.GetExtension(imagePath),
-                OriginalPath = imagePath,
-                ThumbnailPath = "path/to/thumbnail", // Provide actual thumbnail path
-                ViewPath = "path/to/view", // Provide actual view path
-                PixelWidth = 0, // Extract if needed
-                PixelHeight = 0, // Extract if needed
-                GPSLat = null,
-                GPSLon = null,
-                GPSAlt = null,
-                DateTimeOriginal = null,
-                Make = null,
-                Model = null,
-                FocalLength = null,
-                Aperture = null,
-                Copyright = null,
-                ProjectId = null
-            };
-    
-            // Load the image
-            using (Image image = Image.Load(imagePath))
+                throw new Exception("Invalid file.");
+            }
+
+            // Validate file type
+            var allowedExtensionsPhoto = new[] { ".jpg", ".jpeg", ".png"};
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!allowedExtensionsPhoto.Contains(fileExtension))
             {
-                // EXIF Metadata
-                if (image.Metadata.ExifProfile != null)
+                throw new Exception("Only JPG or PNG files are allowed.");
+            }
+
+            // Define compression settings based on option
+            int quality;
+            int maxWidth;
+            int maxHeight;
+
+            // Save compressed image
+            string resolution;
+            switch (option)
+            {
+                case CompressionLevel.Low:
+                    quality = 30; // Reduce quality to 30%
+                    maxWidth = 800; // Resize width
+                    maxHeight = 600;
+                    resolution = "low";
+                    break;
+                case CompressionLevel.Medium:
+                    quality = 60; // Medium quality
+                    maxWidth = 1600;
+                    maxHeight = 1200;
+                    resolution = "medium";
+                    break;
+                case CompressionLevel.High:
+                    quality = 100; // Keep original quality
+                    maxWidth = int.MaxValue;
+                    maxHeight = int.MaxValue;
+                    resolution = "high";
+                    break;
+                default:
+                    throw new Exception("Invalid compression level.");
+            }
+
+        
+            var filePath = Path.Combine(_uploadPath, string.Concat(resolution, file.FileName));
+
+            using (var stream = file.OpenReadStream())
+            using (var image = await Image.LoadAsync(stream))
+            {
+                // Resize the image if needed
+                if (option != CompressionLevel.High)
                 {
-                    // Extract EXIF data
-                    var exif = image.Metadata.ExifProfile;
-    
-                    // DateTimeOriginal
-                    var dateTimeOriginalTag = exif.Values.FirstOrDefault(tag => tag.Tag == ExifTag.DateTimeOriginal);
-                    if (dateTimeOriginalTag != null)
+                    image.Mutate(x => x.Resize(new ResizeOptions
                     {
-                        fileModel.DateTimeOriginal = dateTimeOriginalTag.GetValue() as DateTime?;
+                        Mode = ResizeMode.Max,
+                        Size = new Size(maxWidth, maxHeight)
+                    }));
+                }
+
+                // Save as JPEG with the defined quality
+                await image.SaveAsync(filePath, new JpegEncoder { Quality = quality });
+            }
+
+            return file.FileName;
+        }
+
+       	public async Task<string> UploadRaw(IFormFile file, CompressionLevel option)
+        {
+            if (file == null || file.Length == 0)
+            {
+                throw new Exception("Invalid file.");
+            }
+        
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var allowedExtensionsRaw = new[] { ".arw", ".cr2", ".nef", ".dng" };
+            
+            if (!allowedExtensionsRaw.Contains(fileExtension))
+            {
+                throw new Exception("Unsupported RAW file format.");
+            }
+        
+            uint quality;
+			string resolution;
+            switch (option)
+            {
+                case CompressionLevel.Low:
+                    quality = 30;
+					resolution = "low";
+                    break;
+                case CompressionLevel.Medium:
+                    quality = 60;
+					resolution = "medium";
+                    break;
+                case CompressionLevel.High:
+                    quality = 100;
+					resolution = "high";
+                    break;
+                default:
+                    throw new Exception("Invalid compression level.");
+            }
+        
+            var outputFilePath = Path.Combine(_uploadPath, resolution + Path.ChangeExtension(file.FileName, ".jpg"));
+        
+            try
+            {
+                using (var stream = file.OpenReadStream())
+                {
+                    var settings = new MagickReadSettings
+                    {
+                        Density = new Density(300)
+                        // Removed IgnoreWarnings since it's not available in this version.
+                    };
+        
+                    // Explicitly set the format based on the file extension.
+                    switch (fileExtension)
+                    {
+                        case ".cr2":
+                            settings.Format = MagickFormat.Cr2;
+                            break;
+                        case ".nef":
+                            settings.Format = MagickFormat.Nef;
+                            break;
+                        case ".arw":
+                            settings.Format = MagickFormat.Arw;
+                            break;
+                        case ".dng":
+                            settings.Format = MagickFormat.Dng;
+                            break;
+                        // For other RAW types, you can let ImageMagick auto-detect by not setting the format.
                     }
-    
-                    // GPS data
-                    var gpsLatTag = exif.Values.FirstOrDefault(tag => tag.Tag == ExifTag.GPSLatitude);
-                    if (gpsLatTag != null)
+        
+                    using (var image = new MagickImage(stream, settings))
                     {
-                        fileModel.GPSLat = (decimal?)((Rational[])gpsLatTag.GetValue())?.FirstOrDefault().ToDouble();
-                    }
-    
-                    var gpsLonTag = exif.Values.FirstOrDefault(tag => tag.Tag == ExifTag.GPSLongitude);
-                    if (gpsLonTag != null)
-                    {
-                        fileModel.GPSLon = (decimal?)((Rational[])gpsLonTag.GetValue())?.FirstOrDefault().ToDouble();
-                    }
-    
-                    var gpsAltTag = exif.Values.FirstOrDefault(tag => tag.Tag == ExifTag.GPSAltitude);
-                    if (gpsAltTag != null)
-                    {
-                        fileModel.GPSAlt = (decimal?)((Rational[])gpsAltTag.GetValue())?.FirstOrDefault().ToDouble();
-                    }
-    
-                    // Make and Model
-                    var makeTag = exif.Values.FirstOrDefault(tag => tag.Tag == ExifTag.Make);
-                    if (makeTag != null)
-                    {
-                        fileModel.Make = makeTag.GetValue()?.ToString();
-                    }
-    
-                    var modelTag = exif.Values.FirstOrDefault(tag => tag.Tag == ExifTag.Model);
-                    if (modelTag != null)
-                    {
-                        fileModel.Model = modelTag.GetValue()?.ToString();
-                    }
-    
-                    // Focal Length
-                    var focalLengthTag = exif.Values.FirstOrDefault(tag => tag.Tag == ExifTag.FocalLength);
-                    if (focalLengthTag != null)
-                    {
-                        fileModel.FocalLength = Convert.ToInt32(focalLengthTag.GetValue());
-                    }
-    
-                    // Aperture
-                    var apertureTag = exif.Values.FirstOrDefault(tag => tag.Tag == ExifTag.ApertureValue);
-                    if (apertureTag != null)
-                    {
-                        fileModel.Aperture = Convert.ToSingle(apertureTag.GetValue());
-                    }
-    
-                    // Copyright
-                    var copyrightTag = exif.Values.FirstOrDefault(tag => tag.Tag == ExifTag.Copyright);
-                    if (copyrightTag != null)
-                    {
-                        fileModel.Copyright = copyrightTag.GetValue()?.ToString();
+						image.AutoOrient(); // Corrects orientation based on EXIF data
+                        image.Format = MagickFormat.Jpeg;
+                        image.Quality = quality;
+                        await image.WriteAsync(outputFilePath);
                     }
                 }
-    
-                // Set Pixel Width and Height
-                fileModel.PixelWidth = image.Width;
-                fileModel.PixelHeight = image.Height;
+                
+                return outputFilePath;
             }
-    
-            return fileModel;
+            catch (MagickCoderErrorException ex)
+            {
+                throw new Exception($"Failed to process RAW file: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Unexpected error during RAW file processing: {ex.Message}", ex);
+            }
         }
 
+
+        public async Task<string> UploadMp4(IFormFile file, CompressionLevel option)
+        {
+            if (file == null || file.Length == 0)
+                throw new Exception("Invalid file.");
+
+            var tempFilePath = Path.GetTempFileName() + ".mp4";  // Temporary input file
+
+
+            // Save the uploaded file to disk
+            using (var stream = new FileStream(tempFilePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+        string bitrate;
+        string compressionArgs;
+        switch (option)
+        {
+            case CompressionLevel.Low:
+                compressionArgs = "-crf 32";
+                bitrate = "32"; // Lower quality
+                break;
+            case CompressionLevel.Medium:
+                compressionArgs = "-crf 28";
+                bitrate = "28"; // Medium quality
+                break;
+            case CompressionLevel.High:
+                compressionArgs = "-crf 23";
+                bitrate = "23"; // High quality
+                break;
+            default:
+                throw new Exception("Invalid compression level.");
+        }
+            
+
+            var outputFilePath = Path.Combine(_uploadPath, bitrate + file.FileName);
+            // FFmpeg command
+            string ffmpegArgs = $"-i \"{tempFilePath}\" {"-c:v libx264 -pix_fmt yuv420p " + compressionArgs + " -threads 4 -preset superfast"} \"{outputFilePath}\"";
+            // Execute FFmpeg
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = "ffmpeg",
+                Arguments = ffmpegArgs,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using (var process = new Process { StartInfo = processInfo })
+            {
+                process.Start();
+                string output = await process.StandardError.ReadToEndAsync(); // Capture errors
+                await process.WaitForExitAsync();
+
+                if (process.ExitCode != 0)
+                {
+                    throw new Exception($"FFmpeg failed: {output}");
+                }
+            }
+
+
+            return file.FileName;
+        }
 
         public  void PrintImageMetadata(string imagePath)
         {
@@ -199,22 +341,8 @@ namespace DAMBackend.SubmissionEngine
             }
         }
 
-        // Helper functions for each file format
-
-        // public void ExifImageSharp(string file)
-        // {
-        //     // Load the image
-        //     var exif = new ExifReader(file);
-        //     var metadata = exif.GetExifTags();
-        //
-        //     foreach (var tag in metadata)
-        //     {
-        //         Console.WriteLine($"{tag.Key}: {tag.Value}");
-        //     }
-        // }
-
         // Extract EXIF data from the file using ExifTool
-        private Dictionary<string, string> ExtractExifData(string file)
+        public Dictionary<string, string> ExtractExifData(string file)
         {
             var metadata = new Dictionary<string, string>();
 
@@ -261,7 +389,7 @@ namespace DAMBackend.SubmissionEngine
         {
             // Stub for uploading files to project
             // TODO:
-            // - Validate if files are added
+            // - Validate if files ar`e added
             // - Ensure project is selected
             // - Set resolution (low, medium, high)
         }
