@@ -17,7 +17,6 @@ namespace backend.auth
             _authService = authService;
             _logger = logger;
         }
-
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] LoginRequest request)
         {
