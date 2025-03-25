@@ -41,7 +41,7 @@ builder.Services.AddSingleton(x =>
     new BlobServiceClient(builder.Configuration.GetConnectionString("StorageAccount")));
 
 builder.Services.AddDbContext<SQLDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("AzureSQL")));
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddSingleton<AzureBlobService>();
