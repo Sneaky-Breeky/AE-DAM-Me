@@ -66,6 +66,16 @@ CREATE TABLE Users (
     Status BIT DEFAULT 1 -- 1: Active, 0: Inactive
 );
 
+CREATE TABLE LogImage (
+                          LogId INT PRIMARY KEY,
+                          FileId UNIQUEIDENTIFIER NOT NULL,
+                          UserId INT NOT NULL,
+                          TypeOfLog NVARCHAR(MAX) NOT NULL,
+                          Date DATETIME NOT NULL,
+                          FOREIGN KEY (UserId) REFERENCES Users(id),
+                          FOREIGN KEY (FileId) REFERENCES Files(id)
+);
+
 -- Declare variables for hashed passwords
 DECLARE @UserHashBase64 NVARCHAR(255);
 DECLARE @AdminHashBase64 NVARCHAR(255);
