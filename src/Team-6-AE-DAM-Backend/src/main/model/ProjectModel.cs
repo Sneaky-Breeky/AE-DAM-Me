@@ -12,7 +12,6 @@ namespace DAMBackend.Models
     public class ProjectModel 
 
     {
-        
         public int Id { get; set; }
 
         public required string Description {get; set;}
@@ -28,6 +27,8 @@ namespace DAMBackend.Models
         public AccessLevel AccessLevel {get; set;}
 
         public string Phase { get; set;}
+        
+        public DateTime StartDate { get; set; }
 
         public DateTime LastUpdate { get; set; }
         // change in ER diagram

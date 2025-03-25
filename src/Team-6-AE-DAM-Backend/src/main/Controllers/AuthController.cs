@@ -93,6 +93,43 @@ namespace backend.auth
                 return BadRequest(new { error = "Invalid user data format" });
             }
         }
+        
+        [HttpPut("updateuser/{email}")]
+        public async Task<IActionResult> UpdateUser(string email, [FromBody] JsonElement jsonUser)
+        {
+            try
+            {
+                string? firstName = jsonUser.GetProperty("firstname").GetString();
+                string? lastName = jsonUser.GetProperty("lastname").GetString();
+                string? password = jsonUser.TryGetProperty("password", out var pwdProp) ? pwdProp.GetString() : null;
+                string? roleString = jsonUser.GetProperty("role").GetString();
+                string? statusString = jsonUser.GetProperty("status").GetString();
+
+                Role role = roleString?.ToLower() == "admin" ? Role.Admin : Role.User;
+                bool status = statusString?.ToLower() == "active";
+
+                var updatedUser = new UserModel
+                {
+                    FirstName = firstName ?? "",
+                    LastName = lastName ?? "",
+                    Email = email,
+                    PasswordHash = password ?? "",
+                    Role = role,
+                    Status = status
+                };
+
+                var result = await _authService.UpdateUserAsync(email, updatedUser);
+                return result
+                    ? Ok(new { message = "User updated successfully" })
+                    : NotFound(new { error = "User not found" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error updating user: {ex.Message}");
+                return BadRequest(new { error = "Invalid user data format" });
+            }
+        }
+
     }
 
     public class LoginRequest

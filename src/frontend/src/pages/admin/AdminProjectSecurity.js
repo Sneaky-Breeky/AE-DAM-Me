@@ -9,8 +9,8 @@ import {giveUserAccess, removeAllUserAccess} from "../../api/userApi";
 
 const {Title} = Typography;
 
+function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, allChecked, setAllChecked, selectedChecked, setSelectedChecked, listUsers, setListUsers, fetchedUsersForAProject, setFetchedUsersForProject, originalUsersForProject, setOriginalUsersForProject, handleAccessUpdate, setLoading, getProjects) {
 
-function PopupAccess(adminChecked, setAdminChecked, allChecked, setAllChecked, selectedChecked, setSelectedChecked, listUsers, setListUsers, fetchedUsersForAProject, setFetchedUsersForProject) {
 
     const toggleAdminChecked = () => {
         const isChecked = !adminChecked;
@@ -74,7 +74,37 @@ function PopupAccess(adminChecked, setAdminChecked, allChecked, setAllChecked, s
 
 
     return (
-        <div onClick={(e) => e.stopPropagation()}>
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'flex-start',
+                alignItems: 'left',
+                width: '80%',
+                height: '100%',
+                marginTop: '0',
+                backgroundColor: '#f5f5f5',
+                borderRadius: '10px',
+                padding: '20px',
+                paddingTop: '0',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                overflow: 'auto'
+            }}
+        >
+            <div style={{overflowY: 'auto', width: '100%', height: '100%'}}>
+                <table style={{width: '100%', borderCollapse: 'collapse'}}>
+                    <tr>
+                        <th colspan="2" style={{
+                            height: '40px',
+                            textAlign: 'center',
+                            borderBottom: '1px solid black',
+                            padding: '0px'
+                        }}>
+                            <h4>Edit {project.name} Project's Access Level</h4></th>
+                    </tr>
+                </table>
+
+                <div onClick={(e) => e.stopPropagation()}>
             <table style={{width: '100%', borderCollapse: 'collapse'}}>
                 <tr style={{height: '50px'}}>
                     <td style={{fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black'}}>
@@ -101,7 +131,7 @@ function PopupAccess(adminChecked, setAdminChecked, allChecked, setAllChecked, s
                                     fetchedUsersForAProject.some((u) => u.id === user.id)}
                                 onChange={(e) => toggleUserChecked(e, user)}
                             >
-                                {`${user.firstName} ${user.lastName}`}
+                                <span>{user.id}</span> - <span style={{ color: 'grey', fontStyle: 'italic' }}>{`${user.firstName} ${user.lastName}`}</span>
                             </Checkbox>
 
 
@@ -110,73 +140,7 @@ function PopupAccess(adminChecked, setAdminChecked, allChecked, setAllChecked, s
                 ))}
             </table>
         </div>
-    );
-}
 
-function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, allChecked, setAllChecked, selectedChecked, setSelectedChecked, listUsers, setListUsers, fetchedUsersForAProject, setFetchedUsersForProject, originalUsersForProject, setOriginalUsersForProject, handleAccessUpdate, setLoading, getProjects) {
-
-    return (
-        <Box
-            sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-start',
-                alignItems: 'left',
-                width: '80%',
-                height: '50%',
-                margin: '20px auto',
-                marginTop: '0',
-                backgroundColor: '#f5f5f5',
-                borderRadius: '10px',
-                padding: '20px',
-                paddingTop: '0',
-                paddingBottom: '10',
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                overflow: 'auto'
-            }}
-        >
-            <div style={{overflowY: 'auto', width: '100%', height: '100%'}}>
-                <table style={{width: '100%', borderCollapse: 'collapse'}}>
-                    <tr>
-                        <th colspan="2" style={{
-                            height: '40px',
-                            textAlign: 'center',
-                            borderBottom: '1px solid black',
-                            padding: '0px'
-                        }}>
-                            <h4>Edit {project.name} Project's Access Level</h4></th>
-                    </tr>
-                    <tr style={{height: '50px'}}>
-                        <td style={{
-                            fontSize: '12px',
-                            width: '20%',
-                            textAlign: 'left',
-                            borderBottom: '1px solid black'
-                        }}>Access Level:
-                        </td>
-                        <td style={{
-                            fontSize: '12px',
-                            width: '5%',
-                            textAlign: 'center',
-                            borderBottom: '1px solid black'
-                        }}>{
-                            // reload if status input differs from original user.status
-                            // popup breaks
-                            <Popover
-                                content={PopupAccess(adminChecked, setAdminChecked,
-                                    allChecked, setAllChecked,
-                                    selectedChecked, setSelectedChecked,
-                                    listUsers, setListUsers, fetchedUsersForAProject, setFetchedUsersForProject, originalUsersForProject, setOriginalUsersForProject, handleAccessUpdate, setLoading, getProjects)}
-
-                                trigger="click"
-                            >
-                                <Button color="default" variant="text" size={"default"} icon={<EditOutlined/>}/>
-                            </Popover>
-
-                        }</td>
-                    </tr>
-
-                </table>
                 <div style={{
                     display: 'flex',
                     flexDirection: 'row',

@@ -43,7 +43,8 @@ namespace DAMBackend.Controllers
                 projectData.Phase,
                 projectData.AccessLevel,
                 projectData.LastUpdate,
-                projectData.Description
+                projectData.Description,
+                projectData.StartDate
             );
 
             // Store the new project to the list or your database

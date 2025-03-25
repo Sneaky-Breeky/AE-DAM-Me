@@ -1,6 +1,6 @@
 import React, { useState, useEffect  } from 'react';
 import Box from '@mui/material/Box';
-import { Typography, Button, Input, Form, Space, DatePicker, Spin, message, Popconfirm } from 'antd';
+import { Typography, Button, Input, Form, Space, DatePicker, Spin, message, Popconfirm, Radio } from 'antd';
 import { SearchOutlined, CloseOutlined, MinusCircleOutlined, PlusOutlined, CalendarOutlined} from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { fetchProjects, putProject, addProjectTag, deleteProjectTag, fetchTagsForProject } from '../../api/projectApi';
@@ -48,7 +48,7 @@ getProjects();
                 field: tag.key,
                 fieldMD: tag.type === 0 ? tag.sValue : tag.iValue
             }));
-            form.setFieldsValue({ fields: convertedTags });
+            form.setFieldsValue({ fields: convertedTags, status: project.status === 'Active' ? 'active' : 'inactive',  });
         }
     }, [project, isEditOpen]);
 
@@ -57,7 +57,7 @@ getProjects();
 //TODO: only allow Status to be "Active" or "Inactive"
 const handleMDEdits = async (values) => {
 if (!project) return;
-
+console.log(values.status);
 try {
 const updatedFields = {};
 
@@ -349,10 +349,16 @@ editNameOpen, setEditNameOpen, editLocOpen, setEditLocOpen, editDateOpen, setEdi
             </Form.Item>
 
             <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
-                       name="status"
-                       label={<p style={{fontWeight:"bold"}}>Status</p>}
-            >
-                {isEditOpen ? <Input defaultValue={project.status}/> : project.status}
+                        name="status"
+                        label={<p style={{fontWeight:"bold"}}>Status</p>}
+                        layout="horizontal"
+                        >
+                {isEditOpen ? 
+                        <Radio.Group>
+                            <Radio value="active">Active</Radio>
+                            <Radio value="inactive">Inactive</Radio>
+                        </Radio.Group> 
+                        : project.status}
             </Form.Item>
 
             <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}

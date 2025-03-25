@@ -21,9 +21,8 @@ namespace DAMBackend.Models
         
         public DbSet<UserProjectRelation> UserProjectRelations { get; set; }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder) 
 
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Key for basic data tag model
             modelBuilder.Entity<TagBasicModel>()
