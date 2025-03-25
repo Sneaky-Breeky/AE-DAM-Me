@@ -15,9 +15,8 @@ public class LogImage
     [Required]
     public DateTime Date { get; set; }
 
-    public LogImage(int logId, Guid fileId, int userId, string typeOfLog, DateTime date)
+    public LogImage(Guid fileId, int userId, string typeOfLog, DateTime date)
     {
-        LogId = logId;
         FileId = fileId;
         UserId = userId;
         TypeOfLog = typeOfLog;

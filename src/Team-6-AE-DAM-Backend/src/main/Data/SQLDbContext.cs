@@ -21,6 +21,8 @@ namespace DAMBackend.Models
         
         public DbSet<UserProjectRelation> UserProjectRelations { get; set; }
 
+        public DbSet<LogImage> LogImage { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder) 
 
         {
@@ -127,6 +129,20 @@ namespace DAMBackend.Models
             modelBuilder.Entity<FileModel>()
                 .Property(f => f.GPSAlt)
                 .HasPrecision(10, 3);
+
+//            // one-to-many relationship between User and LogImage
+//
+//            modelBuilder.Entity<LogImage>()
+//                .WithOne(l => l.UserId)
+//                .HasForeignKey(l => l.UserId)
+//                .OnDelete(DeleteBehavior.Cascade)
+//                .IsRequired();;
+//
+//            // one-to-many relationship between File and LogImage
+//            modelBuilder.Entity<LogImage>()
+//                .HasOne(l => l.FileId)
+//                .HasForeignKey(l => l.FileId)
+//                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
