@@ -57,6 +57,7 @@ export default function ProjectManagement() {
             phase: "",
             accessLevel: 0,
             lastUpdated: new Date().toISOString(),
+            startDate: new Date().toISOString(),
             files: [],
             users: []
         };
