@@ -106,10 +106,10 @@ namespace DAMBackend.Models
                 .HasForeignKey(t => t.ProjectId)
                 .IsRequired();
             // Key for basic data tag model
-            modelBuilder.Entity<LogImage>()
-            .HasKey(m =>  m.LogId ).
-            HasForeignKey(t => t.ImageId).
-            HasForeignKey(u => u.UserId);
+//            modelBuilder.Entity<LogImage>()
+//            .HasKey(m =>  m.LogId ).
+//            HasForeignKey(t => t.ImageId).
+//            HasForeignKey(u => u.UserId);
 
             // generate int for userid
             modelBuilder.Entity<UserModel>()
