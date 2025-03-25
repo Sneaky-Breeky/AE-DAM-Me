@@ -56,16 +56,16 @@ app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<SQLDbContext>();
     try
     {
+        var dbContext = scope.ServiceProvider.GetRequiredService<SQLDbContext>();
         if (dbContext.Database.CanConnect())
         {
             Console.WriteLine("Successfully connected to Azure SQL Database!");
         }
         else
         {
-            Console.WriteLine("Connection to Azure SQL Database failed.");
+            Console.WriteLine($"Connection to Azure SQL Database failed");
         }
 
         
