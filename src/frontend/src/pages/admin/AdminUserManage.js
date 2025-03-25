@@ -19,7 +19,8 @@ function PopupForm({ visible, onClose, refreshUsers }) {
       onClose();
     } catch (error) {
       console.error("Error adding user:", error);
-      message.error("Error adding user:", error);
+      // Correctly display the error message
+      message.error(`Error adding user: ${error.message || error}`);
     }
   };
 
@@ -162,7 +163,7 @@ export default function AdminUserManage() {
   const [currentEditingUser, setCurrentEditingUser] = useState(null);
 
 
-    const fetchUsersList = async () => {
+  const fetchUsersList = async () => {
     try {
       const users = await fetchUsers();
       if (Array.isArray(users)) {
@@ -181,31 +182,36 @@ export default function AdminUserManage() {
     fetchUsersList();
   }, []);
 
-    const handleEditUser = async (values) => {
-        const email = editForm.getFieldValue("editEmail");
+  const handleEditUser = async (values) => {
+    const email = editForm.getFieldValue("editEmail");
 
-        if (!currentEditingUser) return;
+    if (!currentEditingUser) return;
 
-        const payload = {
-            firstname: currentEditingUser.firstName,
-            lastname: currentEditingUser.lastName,
-            role: currentEditingUser.role === 0 ? "user" : "admin",
-            status: values.editStatus || "active",
-        };
-        try {
-            const result = await updateUser(email, payload);
-
-            if (result.error) {
-                message.error(`Error updating user: ${result.error}`);
-            } else {
-                message.success("User updated successfully!");
-                fetchUsersList();
-            }
-        } catch (err) {
-            console.error("Update error:", err);
-            message.error("Failed to update user.");
-        }
+    const payload = {
+      firstname: currentEditingUser.firstName,
+      lastname: currentEditingUser.lastName,
+      role: currentEditingUser.role === 0 ? "user" : "admin",
+      status: values.editStatus || "active",
     };
+
+    if (values.editPass && values.editPass.trim() !== "") {
+      payload.password = values.editPass;
+    }
+    
+    try {
+      const result = await updateUser(email, payload);
+
+      if (result.error) {
+        message.error(`Error updating user: ${result.error}`);
+      } else {
+        message.success("User updated successfully!");
+        fetchUsersList();
+      }
+    } catch (err) {
+      console.error("Update error:", err);
+      message.error("Failed to update user.");
+    }
+  };
 
   const handleDeleteUser = async (email) => {
     try {
@@ -218,19 +224,19 @@ export default function AdminUserManage() {
   };
 
   const formReset = (user) => {
-      setCurrentEditingUser(user);
-      console.log(user);
+    setCurrentEditingUser(user);
+    console.log(user);
     editForm.resetFields();
     editForm.setFieldsValue({
       editName: user.name,
       editEmail: user.email,
       editRole: user.role === 0 ? 'user' : 'admin',
-        editStatus: user.status ? 'active' : 'inactive',
-        editPass: user.password
+      editStatus: user.status ? 'active' : 'inactive',
+      editPass: user.password
     });
-    
+
   };
-  
+
 
   return (
     <Box
@@ -299,7 +305,7 @@ export default function AdminUserManage() {
                       <span>{user.id}</span> - <span style={{ color: 'grey', fontStyle: 'italic' }}>{`${user.firstName} ${user.lastName}`}</span>
                     </td>
                     <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.email}</td>
-                    <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.role == "0"? "User" : "Admin"}</td>
+                    <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.role == "0" ? "User" : "Admin"}</td>
                     <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>{user.status}</td>
                     <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>
                       <Popover
@@ -316,8 +322,8 @@ export default function AdminUserManage() {
                             autoComplete="off"
                             onFinish={handleEditUser}
                           >
-                          <div>
-                            {/* Edit First Name 
+                            <div>
+                              {/* Edit First Name 
                             <Form.Item
                               label="Edit Name"
                               name="editName"
@@ -326,7 +332,7 @@ export default function AdminUserManage() {
                                 <Input/>
                             </Form.Item>*/}
 
-                             {/*Edit Email 
+                              {/*Edit Email 
                             <Form.Item
                               label="Edit Email"
                               name="editEmail"
@@ -335,16 +341,16 @@ export default function AdminUserManage() {
                                 <Input/>
                             </Form.Item> */}
 
-                            {/* Edit Password */}
-                            <Form.Item
-                              label="Edit Password"
-                              name="editPass"
-                              layout="horizontal"
+                              {/* Edit Password */}
+                              <Form.Item
+                                label="Edit Password"
+                                name="editPass"
+                                layout="horizontal"
                               >
                                 <Input placeholder={currentEditingUser?.passwordHash ? "Enter new password" : "No password set"} />
-                            </Form.Item>
+                              </Form.Item>
 
-                            {/* User/Admin 
+                              {/* User/Admin 
                             <Form.Item
                               label="Edit Role"
                               name="editRole"
@@ -358,49 +364,49 @@ export default function AdminUserManage() {
                             </Radio.Group>
                             </Form.Item>*/}
 
-                            {/* Activate/Deactivate */}
-                            <Form.Item
-                              label="Edit Status"
-                              name="editStatus"
-                              layout="horizontal"
+                              {/* Activate/Deactivate */}
+                              <Form.Item
+                                label="Edit Status"
+                                name="editStatus"
+                                layout="horizontal"
                               >
-                            <Radio.Group>
-                              <Radio value="active">Activate</Radio>
-                                <Radio value="inactive">Inactive</Radio>
-                            </Radio.Group>
-                            </Form.Item>
+                                <Radio.Group>
+                                  <Radio value="active">Activate</Radio>
+                                  <Radio value="inactive">Inactive</Radio>
+                                </Radio.Group>
+                              </Form.Item>
 
-                            {/* Save edit user changes */}
-                            <Form.Item
-                              label={null}
-                              style={{ marginBottom: "5px" }}>
-                              <Button type="primary" htmlType="submit" style={{ marginTop: '10px', width: '100%' }}>
-                                Save Changes
-                              </Button>
-                            </Form.Item >
+                              {/* Save edit user changes */}
+                              <Form.Item
+                                label={null}
+                                style={{ marginBottom: "5px" }}>
+                                <Button type="primary" htmlType="submit" style={{ marginTop: '10px', width: '100%' }}>
+                                  Save Changes
+                                </Button>
+                              </Form.Item >
 
-                            {/* Delete popconfirm Button inside Popover */}
+                              {/* Delete popconfirm Button inside Popover */}
 
-                            <Popconfirm
-                              title="Delete User"
-                              description="Are you sure you want to delete the selected user?"
-                              onConfirm={() => handleDeleteUser(user.email)}
-                              icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
-                              okText="Yes"
-                              cancelText="No"
-                          >
-                              <Button type="primary" danger style={{ marginTop: '10px', width: '100%' }} icon={<DeleteOutlined />}>
+                              <Popconfirm
+                                title="Delete User"
+                                description="Are you sure you want to delete the selected user?"
+                                onConfirm={() => handleDeleteUser(user.email)}
+                                icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+                                okText="Yes"
+                                cancelText="No"
+                              >
+                                <Button type="primary" danger style={{ marginTop: '10px', width: '100%' }} icon={<DeleteOutlined />}>
                                   Delete User
-                              </Button>
-                          </Popconfirm>
-                          </div>
+                                </Button>
+                              </Popconfirm>
+                            </div>
                           </Form>
                         }
                         //title={user.status === 'Active' ? "User Activated" : "User Deactivated"}
-                        title={<h3 style={{marginTop:'0'}}>Edit User</h3>}
+                        title={<h3 style={{ marginTop: '0' }}>Edit User</h3>}
                         trigger="click"
                       >
-                        <Button color="default" variant="text" icon={<EditOutlined />} onClick={() => formReset(user)}/>
+                        <Button color="default" variant="text" icon={<EditOutlined />} onClick={() => formReset(user)} />
                       </Popover>
                     </td>
                     {/* <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>
