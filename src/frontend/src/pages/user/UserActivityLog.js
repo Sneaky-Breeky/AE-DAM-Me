@@ -3,8 +3,11 @@ import Box from '@mui/material/Box';
 import { Typography, } from 'antd';
 import { logs } from '../../utils/dummyData.js';
 import dayjs from 'dayjs';
+import {fetchLog} from "../../api/logApi";
 
 const { Title } = Typography;
+const userId = "need a user id";
+const logsForUser = fetchLog(userId);
 
 export default function ActivityLog() {
 

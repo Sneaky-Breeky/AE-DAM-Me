@@ -1,8 +1,8 @@
 import { API_BASE_URL } from "./apiURL.js";
 const LOG_URL = `${API_BASE_URL}/api/log`;
-export async function fetchLog( userId) {
+export async function fetchLog(userId) {
     try {
-        const response = await fetch(`${LOG_URL}/fetch/${projectId}`, {
+        const response = await fetch(`${LOG_URL}/fetch/${userId}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json"
@@ -27,8 +27,8 @@ export async function fetchLog( userId) {
 }
 export async function addLog(userID, fileID, typeOfLog) {
     const logData = {
-        FileId: fileId,
-        UserId: userId,
+        FileId: fileID,
+        UserId: userID,
         TypeOfLog: typeOfLog,
         Date: new Date().toISOString(),
     };
@@ -50,7 +50,6 @@ export async function addLog(userID, fileID, typeOfLog) {
                 return { error: `HTTP Error ${response.status}: ${errorText}` };
             }
         }
-
         return { success: true };
     } catch (error) {
         console.error("Network or fetch error:", error);
