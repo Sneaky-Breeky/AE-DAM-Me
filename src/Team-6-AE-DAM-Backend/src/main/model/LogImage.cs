@@ -1,0 +1,23 @@
+public class LogImage
+{
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int LogId { get; set; }
+    [Required]
+    public Guid FileId { get; set; }
+    [Required]
+    public int UserId { get; set; }
+    [Required]
+    public string TypeOfLog { get; set; }
+    [Required]
+    public DateTime Date { get; set; }
+
+    public LogImage(int logId, Guid fileId, int userId, string typeOfLog, DateTime date)
+    {
+        LogId = logId;
+        FileId = fileId;
+        UserId = userId;
+        TypeOfLog = typeOfLog;
+        Date = date;
+    }
+}
