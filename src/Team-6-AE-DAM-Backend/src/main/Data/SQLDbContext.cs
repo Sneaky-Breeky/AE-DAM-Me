@@ -24,9 +24,7 @@ namespace DAMBackend.Models
         
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) 
-
         {
-
             // Key for basic data tag model
             modelBuilder.Entity<TagBasicModel>()
                 .HasKey(m => new { m.Value });

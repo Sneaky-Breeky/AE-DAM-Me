@@ -12,7 +12,6 @@ namespace DAMBackend.Models
     public class ProjectModel 
 
     {
-        
         public int Id { get; set; }
 
         public required string Description {get; set;}
