@@ -81,3 +81,27 @@ export async function deleteUser(email) {
         throw err;
     }
 }
+
+export async function updateUser(email, userData) {
+    try {
+        const response = await fetch(`${AUTH_URL}/updateuser/${email}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(userData)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || "Failed to update user");
+        }
+
+        return result;
+    } catch (error) {
+        console.error("Error updating user:", error);
+        return { error: error.message };
+    }
+}
+

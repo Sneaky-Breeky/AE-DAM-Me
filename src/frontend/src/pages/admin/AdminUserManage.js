@@ -2,11 +2,9 @@ import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import { Typography, Button, Popover, Radio, Form, Input, message, Popconfirm } from 'antd';
 import { PlusOutlined, EditOutlined, CloseOutlined, DeleteOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import { users } from '../../utils/dummyData.js';
-import { fetchUsers, addUser, deleteUser } from '../../api/authApi.js';
+import { fetchUsers, addUser, deleteUser, updateUser } from '../../api/authApi.js';
 
 const { Title } = Typography;
-
 
 
 function PopupForm({ visible, onClose, refreshUsers }) {
@@ -161,8 +159,10 @@ export default function AdminUserManage() {
   const [editForm] = Form.useForm();
   const [isPopupFormOpen, setPopupFormOpen] = useState(false);
   const [userList, setUserList] = useState([]);
+  const [currentEditingUser, setCurrentEditingUser] = useState(null);
 
-  const fetchUsersList = async () => {
+
+    const fetchUsersList = async () => {
     try {
       const users = await fetchUsers();
       if (Array.isArray(users)) {
@@ -181,10 +181,31 @@ export default function AdminUserManage() {
     fetchUsersList();
   }, []);
 
-  const handleEditUser = (values) => {
-    console.log("pass edited: " + values.editPass);
-    console.log("status edited: " + values.editStatus);
-  };
+    const handleEditUser = async (values) => {
+        const email = editForm.getFieldValue("editEmail");
+
+        if (!currentEditingUser) return;
+
+        const payload = {
+            firstname: currentEditingUser.firstName,
+            lastname: currentEditingUser.lastName,
+            role: currentEditingUser.role === 0 ? "user" : "admin",
+            status: values.editStatus || "active",
+        };
+        try {
+            const result = await updateUser(email, payload);
+
+            if (result.error) {
+                message.error(`Error updating user: ${result.error}`);
+            } else {
+                message.success("User updated successfully!");
+                fetchUsersList();
+            }
+        } catch (err) {
+            console.error("Update error:", err);
+            message.error("Failed to update user.");
+        }
+    };
 
   const handleDeleteUser = async (email) => {
     try {
@@ -197,14 +218,15 @@ export default function AdminUserManage() {
   };
 
   const formReset = (user) => {
-    console.log(user);
+      setCurrentEditingUser(user);
+      console.log(user);
     editForm.resetFields();
     editForm.setFieldsValue({
       editName: user.name,
       editEmail: user.email,
       editRole: user.role === 0 ? 'user' : 'admin',
-      editStatus: user.status === 'Active' ? 'active' : 'deactive',
-      editPass: user.password
+        editStatus: user.status ? 'active' : 'inactive',
+        editPass: user.password
     });
     
   };
@@ -317,7 +339,7 @@ export default function AdminUserManage() {
                               name="editPass"
                               layout="horizontal"
                               >
-                                <Input/>
+                                <Input placeholder={currentEditingUser?.passwordHash ? "Enter new password" : "No password set"} />
                             </Form.Item>
 
                             {/* User/Admin 
@@ -340,11 +362,9 @@ export default function AdminUserManage() {
                               name="editStatus"
                               layout="horizontal"
                               >
-                            <Radio.Group
-                              onChange={(e) => console.log('Status changed:', e.target.value)}
-                            >
+                            <Radio.Group>
                               <Radio value="active">Activate</Radio>
-                              <Radio value="deactive">Deactivate</Radio>
+                                <Radio value="inactive">Inactive</Radio>
                             </Radio.Group>
                             </Form.Item>
 
