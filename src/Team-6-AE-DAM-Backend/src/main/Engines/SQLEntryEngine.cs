@@ -140,7 +140,7 @@ ON DELETE CASCADE where appropriate s
         }
 
         public async Task<ProjectModel> addProject(string name, string status, string location, string imagePath,
-            string phase, AccessLevel al, DateTime lastUp, string desription)
+            string phase, AccessLevel al, DateTime lastUp, string desription, DateTime startDate)
         {
             var project = new ProjectModel
             {
@@ -151,7 +151,8 @@ ON DELETE CASCADE where appropriate s
                 AccessLevel = al,
                 LastUpdate = lastUp,
                 Phase = phase,
-                Description = desription
+                Description = desription,
+                StartDate = startDate
             };
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
