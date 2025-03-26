@@ -11,7 +11,7 @@ export async function fetchProjects() {
             }
         });
 
-        console.log(`Fetching projects from: ${PROJECTS_URL}/getprojs`);
+        console.log(`Fetching projects from: ${PROJECTS_URL}/getallprojs`);
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -23,7 +23,16 @@ export async function fetchProjects() {
             }
         }
 
-        return await response.json();
+        const projects = await response.json();
+
+        const processedProjects = projects.map(project => ({
+            ...project,
+            ImagePath: project.imagePath ? `${process.env.PUBLIC_URL}${project.imagePath}` : ''
+        }));
+
+        console.log("Processed Image Paths:", processedProjects.map(p => p.ImagePath));
+
+        return processedProjects;
     } catch (error) {
         console.error("Network or fetch error:", error);
         return { error: "Network error or server unreachable", message: error.message };

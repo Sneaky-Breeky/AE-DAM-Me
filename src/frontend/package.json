@@ -11,6 +11,7 @@
     "@mui/material": "^6.4.3",
     "antd": "^5.23.4",
     "cra-template": "1.2.0",
+    "dexie": "^4.0.11",
     "frontend": "file:",
     "mocha": "^11.1.0",
     "react": "^18.2.0",

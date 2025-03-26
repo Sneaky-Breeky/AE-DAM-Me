@@ -17,7 +17,6 @@ namespace backend.auth
             _authService = authService;
             _logger = logger;
         }
-
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] LoginRequest request)
         {
@@ -114,7 +113,7 @@ namespace backend.auth
                     FirstName = firstName ?? "",
                     LastName = lastName ?? "",
                     Email = email,
-                    PasswordHash = password ?? "",
+                    PasswordHash = password, // <-- do NOT use ?? "" here, keep it null if not set
                     Role = role,
                     Status = status
                 };
@@ -127,7 +126,7 @@ namespace backend.auth
             catch (Exception ex)
             {
                 _logger.LogError($"Error updating user: {ex.Message}");
-                return BadRequest(new { error = "Invalid user data format" });
+                return BadRequest(new { error = ex.Message });
             }
         }
 
