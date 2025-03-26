@@ -9,7 +9,7 @@ import {addLog} from "../../api/logApi";
 
 const { Title } = Typography;
 const { confirm } = Modal;
-const userID = "need a user id";
+const userID = 10;
 
 const tagStyle = {
     backgroundColor: '#dbdbdb',
