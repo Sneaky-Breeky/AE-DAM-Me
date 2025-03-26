@@ -316,7 +316,7 @@ export async function fetchTagsForProject(projectId) {
 
 export async function addProjectTag(ProjectId, Key, Value, type) {
     try {
-        const url = new URL(`${PROJECTS_URL}/addprojtag`);
+        const url = new URL(`${PROJECTS_URL}/tag/add`);
         url.searchParams.append("ProjectId", ProjectId);
         url.searchParams.append("Key", Key);
         url.searchParams.append("Value", Value);
