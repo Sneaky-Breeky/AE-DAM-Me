@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Tooltip } from 'antd';
 import { SearchOutlined, CalendarOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { projects, users } from '../../utils/dummyData.js';
+// import { projects, users } from '../../utils/dummyData.js';
+import { useAuth } from '../../contexts/AuthContext'
+import { fetchProjects } from '../../api/projectApi';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
@@ -13,66 +15,82 @@ const { Meta } = Card;
 export default function UserProjectDir() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDate, setSelectedDate] = useState(null);
-  const navigate = useNavigate();
-  const currentUser = users.find((user) => user.name === "John Doe"); // assume John Doe is logged in
-  const [favProjects, setFavProjects] = useState(new Set(currentUser.favProjs));
-  const [filteredProjects, setFilteredProjects] = useState(projects);
-  //TODO: check each project to see if the current user has access to it, then modify it accordingly
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [projects, setProjects] = useState([]);
+  const [filteredProjects, setFilteredProjects] = useState([]);
+  const { user, login } = useAuth();
+  //TODO: check each project to see if the current user has access to it, then modify it accordingly
+  const navigate = useNavigate();
 
+  const [favProjects, setFavProjects] = useState(new Set(user?.favProjects || []));
 
-    const handleSearch = () => {
-        let filtered = [...projects];
-
-        if (searchQuery.trim() !== '') {
-            const query = searchQuery.toLowerCase();
-
-            filtered = filtered.filter(project =>
-                project.name.toLowerCase() === query ||
-                project.id.toString() === query || 
-                project.location.toLowerCase() === query ||
-                project.files.some(file =>
-                    file.Metadata.some(tag => tag.toLowerCase() === query)
-                )
-            );
-        }
-
-        if (selectedDate) {
-            filtered = filtered.filter(project =>
-                dayjs(project.startDate).isSame(selectedDate, 'day')
-            );
-        }
-
-        if (selectedStatus) {
-            filtered = filtered.filter(project =>
-                project.status.toLowerCase() === selectedStatus.toLowerCase()
-            );
-        }
-
-        setFilteredProjects([...filtered]);
-        console.log("Filtered projects:", filtered);
+  useEffect(() => {
+    const loadProjects = async () => {
+      const data = await fetchProjects();
+      if (data.error) {
+        console.error(data.error);
+      } else {
+        setProjects(data);
+        setFilteredProjects(data);
+      }
     };
+    loadProjects();
+  }, []);
+
+  const handleSearch = () => {
+    let filtered = [...projects];
+
+    if (searchQuery.trim() !== '') {
+      const query = searchQuery.toLowerCase();
+
+      filtered = filtered.filter((project) =>
+        project.name.toLowerCase() === query ||
+        project.id.toString() === query ||
+        project.location.toLowerCase() === query ||
+        project.files.some(file =>
+          file.Metadata.some(tag => tag.toLowerCase() === query)
+        )
+      );
+    }
+
+    if (selectedDate) {
+      filtered = filtered.filter(project =>
+        dayjs(project.startDate).isSame(selectedDate, 'day')
+      );
+    }
+
+    if (selectedStatus) {
+      filtered = filtered.filter(project =>
+        project.status.toLowerCase() === selectedStatus.toLowerCase()
+      );
+    }
+
+    setFilteredProjects(filtered);
+    console.log("Filtered projects:", filtered);
+  };
 
 
-    const handleClearFilters = () => {
-        setSearchQuery('');
-        setSelectedDate(null);
-        setSelectedStatus('');
-        setFilteredProjects(projects);
-    };
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setSelectedDate(null);
+    setSelectedStatus('');
+    setFilteredProjects([...projects]);
+  };
 
 
-    const toggleFavorite = (projectId) => {
+  const toggleFavorite = (projectId) => {
     const updatedFavs = new Set(favProjects);
+
     if (updatedFavs.has(projectId)) {
       updatedFavs.delete(projectId);
     } else {
       updatedFavs.add(projectId);
     }
+
     setFavProjects(updatedFavs);
 
-    currentUser.favProjs = Array.from(updatedFavs);
-    console.log("Updated Favorites:", currentUser.favProjs);
+    login({ ...user, favProjects: Array.from(updatedFavs) });
+    console.log("Updated Favorites:", user.favProjects);
   };
 
   return (
@@ -123,15 +141,15 @@ export default function UserProjectDir() {
           </Form.Item>
 
           <Form.Item>
-              <Select
-                  style={{ width: 120 }}
-                  allowClear
-                  options={[
-                      { value: 'active', label: 'Active' },
-                      { value: 'inactive', label: 'Inactive' }]}
-                  onChange={(value) => setSelectedStatus(value)}
-                  placeholder="Select status"
-              />
+            <Select
+              style={{ width: 120 }}
+              allowClear
+              options={[
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' }]}
+              onChange={(value) => setSelectedStatus(value)}
+              placeholder="Select status"
+            />
           </Form.Item>
 
           <Form.Item>
@@ -149,11 +167,11 @@ export default function UserProjectDir() {
             </Button>
           </Form.Item>
 
-            <Form.Item>
-                <Button type="default" onClick={handleClearFilters} danger>
-                    Clear Filters
-                </Button>
-            </Form.Item>
+          <Form.Item>
+            <Button type="default" onClick={handleClearFilters} danger>
+              Clear Filters
+            </Button>
+          </Form.Item>
         </Form>
       </Box>
 
@@ -208,7 +226,7 @@ export default function UserProjectDir() {
                     cover={
                       <img
                         alt={project.name}
-                        src={project.thumbnail}
+                        src={project.ImagePath}
                         style={{ height: '80px', objectFit: 'cover' }}
                       />
                     }
