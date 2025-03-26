@@ -1,6 +1,6 @@
-import React, {useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
-import {Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Tooltip} from 'antd';
+import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Tooltip } from 'antd';
 import {
     SearchOutlined,
     CalendarOutlined,
@@ -9,22 +9,49 @@ import {
     PlusOutlined,
     UnorderedListOutlined
 } from '@ant-design/icons';
-import {useNavigate} from 'react-router-dom';
-import {projects, users} from '../../utils/dummyData.js';
+import { useNavigate } from 'react-router-dom';
+// import {projects, users} from '../../utils/dummyData.js';
 import dayjs from 'dayjs';
+import { fetchProjects } from '../../api/projectApi';
+import { useAuth } from '../../contexts/AuthContext';
 
-const {Title} = Typography;
-const {Meta} = Card;
+const { Title } = Typography;
+const { Meta } = Card;
 
 
 export default function UserDashboard() {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedDate, setSelectedDate] = useState(null);
+    const [projects, setProjects] = useState([]);
+    const [filteredProjects, setFilteredProjects] = useState([]);
+    const [favProjects, setFavProjects] = useState(new Set());
+
+    const { user } = useAuth();
     const navigate = useNavigate();
-    const currentUser = users.find((user) => user.name === "John Doe"); // assume John Doe is logged in
-    const [filteredProjects, setFilteredProjects] = useState(projects);
-    //TODO: check each project to see if the current user has access to it, then modify it accordingly
-    const [favProjects, setFavProjects] = useState(new Set(currentUser.favProjs));
+
+    useEffect(() => {
+        async function loadProjects() {
+            const response = await fetchProjects();
+            if (!response.error) {
+                setProjects(response);
+                setFilteredProjects(response);
+            } else {
+                console.error(response.error);
+            }
+        }
+
+        if (user) {
+            loadProjects();
+            // Initialize user's favorite projects if available from backend
+            if (user.favProjects) {
+                setFavProjects(new Set(user.favProjects));
+            }
+        }
+    }, [user]);
+
+    useEffect(() => {
+        console.log('Current user from AuthContext:', user);
+    }, [user]);
 
     const handleSearch = () => {
         let filtered = [...projects];
@@ -58,7 +85,7 @@ export default function UserDashboard() {
         setSelectedDate(null);
         setFilteredProjects(projects);
     };
-    
+
     const toggleFavorite = (projectId) => {
         const updatedFavs = new Set(favProjects);
         if (updatedFavs.has(projectId)) {
@@ -67,8 +94,8 @@ export default function UserDashboard() {
             updatedFavs.add(projectId);
         }
         setFavProjects(updatedFavs);
-        currentUser.favProjs = Array.from(updatedFavs);
-        console.log("Updated Favorites:", currentUser.favProjs);
+        // currentUser.favProjs = Array.from(updatedFavs);
+        console.log("Updated Favorites:", user.favProjects);
     };
 
     return (
@@ -112,10 +139,10 @@ export default function UserDashboard() {
                     <Form.Item>
                         <Input
                             placeholder="Search files..."
-                            prefix={<SearchOutlined/>}
+                            prefix={<SearchOutlined />}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            style={{width: '300px'}}
+                            style={{ width: '300px' }}
                         />
                     </Form.Item>
 
@@ -124,7 +151,7 @@ export default function UserDashboard() {
                             placeholder="Select date"
                             maxDate={dayjs()}
                             onChange={(date, dateString) => setSelectedDate(dateString)}
-                            suffixIcon={<CalendarOutlined/>}
+                            suffixIcon={<CalendarOutlined />}
                         />
                     </Form.Item>
 
@@ -177,10 +204,10 @@ export default function UserDashboard() {
                             border: 1,
                             borderColor: 'grey.500',
                             borderRadius: '16px',
-                            '&:hover': {boxShadow: 3},
+                            '&:hover': { boxShadow: 3 },
                         }}
                     >
-                        <PlusOutlined style={{marginTop: '30px', fontSize: '50px'}}/>
+                        <PlusOutlined style={{ marginTop: '30px', fontSize: '50px' }} />
                         <h4>Upload Images/Videos</h4>
                     </Box>
 
@@ -197,10 +224,10 @@ export default function UserDashboard() {
                             border: 1,
                             borderColor: 'grey.500',
                             borderRadius: '16px',
-                            '&:hover': {boxShadow: 3},
+                            '&:hover': { boxShadow: 3 },
                         }}
                     >
-                        <UnorderedListOutlined style={{marginTop: '30px', fontSize: '50px'}}/>
+                        <UnorderedListOutlined style={{ marginTop: '30px', fontSize: '50px' }} />
                         <h4>Activity Log</h4>
                     </Box>
                 </Box>
@@ -225,10 +252,10 @@ export default function UserDashboard() {
                         padding: '20px',
                         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                         overflow: 'hidden',
-                        '&:hover': {boxShadow: 3},
+                        '&:hover': { boxShadow: 3 },
                     }}
                 >
-                    <Title level={3} style={{textAlign: 'center', marginBottom: '30px', marginTop: '0px'}}>
+                    <Title level={3} style={{ textAlign: 'center', marginBottom: '30px', marginTop: '0px' }}>
                         Active Projects
                     </Title>
                     <Box
@@ -250,17 +277,17 @@ export default function UserDashboard() {
                                             cover={
                                                 <img
                                                     alt={project.name}
-                                                    src={project.thumbnail}
-                                                    style={{height: '80px', objectFit: 'cover'}}
+                                                    src={project.ImagePath}
+                                                    style={{ height: '80px', objectFit: 'cover' }}
                                                 />
                                             }
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 sessionStorage.setItem('menu', 1);
-                                                navigate(`/projectDirectory/projectOverview/${project.id}`, {state: {project}});
+                                                navigate(`/projectDirectory/projectOverview/${project.id}`, { state: { project } });
                                                 window.location.reload();
                                             }}
-                                            style={{borderRadius: '10px', overflow: 'hidden'}}
+                                            style={{ borderRadius: '10px', overflow: 'hidden' }}
                                         >
                                             <Tooltip title="Favorite Project">
                                                 {favProjects.has(project.id) ? (
@@ -300,7 +327,7 @@ export default function UserDashboard() {
                                                 )}
                                             </Tooltip>
                                             <Meta title={project.name} description={project.location}
-                                                  style={{textAlign: 'center'}}/>
+                                                style={{ textAlign: 'center' }} />
                                         </Card>
                                     </Col>
                                 ))}

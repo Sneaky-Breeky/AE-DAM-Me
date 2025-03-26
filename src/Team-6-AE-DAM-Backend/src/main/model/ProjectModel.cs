@@ -1,8 +1,6 @@
 using System.Data.SqlTypes;
 
 namespace DAMBackend.Models
-
-
 {
 
     public enum AccessLevel {
