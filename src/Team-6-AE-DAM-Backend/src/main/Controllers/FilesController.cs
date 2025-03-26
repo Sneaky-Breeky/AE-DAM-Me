@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DAMBackend.Data;
 using DAMBackend.Models;
-using File = DAMBackend.Models.File;
+// using File = DAMBackend.Models.File;
 
 namespace DAMBackend.Controllers
 {
@@ -32,7 +32,7 @@ namespace DAMBackend.Controllers
 
         // GET: api/Files/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<File>> GetFile(int id)
+        public async Task<ActionResult<FileModel>> GetFile(int id)
         {
             var @file = await _context.Files.FindAsync(id);
 
@@ -47,7 +47,7 @@ namespace DAMBackend.Controllers
         // PUT: api/Files/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutFile(Guid id, File @file)
+        public async Task<IActionResult> PutFile(Guid id, FileModel @file)
         {
             if (id != @file.Id)
             {

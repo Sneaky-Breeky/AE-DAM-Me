@@ -73,7 +73,7 @@ namespace DAMBackend.Controllers
 
         // GET: api/damprojects/AccessList/{userId}
         [HttpGet("AccessList/{userId}")]
-        public async Task<ActionResult<IEnumerable<Project>>> GetProjects(int userId)
+        public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjects(int userId)
         {
             var projects = await _context.UserProjectRelations
                 .Where(upr => upr.UserId == userId)
@@ -173,22 +173,16 @@ namespace DAMBackend.Controllers
 
         // GET: api/damprojects/getallprojs
         [HttpGet("getallprojs")]
-        public async Task<ActionResult<List<Project>>> GetAllProjects()
+        public async Task<ActionResult<List<ProjectModel>>> GetAllProjects()
         {
             var projects = await _context.Projects.ToListAsync();
-
-            if (projects == null)
-            {
-                return NotFound();
-            }
-
             return Ok(projects);
         }
         
         
         // GET: api/damprojects/id
         [HttpGet("{id}")]
-        public async Task<ActionResult<Project>> GetProject(int id)
+        public async Task<ActionResult<ProjectModel>> GetProject(int id)
         {
             var project = await _context.Projects.FindAsync(id);
 

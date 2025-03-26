@@ -11,7 +11,7 @@ export async function fetchProjects() {
             }
         });
 
-        console.log(`Fetching projects from: ${PROJECTS_URL}/getprojs`);
+        console.log(`Fetching projects from: ${PROJECTS_URL}/getallprojs`);
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -27,11 +27,11 @@ export async function fetchProjects() {
 
         const processedProjects = projects.map(project => ({
             ...project,
-            ImagePath: project.ImagePath ? `${process.env.PUBLIC_URL}${project.ImagePath}` : ''
+            ImagePath: project.imagePath ? `${process.env.PUBLIC_URL}${project.imagePath}` : ''
         }));
 
         console.log("Processed Image Paths:", processedProjects.map(p => p.ImagePath));
-        
+
         return processedProjects;
     } catch (error) {
         console.error("Network or fetch error:", error);
