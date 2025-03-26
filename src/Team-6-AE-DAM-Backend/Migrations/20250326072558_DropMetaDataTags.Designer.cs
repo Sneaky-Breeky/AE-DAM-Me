@@ -4,6 +4,7 @@ using DAMBackend.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DAMBackend.Migrations
 {
     [DbContext(typeof(SQLDbContext))]
-    partial class SQLDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250326072558_DropMetaDataTags")]
+    partial class DropMetaDataTags
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -104,7 +107,7 @@ namespace DAMBackend.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Files", (string)null);
+                    b.ToTable("Files");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.FileTag", b =>
@@ -149,7 +152,7 @@ namespace DAMBackend.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("LogImages", (string)null);
+                    b.ToTable("LogImages");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.MetadataTagModel", b =>
@@ -172,7 +175,7 @@ namespace DAMBackend.Migrations
 
                     b.HasKey("FileId", "Key");
 
-                    b.ToTable("MetadataTags", (string)null);
+                    b.ToTable("MetadataTags");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.ProjectModel", b =>
@@ -216,7 +219,7 @@ namespace DAMBackend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Projects", (string)null);
+                    b.ToTable("Projects");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.ProjectTagModel", b =>
@@ -238,7 +241,7 @@ namespace DAMBackend.Migrations
 
                     b.HasKey("ProjectId", "Key");
 
-                    b.ToTable("ProjectTags", (string)null);
+                    b.ToTable("ProjectTags");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.TagBasicModel", b =>
@@ -248,7 +251,7 @@ namespace DAMBackend.Migrations
 
                     b.HasKey("Value");
 
-                    b.ToTable("BasicTags", (string)null);
+                    b.ToTable("BasicTags");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.UserModel", b =>
@@ -288,7 +291,7 @@ namespace DAMBackend.Migrations
 
                     b.HasIndex("ProjectModelId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.UserProjectRelation", b =>
@@ -309,7 +312,7 @@ namespace DAMBackend.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("UserProjectRelations", (string)null);
+                    b.ToTable("UserProjectRelations");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.FileModel", b =>
