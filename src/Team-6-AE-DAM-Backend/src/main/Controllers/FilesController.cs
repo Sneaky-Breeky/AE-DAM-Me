@@ -146,7 +146,12 @@ namespace DAMBackend.Controllers
                     return BadRequest(string.Concat("User with id = ", file.userId, " not found"));
                 }
 
-                var updatedPath = await _azureBlobService.MoveBlobWithinContainerAsync("palettes", Path.GetFileName(new Uri(file.filePath).LocalPath), "projects");
+
+                var updatedPath = file.filePath;
+                if (!file.palette)
+                {
+                    updatedPath = await _azureBlobService.MoveBlobWithinContainerAsync("palettes", Path.GetFileName(new Uri(file.filePath).LocalPath), "projects");
+                }
                 var dimensions = FileEngine.GetDimensions(file.filePath);
 
                 FileModel fileModel = new FileModel
