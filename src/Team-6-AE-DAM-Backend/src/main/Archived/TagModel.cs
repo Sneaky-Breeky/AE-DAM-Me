@@ -1,49 +1,49 @@
-using System;
-using System.ComponentModel.DataAnnotations;
+// using System;
+// using System.ComponentModel.DataAnnotations;
 
-namespace DAMBackend.Models
+// namespace DAMBackend.Models
 
-{
-    public enum Department {
-            Elec,
-            Mech,
-            Civil,
-            Software,
-            Environment,
-            Management,
-            Other
-        }
-    public enum MediaType {
-        Photo,
-        Video,
-        Drawing,
-        Document,
-        Other
-    }
+// {
+//     public enum Department {
+//             Elec,
+//             Mech,
+//             Civil,
+//             Software,
+//             Environment,
+//             Management,
+//             Other
+//         }
+//     public enum MediaType {
+//         Photo,
+//         Video,
+//         Drawing,
+//         Document,
+//         Other
+//     }
 
 
 
-    public class TagModel
+//     public class TagModel
 
-    // Metadata
+//     // Metadata
 
-    {
-        [Key]
-        public int Id { get; set; }
+//     {
+//         [Key]
+//         public int Id { get; set; }
 
-        public required int UserId { get; set; }
+//         public required int UserId { get; set; }
 
-        public Guid? ProjectId { get; set; }
+//         public Guid? ProjectId { get; set; }
 
-        public required string Phase { get; set; }
-        // Ask developers
+//         public required string Phase { get; set; }
+//         // Ask developers
         
-        public Department Dep { get; set; }
+//         public Department Dep { get; set; }
 
-        public MediaType Type { get; set; }
+//         public MediaType Type { get; set; }
 
-        // public required Guid FileId { get; set; }
+//         // public required Guid FileId { get; set; }
 
-        public List<FileModel> Files { get; set; } = new List<FileModel>();
-    }
-}
+//         public List<FileModel> Files { get; set; } = new List<FileModel>();
+//     }
+// }

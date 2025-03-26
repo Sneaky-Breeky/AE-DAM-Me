@@ -23,7 +23,16 @@ export async function fetchProjects() {
             }
         }
 
-        return await response.json();
+        const projects = await response.json();
+
+        const processedProjects = projects.map(project => ({
+            ...project,
+            ImagePath: project.ImagePath ? `${process.env.PUBLIC_URL}${project.ImagePath}` : ''
+        }));
+
+        console.log("Processed Image Paths:", processedProjects.map(p => p.ImagePath));
+        
+        return processedProjects;
     } catch (error) {
         console.error("Network or fetch error:", error);
         return { error: "Network error or server unreachable", message: error.message };
