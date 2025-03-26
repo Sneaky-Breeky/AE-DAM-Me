@@ -33,7 +33,7 @@ export async function addLog(userID, fileID, typeOfLog) {
         Date: new Date().toISOString(),
     };
     try {
-        const response = await fetch(`${LOG_URL}}`, {
+        const response = await fetch(`${LOG_URL}/addLog}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

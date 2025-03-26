@@ -76,45 +76,45 @@ ON DELETE CASCADE where appropriate s
             return file;
         }
 
-        public MetadataTagModel addTags(FileModel file, string key, object value, value_type v_type)
-        {
-            // if (!IsValidValue(value, v_type))
-            // {
-            //     throw new ArgumentException(
-            //         $"Invalid value type for key {key}. Expected {v_type}, but got {value.GetType().Name}.");
-            // }
-
-            var tag = new MetadataTagModel
-            {
-                Key = key,
-                type = v_type,
-                FileId = file.Id,
-                File = file
-            };
-
-            if (v_type == value_type.String)
-            {
-                tag.sValue = value as string;
-            }
-            else
-            {
-                tag.iValue = Convert.ToInt32(value);
-            }
-
-            if (file != null)
-            {
-                tag.FileId = file.Id;
-                file.mTags.Add(tag);
-            }
-            else
-            {
-                throw new Exception("File was not added to tag, please attach a File");
-            }
-
-            // database.Tags.Add(tag);
-            // await database.SaveChanges();
-            return tag;
-        }
+        // public MetadataTagModel addTags(FileModel file, string key, object value, value_type v_type)
+        // {
+        //     // if (!IsValidValue(value, v_type))
+        //     // {
+        //     //     throw new ArgumentException(
+        //     //         $"Invalid value type for key {key}. Expected {v_type}, but got {value.GetType().Name}.");
+        //     // }
+        //
+        //     var tag = new MetadataTagModel
+        //     {
+        //         Key = key,
+        //         type = v_type,
+        //         FileId = file.Id,
+        //         File = file
+        //     };
+        //
+        //     if (v_type == value_type.String)
+        //     {
+        //         tag.sValue = value as string;
+        //     }
+        //     else
+        //     {
+        //         tag.iValue = Convert.ToInt32(value);
+        //     }
+        //
+        //     if (file != null)
+        //     {
+        //         tag.FileId = file.Id;
+        //         file.mTags.Add(tag);
+        //     }
+        //     else
+        //     {
+        //         throw new Exception("File was not added to tag, please attach a File");
+        //     }
+        //
+        //     // database.Tags.Add(tag);
+        //     // await database.SaveChanges();
+        //     return tag;
+        // }
 
         public TagBasicModel addTags(FileModel file, string value)
         {

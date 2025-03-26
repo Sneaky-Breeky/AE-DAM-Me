@@ -3,9 +3,8 @@ import Box from '@mui/material/Box';
 import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Tooltip } from 'antd';
 import { SearchOutlined, CalendarOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-// import { projects, users } from '../../utils/dummyData.js';
 import { useAuth } from '../../contexts/AuthContext'
-import { fetchProjects } from '../../api/projectApi';
+import {addFavorite, removeFavorite, fetchProjectsForUser, fetchFavoriteProjects} from '../../api/projectApi';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
@@ -19,23 +18,34 @@ export default function UserProjectDir() {
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
   const { user, login } = useAuth();
-  //TODO: check each project to see if the current user has access to it, then modify it accordingly
   const navigate = useNavigate();
 
   const [favProjects, setFavProjects] = useState(new Set(user?.favProjects || []));
 
-  useEffect(() => {
-    const loadProjects = async () => {
-      const data = await fetchProjects();
-      if (data.error) {
-        console.error(data.error);
-      } else {
-        setProjects(data);
-        setFilteredProjects(data);
-      }
-    };
-    loadProjects();
-  }, []);
+    useEffect(() => {
+        const loadProjects = async () => {
+            if (!user?.id) return;
+
+            const data = await fetchProjectsForUser(user.id);
+            if (data.error) {
+                console.error(data.error);
+            } else {
+                const activeProjects = data.filter(p => p.status.toLowerCase() === "active");
+                setProjects(activeProjects);
+                setFilteredProjects(activeProjects);
+            }
+
+            const favs = await fetchFavoriteProjects(user.id);
+            if (!favs.error) {
+                const favIds = favs.map(p => p.id);
+                setFavProjects(new Set(favIds));
+            } else {
+                console.error(favs.error);
+            }
+        };
+        loadProjects();
+    }, [user]);
+
 
   const handleSearch = () => {
     let filtered = [...projects];
@@ -64,9 +74,7 @@ export default function UserProjectDir() {
         project.status.toLowerCase() === selectedStatus.toLowerCase()
       );
     }
-
     setFilteredProjects(filtered);
-    console.log("Filtered projects:", filtered);
   };
 
 
@@ -78,20 +86,25 @@ export default function UserProjectDir() {
   };
 
 
-  const toggleFavorite = (projectId) => {
-    const updatedFavs = new Set(favProjects);
+    const toggleFavorite = async (projectId) => {
+        const updatedFavs = new Set(favProjects);
+        let response;
 
-    if (updatedFavs.has(projectId)) {
-      updatedFavs.delete(projectId);
-    } else {
-      updatedFavs.add(projectId);
-    }
+        if (updatedFavs.has(projectId)) {
+            updatedFavs.delete(projectId);
+            response = await removeFavorite(user.id, projectId);
+        } else {
+            updatedFavs.add(projectId);
+            response = await addFavorite(user.id, projectId);
+        }
 
-    setFavProjects(updatedFavs);
+        if (!response.error) {
+            setFavProjects(new Set(updatedFavs));
+        } else {
+            console.error("Error updating favorite:", response.error);
+        }
+    };
 
-    login({ ...user, favProjects: Array.from(updatedFavs) });
-    console.log("Updated Favorites:", user.favProjects);
-  };
 
   return (
     <Box
@@ -215,11 +228,10 @@ export default function UserProjectDir() {
             }}
           >
             <Row gutter={[16, 16]} justify="center">
-              {filteredProjects.sort((a, b) => {
-                const aFav = favProjects.has(a.id) ? -1 : 1;
-                const bFav = favProjects.has(b.id) ? -1 : 1;
-                return aFav - bFav;
-              }).map((project, index) => (
+                {filteredProjects
+                    .filter(project => project.status.toLowerCase() === "active")
+                    .sort((a, b) => (favProjects.has(a.id) ? -1 : 1) - (favProjects.has(b.id) ? -1 : 1))
+                    .map((project, index) => (
                 <Col key={index} xs={24} sm={12} md={8} lg={6}>
                   <Card
                     hoverable

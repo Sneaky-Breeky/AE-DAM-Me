@@ -39,6 +39,28 @@ export async function fetchProjects() {
     }
 }
 
+export async function fetchProjectsForUser(userId) {
+    try {
+        const response = await fetch(`${PROJECTS_URL}/AccessList/${userId}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || "Failed to fetch user's projects");
+        }
+
+        return result.data || result; // `data` is returned because of `Ok(new { data = projects })`
+    } catch (error) {
+        console.error("Error fetching user projects:", error);
+        return { error: error.message };
+    }
+}
+
 export async function fetchUsersForProject(projectId) {
     try {
         const url = `${PROJECTS_URL}/${projectId}/users`;
@@ -67,6 +89,115 @@ export async function fetchUsersForProject(projectId) {
         return { error: "Network error or server unreachable", message: error.message };
     }
 }
+
+export async function addFavorite(userId, projectId) {
+    try {
+        const response = await fetch(`${PROJECTS_URL}/AccessList/favorite/${userId}/${projectId}`, {
+            method: 'PUT',
+        });
+
+        if (!response.ok) {
+            const error = await response.text();
+            throw new Error(error || "Failed to add favorite");
+        }
+
+        return await response.json();
+    } catch (err) {
+        console.error("Error adding favorite:", err);
+        return { error: err.message };
+    }
+}
+
+export async function removeFavorite(userId, projectId) {
+    try {
+        const response = await fetch(`${PROJECTS_URL}/AccessList/removefavorite/${userId}/${projectId}`, {
+            method: 'PUT',
+        });
+
+        if (!response.ok) {
+            const error = await response.text();
+            throw new Error(error || "Failed to remove favorite");
+        }
+
+        return await response.json();
+    } catch (err) {
+        console.error("Error removing favorite:", err);
+        return { error: err.message };
+    }
+}
+
+export async function fetchFavoriteProjects(userId) {
+    try {
+        const response = await fetch(`${PROJECTS_URL}/AccessList/FavProjects/${userId}`);
+
+        if (!response.ok) {
+            const error = await response.text();
+            return { error };
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (err) {
+        console.error("Error fetching favorite projects:", err);
+        return { error: err.message };
+    }
+}
+
+
+export async function addWorkingOn(userId, projectId) {
+    try {
+        const response = await fetch(`${PROJECTS_URL}/AccessList/workingon/${userId}/${projectId}`, {
+            method: 'PUT',
+        });
+
+        if (!response.ok) {
+            const error = await response.text();
+            throw new Error(error || "Failed to add working on");
+        }
+
+        return await response.json();
+    } catch (err) {
+        console.error("Error adding working on:", err);
+        return { error: err.message };
+    }
+}
+
+
+export async function removeWorkingOn(userId, projectId) {
+    try {
+        const response = await fetch(`${PROJECTS_URL}/AccessList/removeworkingon/${userId}/${projectId}`, {
+            method: 'PUT',
+        });
+
+        if (!response.ok) {
+            const error = await response.text();
+            throw new Error(error || "Failed to remove working on");
+        }
+
+        return await response.json();
+    } catch (err) {
+        console.error("Error removing working on:", err);
+        return { error: err.message };
+    }
+}
+
+export async function fetchWorkingProjects(userId) {
+    try {
+        const response = await fetch(`${PROJECTS_URL}/AccessList/WorkingProjects/${userId}`);
+
+        if (!response.ok) {
+            const error = await response.text();
+            return { error };
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (err) {
+        console.error("Error fetching working projects:", err);
+        return { error: err.message };
+    }
+}
+
 
 // create new project
 export async function postProject(projectData) {
@@ -185,7 +316,7 @@ export async function fetchTagsForProject(projectId) {
 
 export async function addProjectTag(ProjectId, Key, Value, type) {
     try {
-        const url = new URL(`${PROJECTS_URL}/addprojtag`);
+        const url = new URL(`${PROJECTS_URL}/tag/add`);
         url.searchParams.append("ProjectId", ProjectId);
         url.searchParams.append("Key", Key);
         url.searchParams.append("Value", Value);

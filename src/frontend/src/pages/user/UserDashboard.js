@@ -10,9 +10,8 @@ import {
     UnorderedListOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-// import {projects, users} from '../../utils/dummyData.js';
 import dayjs from 'dayjs';
-import { fetchProjects } from '../../api/projectApi';
+import {addFavorite, removeFavorite, fetchProjectsForUser, fetchFavoriteProjects} from '../../api/projectApi';
 import { useAuth } from '../../contexts/AuthContext';
 
 const { Title } = Typography;
@@ -33,21 +32,25 @@ export default function UserDashboard() {
     
     useEffect(() => {
         async function loadProjects() {
-            const response = await fetchProjects();
+            if (!user?.id) return;
+            const response = await fetchProjectsForUser(user.id);
             if (!response.error) {
                 setProjects(response);
                 setFilteredProjects(response);
             } else {
                 console.error(response.error);
             }
-        }
 
+            const favsResponse = await fetchFavoriteProjects(user.id);
+            if (!favsResponse.error) {
+                const favIds = favsResponse.map(p => p.id);
+                setFavProjects(new Set(favIds));
+            } else {
+                console.error(favsResponse.error);
+            }
+        }
         if (user) {
             loadProjects();
-            // Initialize user's favorite projects if available from backend
-            if (user.favProjects) {
-                setFavProjects(new Set(user.favProjects));
-            }
         }
     }, [user]);
 
@@ -76,10 +79,7 @@ export default function UserDashboard() {
                 dayjs(project.startDate).isSame(selectedDate, 'day')
             );
         }
-
-
         setFilteredProjects([...filtered]);
-        console.log("Filtered projects:", filtered);
     };
 
     const handleClearFilters = () => {
@@ -88,16 +88,22 @@ export default function UserDashboard() {
         setFilteredProjects(projects);
     };
 
-    const toggleFavorite = (projectId) => {
+    const toggleFavorite = async (projectId) => {
         const updatedFavs = new Set(favProjects);
+        let response;
         if (updatedFavs.has(projectId)) {
             updatedFavs.delete(projectId);
+            response = await removeFavorite(user.id, projectId);
         } else {
             updatedFavs.add(projectId);
+            response = await addFavorite(user.id, projectId);
         }
-        setFavProjects(updatedFavs);
-        // currentUser.favProjs = Array.from(updatedFavs);
-        console.log("Updated Favorites:", user.favProjects);
+
+        if (!response.error) {
+            setFavProjects(new Set(updatedFavs));
+        } else {
+            console.error("Error updating favorite:", response.error);
+        }
     };
 
     return (
@@ -270,7 +276,7 @@ export default function UserDashboard() {
                     >
                         <Row gutter={[16, 16]} justify="center">
                             {filteredProjects
-                                .filter(project => project.status.toLowerCase() === "active") // ✅ Only show active projects
+                                .filter(project => project.status.toLowerCase() === "active")
                                 .sort((a, b) => (favProjects.has(a.id) ? -1 : 1) - (favProjects.has(b.id) ? -1 : 1))
                                 .map((project, index) => (
                                     <Col key={index} xs={24} sm={12} md={8} lg={6}>
