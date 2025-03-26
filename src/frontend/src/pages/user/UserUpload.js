@@ -5,9 +5,11 @@ import { PlusOutlined, RotateLeftOutlined, RotateRightOutlined, ExclamationCircl
 import Cropper from 'react-easy-crop';
 import dayjs from 'dayjs';
 import { projects, users } from '../../utils/dummyData.js';
+import {addLog} from "../../api/logApi";
 
 const { Title } = Typography;
 const { confirm } = Modal;
+const userID = "need a user id";
 
 const tagStyle = {
     backgroundColor: '#dbdbdb',
@@ -238,6 +240,10 @@ export default function UserUpload() {
         // TODO: add "files" to current "project"'s "files" variable, and other associated info
         // TODO: update user's activity log that they added files to this certain project
         console.log("Uploading files:", files);
+        userFiles.forEach(file => {
+            addLog(file.file.name, userID, 'upload');
+        });
+
         setFiles([]);
         setUserFiles([]);
         setTagApplications([]);
@@ -246,6 +252,7 @@ export default function UserUpload() {
         setSelectedDate(dayjs().format('YYYY-MM-DD'));
         setLocation(null);
         setUploadSuccess(true);
+
     };
 
     const resetUploadState = () => {
