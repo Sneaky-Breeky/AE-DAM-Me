@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import {fetchLog} from "../../api/logApi";
 
 const { Title } = Typography;
-const userId = "need a user id";
+const userId = 10;
 const logsForUser = fetchLog(userId);
 
 export default function ActivityLog() {

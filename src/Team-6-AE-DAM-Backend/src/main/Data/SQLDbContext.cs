@@ -21,7 +21,7 @@ namespace DAMBackend.Models
         
         public DbSet<UserProjectRelation> UserProjectRelations { get; set; }
 
-        public DbSet<LogImage> LogImages { get; set; }
+        public DbSet<LogImage> LogImage { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) 
 
