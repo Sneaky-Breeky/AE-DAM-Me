@@ -27,14 +27,24 @@ namespace backend.auth
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var result = await _authService.AuthenticateUserAsync(request.Email, request.Password);
-            
-            if (!result)
+            var user = await _authService.AuthenticateUserAsync(request.Email, request.Password);
+
+            if (user is null)
             {
                 return Unauthorized(new { error = "Invalid email or password" });
             }
 
-            return Ok(new { message = "Login successful", role = "user" });
+            // Return useful user details after successful login
+            return Ok(new 
+            { 
+                message = "Login successful", 
+                id = user.Id,
+                email = user.Email,
+                firstName = user.FirstName,
+                lastName = user.LastName,
+                role = user.Role.ToString().ToLower(),
+                status = user.Status
+            });
         }
 
         [HttpGet("fetchusers")]

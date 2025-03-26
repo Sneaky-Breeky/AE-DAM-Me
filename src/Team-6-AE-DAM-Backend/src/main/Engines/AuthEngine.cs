@@ -53,14 +53,13 @@ namespace DAMBackend.auth
             return true;
         }
 
-        public async Task<bool> AuthenticateUserAsync(string email, string password)
+        public async Task<UserModel?> AuthenticateUserAsync(string email, string password)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null || !VerifyPassword(password, user.PasswordHash))
+                return null;
 
-            if (user == null) return false; // User not found
-            // Console.WriteLine($"Hashed Password for {email}: {HashPassword(password)}, {user.PasswordHash}");
-
-            return VerifyPassword(password, user.PasswordHash);
+            return user;
         }
 
         public async Task<bool> AddUserAsync(UserModel user)

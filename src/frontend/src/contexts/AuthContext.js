@@ -22,7 +22,12 @@ export function AuthProvider({ children }) {
 
     const login = (userData) => {
         const completeUserData = {
-            ...userData,
+            id: userData.id,                     
+            email: userData.email,               
+            firstName: userData.firstName,       
+            lastName: userData.lastName,         
+            role: userData.role,
+            status: userData.status,
             favProjects: userData.favProjects || []
         };
         setUser(completeUserData);

@@ -42,7 +42,7 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 
 
 
-export default function Login({setLoggedIn}) {
+export default function Login({ setLoggedIn }) {
   const [emailError, setEmailError] = useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = useState('');
   const [passwordError, setPasswordError] = useState(false);
@@ -52,11 +52,11 @@ export default function Login({setLoggedIn}) {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-  
+
     const userData = new FormData(event.currentTarget);
     const email = userData.get('email');
     const password = userData.get('password');
-  
+
     setPasswordErrorMessage('');
     setEmailErrorMessage('');
     setPasswordError(false);
@@ -66,29 +66,38 @@ export default function Login({setLoggedIn}) {
       const response = await loginUser(email, password);
 
       if (response.error) {
-        if (response.error === "wrongpassword") {
+        if (response.error === "Invalid email or password") {
           setPasswordError(true);
-          setPasswordErrorMessage("Incorrect password.");
+          setPasswordErrorMessage("Incorrect email or password.");
         } else {
           setEmailError(true);
-          setEmailErrorMessage("Account does not exist.");
+          setEmailErrorMessage(response.error || "Something went wrong.");
         }
         return;
       }
 
-      login(response);
+      login({
+        id: response.id,
+        email: response.email,
+        firstName: response.firstName,
+        lastName: response.lastName,
+        role: response.role,
+        status: response.status,
+        favProjects: response.favProjects || []
+      });
 
       setLoggedIn(true);
-      
+
+      const isAdmin = response.role === "admin"; // ✅ CHANGED: directly from response
       navigate(isAdmin ? "/admin/dashboard" : "/user/dashboard");
-      
+
     } catch (error) {
       console.error("Login error:", error);
       setEmailError(true);
       setEmailErrorMessage("Something went wrong. Please try again.");
     }
   };
-  
+
 
   return (
     <SignInContainer direction="column" justifyContent="center">
