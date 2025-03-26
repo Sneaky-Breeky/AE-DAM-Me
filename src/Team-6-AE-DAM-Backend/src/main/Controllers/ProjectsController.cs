@@ -137,7 +137,40 @@ namespace DAMBackend.Controllers
         }
 
         
-        [HttpGet("FavProjects/{userId}")]
+        [HttpPut("AccessList/favorite/{userId}/{projectId}")]
+        public async Task<IActionResult> AddFavorite(int userId, int projectId)
+        {
+            var relation = await _context.UserProjectRelations
+                .FirstOrDefaultAsync(r => r.UserId == userId && r.ProjectId == projectId);
+
+            if (relation == null)
+                return NotFound("User does not have access to this project.");
+
+            relation.IsFavourite = true;
+            await _context.SaveChangesAsync();
+            return Ok(new { projectId, isFavourite = true });
+        }
+        
+        
+        [HttpPut("AccessList/removefavorite/{userId}/{projectId}")]
+        public async Task<IActionResult> RemoveFavorite(int userId, int projectId)
+        {
+            var relation = await _context.UserProjectRelations
+                .FirstOrDefaultAsync(r => r.UserId == userId && r.ProjectId == projectId);
+
+            if (relation == null)
+            {
+                return NotFound("User does not have access to this project.");
+            }
+
+            relation.IsFavourite = false;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { projectId, isFavourite = false });
+        }
+        
+        
+        [HttpGet("AccessList/FavProjects/{userId}")]
         public async Task<ActionResult<List<ProjectModel>>> GetFavProjects(int userId)
         {
             var projects = await _context.UserProjectRelations
@@ -154,7 +187,43 @@ namespace DAMBackend.Controllers
             return Ok(projects);
         }
         
-        [HttpGet("WorkingProjects/{userId}")]
+
+        [HttpPut("AccessList/workingon/{userId}/{projectId}")]
+        public async Task<IActionResult> AddWorkingOn(int userId, int projectId)
+        {
+            var relation = await _context.UserProjectRelations
+                .FirstOrDefaultAsync(r => r.UserId == userId && r.ProjectId == projectId);
+
+            if (relation == null)
+                return NotFound("User does not have access to this project.");
+
+            relation.WorkingOn = true;
+            await _context.SaveChangesAsync();
+            return Ok(new { projectId, workingOn = true });
+        }
+        
+        
+        
+        [HttpPut("AccessList/removeworkingon/{userId}/{projectId}")]
+        public async Task<IActionResult> RemoveWorkingOn(int userId, int projectId)
+        {
+            var relation = await _context.UserProjectRelations
+                .FirstOrDefaultAsync(r => r.UserId == userId && r.ProjectId == projectId);
+
+            if (relation == null)
+            {
+                return NotFound("User does not have access to this project.");
+            }
+
+            relation.WorkingOn = false;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { projectId, workingOn = false });
+        }
+        
+
+        
+        [HttpGet("AccessList/WorkingProjects/{userId}")]
         public async Task<ActionResult<List<ProjectModel>>> GetWorkingProjects(int userId)
         {
             var projects = await _context.UserProjectRelations
