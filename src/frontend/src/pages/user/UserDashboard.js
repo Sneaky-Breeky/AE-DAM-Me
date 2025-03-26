@@ -77,10 +77,7 @@ export default function UserDashboard() {
                 dayjs(project.startDate).isSame(selectedDate, 'day')
             );
         }
-
-
         setFilteredProjects([...filtered]);
-        console.log("Filtered projects:", filtered);
     };
 
     const handleClearFilters = () => {
@@ -277,7 +274,7 @@ export default function UserDashboard() {
                     >
                         <Row gutter={[16, 16]} justify="center">
                             {filteredProjects
-                                .filter(project => project.status.toLowerCase() === "active") // ✅ Only show active projects
+                                .filter(project => project.status.toLowerCase() === "active")
                                 .sort((a, b) => (favProjects.has(a.id) ? -1 : 1) - (favProjects.has(b.id) ? -1 : 1))
                                 .map((project, index) => (
                                     <Col key={index} xs={24} sm={12} md={8} lg={6}>
