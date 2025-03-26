@@ -137,7 +137,7 @@ namespace DAMBackend.Controllers
         }
 
         
-        [HttpPut("favorite/{userId}/{projectId}")]
+        [HttpPut("AccessList/favorite/{userId}/{projectId}")]
         public async Task<IActionResult> AddFavorite(int userId, int projectId)
         {
             var relation = await _context.UserProjectRelations
@@ -152,7 +152,7 @@ namespace DAMBackend.Controllers
         }
         
         
-        [HttpPut("removefavorite/{userId}/{projectId}")]
+        [HttpPut("AccessList/removefavorite/{userId}/{projectId}")]
         public async Task<IActionResult> RemoveFavorite(int userId, int projectId)
         {
             var relation = await _context.UserProjectRelations
@@ -170,7 +170,7 @@ namespace DAMBackend.Controllers
         }
         
         
-        [HttpGet("FavProjects/{userId}")]
+        [HttpGet("AccessList/FavProjects/{userId}")]
         public async Task<ActionResult<List<ProjectModel>>> GetFavProjects(int userId)
         {
             var projects = await _context.UserProjectRelations
@@ -188,7 +188,7 @@ namespace DAMBackend.Controllers
         }
         
 
-        [HttpPut("workingon/{userId}/{projectId}")]
+        [HttpPut("AccessList/workingon/{userId}/{projectId}")]
         public async Task<IActionResult> AddWorkingOn(int userId, int projectId)
         {
             var relation = await _context.UserProjectRelations
@@ -204,7 +204,7 @@ namespace DAMBackend.Controllers
         
         
         
-        [HttpPut("removeworkingon/{userId}/{projectId}")]
+        [HttpPut("AccessList/removeworkingon/{userId}/{projectId}")]
         public async Task<IActionResult> RemoveWorkingOn(int userId, int projectId)
         {
             var relation = await _context.UserProjectRelations
@@ -223,7 +223,7 @@ namespace DAMBackend.Controllers
         
 
         
-        [HttpGet("WorkingProjects/{userId}")]
+        [HttpGet("AccessList/WorkingProjects/{userId}")]
         public async Task<ActionResult<List<ProjectModel>>> GetWorkingProjects(int userId)
         {
             var projects = await _context.UserProjectRelations
