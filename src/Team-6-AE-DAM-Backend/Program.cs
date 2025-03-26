@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddScoped<CsvEngine>();
 builder.Services.AddSwaggerGen();
 
 // var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
