@@ -3,6 +3,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System.Text.Json.Serialization;
 
 namespace DAMBackend.Models
 
@@ -50,10 +52,13 @@ Project that it was added to with id
         public ICollection<LogImage> Logs { get; set;} = new HashSet<LogImage>();
 
         public int? ProjectId { get; set; }
+        [JsonIgnore]
         public ProjectModel? Project { get; set; }
 
         public int UserId { get; set; }
-        // change to be required 
+        
+        // change to be required )
+        [JsonIgnore]
         public UserModel User { get; set; }
 
         public bool Palette {get; set;}
