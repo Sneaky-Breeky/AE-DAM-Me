@@ -38,6 +38,8 @@ namespace DAMBackend.Models
         // Set limit to 100 
         public ICollection<FileModel> Files { get; set; } = new HashSet<FileModel>();
         public ICollection<UserProjectRelation> UserProjectRelations { get; set; } = new HashSet<UserProjectRelation>();
+        public ICollection<LogImage> Logs { get; set;} = new HashSet<LogImage>();
+
     }
     
     public class UserProjectRelation

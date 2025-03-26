@@ -4,6 +4,7 @@ using DAMBackend.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DAMBackend.Migrations
 {
     [DbContext(typeof(SQLDbContext))]
-    partial class SQLDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250326070428_FixFileIdColumnType")]
+    partial class FixFileIdColumnType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -104,7 +107,7 @@ namespace DAMBackend.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Files", (string)null);
+                    b.ToTable("Files");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.FileTag", b =>
@@ -149,7 +152,7 @@ namespace DAMBackend.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("LogImages", (string)null);
+                    b.ToTable("LogImages");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.MetadataTagModel", b =>
@@ -158,7 +161,8 @@ namespace DAMBackend.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Key")
-                        .HasColumnType("nvarchar(450)");
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("iValue")
                         .HasColumnType("int");
@@ -170,9 +174,9 @@ namespace DAMBackend.Migrations
                     b.Property<int>("type")
                         .HasColumnType("int");
 
-                    b.HasKey("FileId", "Key");
+                    b.HasIndex("FileId");
 
-                    b.ToTable("MetadataTags", (string)null);
+                    b.ToTable("MetadataTagModel");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.ProjectModel", b =>
@@ -216,7 +220,7 @@ namespace DAMBackend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Projects", (string)null);
+                    b.ToTable("Projects");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.ProjectTagModel", b =>
@@ -238,7 +242,7 @@ namespace DAMBackend.Migrations
 
                     b.HasKey("ProjectId", "Key");
 
-                    b.ToTable("ProjectTags", (string)null);
+                    b.ToTable("ProjectTags");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.TagBasicModel", b =>
@@ -248,7 +252,7 @@ namespace DAMBackend.Migrations
 
                     b.HasKey("Value");
 
-                    b.ToTable("BasicTags", (string)null);
+                    b.ToTable("BasicTags");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.UserModel", b =>
@@ -288,7 +292,7 @@ namespace DAMBackend.Migrations
 
                     b.HasIndex("ProjectModelId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.UserProjectRelation", b =>
@@ -309,7 +313,7 @@ namespace DAMBackend.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("UserProjectRelations", (string)null);
+                    b.ToTable("UserProjectRelations");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.FileModel", b =>
@@ -370,7 +374,7 @@ namespace DAMBackend.Migrations
             modelBuilder.Entity("DAMBackend.Models.MetadataTagModel", b =>
                 {
                     b.HasOne("DAMBackend.Models.FileModel", "File")
-                        .WithMany("mTags")
+                        .WithMany()
                         .HasForeignKey("FileId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -418,8 +422,6 @@ namespace DAMBackend.Migrations
             modelBuilder.Entity("DAMBackend.Models.FileModel", b =>
                 {
                     b.Navigation("Logs");
-
-                    b.Navigation("mTags");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.ProjectModel", b =>

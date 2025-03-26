@@ -21,11 +21,12 @@ namespace DAMBackend.Models
         
         public DbSet<UserProjectRelation> UserProjectRelations { get; set; }
 
-        public DbSet<LogImage> LogImage { get; set; }
+        public DbSet<LogImage> LogImages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) 
 
         {
+            
             // Key for basic data tag model
             modelBuilder.Entity<TagBasicModel>()
                 .HasKey(m => new { m.Value });
@@ -37,6 +38,10 @@ namespace DAMBackend.Models
             // Key for project tag model
             modelBuilder.Entity<ProjectTagModel>()
                 .HasKey(t => new { t.ProjectId, t.Key });
+            
+            // Key for LogImage 
+            modelBuilder.Entity <LogImage>()
+                .HasKey(l => new { l.LogId, l.FileId, l.UserId });
 
             // Delete tags with Project
             modelBuilder.Entity<ProjectTagModel>()
@@ -58,11 +63,14 @@ namespace DAMBackend.Models
             modelBuilder.Entity<FileModel>()
                 .HasMany(f => f.bTags)
                 .WithMany(t => t.Files)
-                .UsingEntity<Dictionary<string, object>>(
-                    "FileTag",
-                    j => j.HasOne<TagBasicModel>().WithMany().HasForeignKey("TagId"),
-                    j => j.HasOne<FileModel>().WithMany().HasForeignKey("FileId")
-                );
+                .UsingEntity<FileTag>(
+                    j => j.HasOne(ft => ft.Tag).WithMany().HasForeignKey(ft => ft.TagId),
+                    j => j.HasOne(ft => ft.File).WithMany().HasForeignKey(ft => ft.FileId),
+                    j =>
+                    {
+                        // Optionally, specify the table name if needed
+                        j.ToTable("FileTag");
+                    });
 
             // One to many from projects to files
             modelBuilder.Entity<ProjectModel>()
@@ -107,12 +115,12 @@ namespace DAMBackend.Models
                 .Property(u => u.Id)
                 .ValueGeneratedOnAdd();
 
-            // generate guid for fileid
+            // generate id for fileid
             modelBuilder.Entity<FileModel>()
                 .Property(f => f.Id)
                 .ValueGeneratedOnAdd();
 
-            // generate guid for projectid
+            // generate id for projectid
             modelBuilder.Entity<ProjectModel>()
                 .Property(p => p.Id)
                 .ValueGeneratedOnAdd();
@@ -130,19 +138,23 @@ namespace DAMBackend.Models
                 .Property(f => f.GPSAlt)
                 .HasPrecision(10, 3);
 
-//            // one-to-many relationship between User and LogImage
-//
-//            modelBuilder.Entity<LogImage>()
-//                .WithOne(l => l.UserId)
-//                .HasForeignKey(l => l.UserId)
-//                .OnDelete(DeleteBehavior.Cascade)
-//                .IsRequired();;
-//
-//            // one-to-many relationship between File and LogImage
-//            modelBuilder.Entity<LogImage>()
-//                .HasOne(l => l.FileId)
-//                .HasForeignKey(l => l.FileId)
-//                .OnDelete(DeleteBehavior.Cascade);
+            // one-to-many relationship between User and LogImage
+
+            modelBuilder.Entity<LogImage>()
+                .HasOne(l => l.User)
+                .WithMany(u => u.Logs)
+                .HasForeignKey(l => l.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();;
+
+            // one-to-many relationship between File and LogImage
+            modelBuilder.Entity<LogImage>()
+                .HasOne(l => l.File)
+                .WithMany(f => f.Logs)
+                .HasForeignKey(l => l.FileId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            base.OnModelCreating(modelBuilder);
         }
     }
 }
