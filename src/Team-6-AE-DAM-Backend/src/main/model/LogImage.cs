@@ -19,7 +19,9 @@ namespace DAMBackend.Models
 
         [JsonIgnore] public UserModel User { get; set; }
         [Required] public string TypeOfLog { get; set; }
-        [Required] public DateTime Date { get; set; }
+        [Required] 
+        [Column("LogDate")]
+        public DateTime Date { get; set; }
 
 
 
