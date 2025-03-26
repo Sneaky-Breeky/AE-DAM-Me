@@ -4,15 +4,19 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(() => {
-        const storedUser = sessionStorage.getItem('user');
+        const storedUser = localStorage.getItem('user');
         return storedUser ? JSON.parse(storedUser) : null;
     });
 
     useEffect(() => {
         if (user) {
-            sessionStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('loggedIn', 'true');
+            localStorage.setItem('userRole', user.role);
         } else {
-            sessionStorage.removeItem('user');
+            localStorage.removeItem('user');
+            localStorage.removeItem('loggedIn');
+            localStorage.removeItem('userRole');
         }
     }, [user]);
 
@@ -21,12 +25,15 @@ export function AuthProvider({ children }) {
             ...userData,
             favProjects: userData.favProjects || []
         };
-        setUser(userData);
+        setUser(completeUserData);
     };
 
     const logout = () => {
         setUser(null);
-        sessionStorage.clear();
+        localStorage.removeItem('user');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('loggedIn');
     };
 
     const isAdmin = user?.role === 'admin';
