@@ -267,11 +267,19 @@ export default function UserProjectOverview() {
                         <div><strong>State: </strong><span>{state.project.status}</span></div>
                         <div><strong>Phase: </strong><span>{state.project.phase}</span></div>
                         </div>
-                        <div style={{margin: '20px auto', marginBottom: '0', width:'100%'}}><strong>Metadata: </strong>{
-                            state.project.fields.map((f) => (
-                                <span>{f.field}: <span style={{ color: 'grey', fontStyle: 'italic' }}>{f.fieldMD} </span></span>
+                    <div style={{margin: '20px auto', marginBottom: '0', width:'100%'}}>
+                        <strong>Metadata: </strong>
+                        {Array.isArray(state.project?.fields) && state.project.fields.length > 0 ? (
+                            state.project.fields.map((f, idx) => (
+                                <span key={idx}>
+        {f.field}: <span style={{ color: 'grey', fontStyle: 'italic' }}>{f.fieldMD}</span>{' '}
+      </span>
                             ))
-                        }</div>
+                        ) : (
+                            <span style={{ color: 'grey', fontStyle: 'italic' }}>No metadata</span>
+                        )}
+                    </div>
+
                 </Box>
                 {/* Download Images */}
                 <Box sx={{ display: 'flex', alignItems: 'start', justifyContent: 'left', margin: '20px auto', gap: '10px', width:'70%', }}>
