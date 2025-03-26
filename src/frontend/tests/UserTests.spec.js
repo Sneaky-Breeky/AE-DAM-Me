@@ -4,13 +4,21 @@ const USER_EMAIL = "user@gmail.com";
 const ADMIN_EMAIL = "admin@gmail.com";
 const PASSWORD = "password"
 const API_TIMEOUT = 5000;
+const PAGES = {
+    DASHBOARD: "Dashboard",
+    PROJECT_MANAGEMENT: "Project Management",
+    USER_MANAGEMENT: "User Management",
+    METADATA_MANAGEMENT: "Metadata Management",
+    FILE_METADATA_MANAGEMENT: "File Metadata Management",
+    PROJECT_SECURITY: "Project Security"
+}
 
 let driver;
 
 before(async function () {
+    this.timeout(API_TIMEOUT);
     driver = await new Builder().forBrowser("chrome").build();
     await driver.get('https://thankful-field-0410c1a1e.6.azurestaticapps.net/#/login');
-
 });
 
 async function findXPathElement(xpath) {
@@ -31,7 +39,7 @@ function loadBeforeAndAfter(isAdmin = false) {
         const submitButton = await driver.findElement(By.css("button[type='submit']"));
         await emailInput.sendKeys(isAdmin ? ADMIN_EMAIL : USER_EMAIL);
         await passwordInput.sendKeys(PASSWORD);
-        submitButton.click();
+        await submitButton.click();
 
         // Login may require time for database to boot up
         this.timeout(60000);
@@ -41,13 +49,31 @@ function loadBeforeAndAfter(isAdmin = false) {
     after(async function () {
         // Logout after each suite
         const logoutButton = await findXPathElement("//span[text()='Logout']");
-        logoutButton.click();
+        await logoutButton.click();
         const logoutConfirmButton = await findXPathElement("//button[text()='Logout']");
         logoutConfirmButton.click();
         await driver.wait(until.stalenessOf(logoutConfirmButton), API_TIMEOUT);
     });
 }
 
+async function navigateToPage(page) {
+    const button = await findXPathElement("//span[text()='" + page + "']");
+    await button.click();
+}
+
+async function getDisplayedMetadata(field) {
+    const labelElement = await findXPathElement("//p[text()='" + field + "']");
+    const ancestor = await labelElement.findElement(By.xpath("./../../.."));
+    const foundNameElement = await ancestor.findElement(By.className("ant-form-item-control-input-content"));
+    const foundName = await foundNameElement.getText();
+    return foundName;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              Tests Start Here                              */
+/* -------------------------------------------------------------------------- */
+
+/* ----------------------------------- UI ----------------------------------- */
 describe("UI - Sanity tests", function () {
     loadBeforeAndAfter();
 
@@ -57,32 +83,37 @@ describe("UI - Sanity tests", function () {
     });
 });
 
+
 describe("PROJ-ORG - Project organization", function () {
     loadBeforeAndAfter(true);
 
-    this.beforeEach(async function () {
-        const projectManagementButton = await findXPathElement("//span[text()='Project Management']");
-        projectManagementButton.click();
-    });
-
+    let dateOptions = {
+        month: "short",
+        year: "numeric",
+        day: "numeric"
+    }
+    let today = new Date();
     let testProject = {
         name: "Test Project",
         description: "Test Project Description",
-        location: "Test Project Location"
+        location: "Test Project Location",
+        date: today.toLocaleDateString("en-US", dateOptions),
+        status: "Active"
     };
-
     let projectAdded = false;
 
     it("PROJ-ORG-001 - Project creation", async function () {
+        navigateToPage(PAGES.PROJECT_MANAGEMENT);
+
         // Get list of currently added projects
         const deleteProjectButton = await findXPathElement("//h4[text()='Delete Project']");
-        deleteProjectButton.click();
+        await deleteProjectButton.click();
         await driver.wait(until.elementLocated(By.css("tr")));
         const preProjects = await driver.findElements(By.css("tr"));
 
         // Add project
         const createProjectButton = await findXPathElement("//h4[text()='Create Project']");
-        createProjectButton.click();
+        await createProjectButton.click();
         const projectNameInput = await findIdElement("project_creation_projectName");
         const projectDescriptionInput = await findIdElement("project_creation_description");
         const projectLocationInput = await findIdElement("project_creation_location");
@@ -90,60 +121,63 @@ describe("PROJ-ORG - Project organization", function () {
         await projectDescriptionInput.sendKeys(testProject.description);
         await projectLocationInput.sendKeys(testProject.location);
         const addProjectButton = await findXPathElement("//span[text()='Add Project']");
-        addProjectButton.click();
+        await addProjectButton.click();
         this.timeout(API_TIMEOUT);
         await findXPathElement("//span[text()='Project added successfully']");
-        // TODO: THE FOLLOWING CODE ISN'T WORKING: imports can't be used outside a module?
-        /*
-        driver.wait(async function() {
-            const projects = await fetchProjects();
-            return projects.some((project) => 
-                project.name === testProject.name &&
-                project.description === testProject.description &&
-                project.location === testProject.location
-            );
-        }, 5000);
-        */
 
-        // Check if element is present and get id
-        deleteProjectButton.click();
+        // Check if project was added and has correct parameters
+        await deleteProjectButton.click();
         await driver.wait(until.elementLocated(By.css("tr")));
         const postProjects = await driver.findElements(By.css("tr"));
-        assert(postProjects.length === preProjects.length + 1, "Number of projects before add: " + preProjects.length + " vs. after: " + postProjects.length);
+        assert.equal(postProjects.length, preProjects.length + 1);
         const projectIdElement = await postProjects[postProjects.length - 1].findElement(By.css("td"));
-        testProject.id = (await projectIdElement.getText()).replace(/ .*/,'');
-        console.log("ID found: " + testProject.id);
+        testProject.id = (await projectIdElement.getText()).replace(/ .*/, '');
+        
+        // Check if project metadata is correct
+        navigateToPage(PAGES.METADATA_MANAGEMENT);
+        await driver.wait(until.elementLocated(By.css("tr")));
+        const editTagElement = await findXPathElement("//strong[text()='" + testProject.id + "']");
+        await editTagElement.click();
         projectAdded = true;
+        const foundName = await getDisplayedMetadata("Project Name");
+        const foundLocation = await getDisplayedMetadata("Location");
+        const foundDate = await getDisplayedMetadata("Date");
+        const foundStatus = await getDisplayedMetadata("Status")
+        assert.equal(foundName, testProject.name);
+        assert.equal(foundLocation, testProject.location);
+        assert.equal(foundDate, testProject.date);
+        assert.equal(foundStatus, testProject.status);
     });
+
+    // it("PROJ-ORG-003 - Project modification", async function () {
+    //     assert(projectAdded, "Project was not added, no test data to delete");
+    // });
 
     it("PROJ-ORG-002 - Project deletion", async function () {
         assert(projectAdded, "Project was not added, no test data to delete");
+        navigateToPage(PAGES.PROJECT_MANAGEMENT);
+        const deleteProjectButton = await findXPathElement("//h4[text()='Delete Project']");
+        deleteProjectButton.click();
         const idElement = await findXPathElement("//td[text()='" + testProject.id + "']");
         const project = await idElement.findElement(By.xpath("./.."));
         const projectDeleteButton = await project.findElement(By.css("button"));
-        projectDeleteButton.click();
-        const projectDeleteConfirmButton = await findXPathElement("//span[text()='Yes']");
-        projectDeleteConfirmButton.click();
-        this.timeout(API_TIMEOUT);
+        await projectDeleteButton.click();
+        const projectDeleteConfirm = await findXPathElement("//span[text()='Yes']");
+        await driver.wait(until.elementIsVisible(projectDeleteConfirm));
+        await projectDeleteConfirm.click();
         await findXPathElement("//span[text()='Project deleted successfully']");
 
         // Check if element is not present (via id)
         const projects = await driver.findElements(By.xpath("//td[text()='" + testProject.id + "']"));
-        assert(projects == 0, "Found " + projects + " with same id as test project after deleting");
+        assert.equal(projects, 0);
 
         const closeButton = await findXPathElement("//h4[text()='Close']");
         closeButton.click();
     });
 
-    /*s
-    it("PROJ-ORG-003 - Project modification", async function () {
-        assert.fail("Test not implemented");
-    });
-
     it("PROJ-ORG-004 - Project creation error handling", async function () {
         assert.fail("Test not implemented");
     });
-    */
 });
 
 after(async () => await driver.quit());
