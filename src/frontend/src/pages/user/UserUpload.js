@@ -241,7 +241,7 @@ export default function UserUpload() {
         // TODO: update user's activity log that they added files to this certain project
         console.log("Uploading files:", files);
         userFiles.forEach(file => {
-            addLog(file.file.name, userID, 'upload');
+            addLog(userID, file.file.id, 'upload');
         });
 
         setFiles([]);
