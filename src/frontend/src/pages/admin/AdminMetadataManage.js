@@ -117,6 +117,10 @@ message.success("Project updated successfully");
 setEditOpen(false);
 form.resetFields();
 await getProjects();
+const refreshedProjects = await fetchProjects();
+const updatedProject = refreshedProjects.find(p => p.id === project.id);
+const theUpdatedTags = await fetchTagsForProject(project.id);
+setProject({ ...updatedProject, tags: theUpdatedTags });
 } catch (err) {
 console.error("Error updating project:", err);
 message.error("Failed to update project");
