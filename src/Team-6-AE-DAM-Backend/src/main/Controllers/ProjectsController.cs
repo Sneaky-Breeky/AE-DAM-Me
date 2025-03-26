@@ -343,7 +343,7 @@ namespace DAMBackend.Controllers
             }
          
          */
-        [HttpPost("addprojtag")]
+        [HttpPost("tag/add")]
         public async Task<IActionResult> AddProjectTag(
             [FromQuery] int ProjectId, 
             [FromQuery] string Key, 
