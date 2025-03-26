@@ -44,7 +44,7 @@ export default function UserDashboard() {
 
         if (selectedDate) {
             filtered = filtered.filter(project =>
-                dayjs(project.date).isSame(selectedDate, 'day')
+                dayjs(project.startDate).isSame(selectedDate, 'day')
             );
         }
 

@@ -64,9 +64,8 @@ const updatedFields = {};
 // compare original project info with current form info
 if (values.name && values.name !== project.name) updatedFields.name = values.name;
 if (values.location && values.location !== project.location) updatedFields.location = values.location;
-if (values.date && (!project.date || !dayjs(project.date).isSame(dayjs(values.date), 'day'))) {
-updatedFields.date = values.date.format('YYYY-MM-DD');
-}
+    if (values.startDate && (!project.startDate || !dayjs(project.startDate).isSame(dayjs(values.startDate), 'day'))
+    ) {updatedFields.startDate = values.startDate.format('YYYY-MM-DD');}
 if (values.status && values.status !== project.status) updatedFields.status = values.status;
 if (values.phase && values.phase !== project.phase) updatedFields.phase = values.phase;
 
@@ -315,7 +314,7 @@ editNameOpen, setEditNameOpen, editLocOpen, setEditLocOpen, editDateOpen, setEdi
             initialValues={{
                 name: project?.name || '',
                 location: project?.location || '',
-                date: project?.date ? dayjs(project.date) : null,
+                startDate: project?.startDate ? dayjs(project.startDate) : null,
                 status: project?.status || '',
                 phase: project?.phase || '',
                 fields: project?.tags?.map(tag => ({
@@ -340,16 +339,16 @@ editNameOpen, setEditNameOpen, editLocOpen, setEditLocOpen, editDateOpen, setEdi
             </Form.Item>
 
             <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
-                       name="date"
-                       label={<p style={{fontWeight:"bold"}}>Date</p>}
+                       name="startDate"
+                       label={<p style={{fontWeight:"bold"}}>Start Date</p>}
             >
                 {isEditOpen ? <DatePicker
                         maxDate={dayjs()}
-                        placeholder= {dayjs(project.date).format('MMM DD, YYYY')}
+                        placeholder={project?.startDate ? dayjs(project.startDate).format('MMM DD, YYYY') : ''}
                         suffixIcon={<CalendarOutlined />}
                         style={{ width: '100%' }}
                     />
-                    : dayjs(project.date).format('MMM DD, YYYY')}
+                    : dayjs(project.startDate).format('MMM DD, YYYY')}
             </Form.Item>
 
             <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}

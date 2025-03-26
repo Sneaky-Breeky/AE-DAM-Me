@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Input, Form, Button, Tag, Flex, message, Spin, Popconfirm } from "antd"
+import { Typography, Input, Form, Button, Tag, Flex, message, Spin, Popconfirm, DatePicker, CalendarOutlined } from "antd"
 import Box from '@mui/material/Box';
 import { CloseOutlined, SearchOutlined, DeleteOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import CreateNewFolderOutlinedIcon from '@mui/icons-material/CreateNewFolderOutlined';
@@ -57,7 +57,7 @@ export default function ProjectManagement() {
             phase: "",
             accessLevel: 0,
             lastUpdated: new Date().toISOString(),
-            startDate: new Date().toISOString(),
+            startDate: values.startDate.toISOString(),
             files: [],
             users: []
         };
@@ -262,6 +262,20 @@ export default function ProjectManagement() {
                         >
                             <Input placeholder="Enter description" />
                         </Form.Item>
+
+                        <Title level={5} style={{ marginTop: '10px' }}>
+                            Start Date <span style={{ color: 'red' }}>*</span>
+                        </Title>
+                        <Form.Item
+                            name="startDate"
+                            rules={[{ required: true, message: "Please select a start date" }]}
+                        >
+                            <DatePicker
+                                style={{ width: '100%' }}
+                                format="YYYY-MM-DD"
+                            />
+                        </Form.Item>
+
 
                         <Title level={5} style={{ marginTop: '10px' }}>Location</Title>
                         <Form.Item name="location">

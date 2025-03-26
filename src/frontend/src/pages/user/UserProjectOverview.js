@@ -263,7 +263,7 @@ export default function UserProjectOverview() {
                     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
                         <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width:'100%'}}>
                         <div><strong>Location: </strong><span>{state.project.location}</span></div>
-                        <div><strong>Date: </strong><span>{/*dayjs(state.project.date)*/}</span></div>
+                        <div><strong>Start Date: </strong><span>{dayjs(state.project.startDate).format('MMM DD, YYYY')}</span></div>
                         <div><strong>State: </strong><span>{state.project.status}</span></div>
                         <div><strong>Phase: </strong><span>{state.project.phase}</span></div>
                         </div>
