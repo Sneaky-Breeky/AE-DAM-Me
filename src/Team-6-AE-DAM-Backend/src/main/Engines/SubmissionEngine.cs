@@ -15,6 +15,8 @@ using DAMBackend.Models;
 using ImageMagick;
 using System.Diagnostics;
 using File = System.IO.File;
+using ImageSharpExif = SixLabors.ImageSharp.Metadata.Profiles.Exif;
+using ImageSharpExifTag = SixLabors.ImageSharp.Metadata.Profiles.Exif.ExifTag;
 
 
 

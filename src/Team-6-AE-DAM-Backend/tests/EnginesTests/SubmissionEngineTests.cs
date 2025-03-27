@@ -314,6 +314,90 @@ namespace backendTests.SubmissionEngineTests
         // ---------------------------- Compression Test Finish Here ------------------------------
 
         [Fact]
+        public void ProcessImageMetadata_WithRealImage_ReturnsPopulatedModel()
+        {
+            // Arrange
+            var filePath = Path.Combine("../../../TestFiles", "image1.jpeg");
+            var testFile = FileHelper.GetTestFormFile(filePath);
+
+            var dummyUser = new UserModel
+            {
+                Id = 1,
+                FirstName = "Test",
+                LastName = "User",
+                Email = "test@example.com",
+                PasswordHash = "hashed",
+                Role = Role.User,
+                Status = true
+            };
+
+            string tempBasePath = "palette/user1";
+
+            // Act
+            var result = _fixture.submissionEngine.ProcessImageMetadataJpgPng(testFile, tempBasePath, dummyUser);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(dummyUser.Id, result.UserId);
+            Assert.Equal( "image1", result.Name);
+            Assert.Equal( ".jpeg", result.Extension);
+            Assert.Equal( 4032, result.PixelWidth);
+            Assert.Equal( 3024, result.PixelHeight);
+            Assert.Equal( 1, result.UserId);
+            Assert.Equal("palette/user1/thumbnails/image1.jpeg", result.ThumbnailPath);
+            Assert.Equal( "palette/user1/originals/image1.jpeg", result.OriginalPath);
+            Assert.Equal("palette/user1/views/image1.jpeg", result.ViewPath);
+            Assert.Equal(null, result.DateTimeOriginal);
+            Assert.Equal("Apple", result.Make);
+            Assert.Equal("iPhone 13 Pro Max", result.Model);
+            Assert.Equal((int) 5, result.FocalLength);
+            Assert.Equal((float) 1.5, result.Aperture);
+            Assert.Equal(null, result.Copyright);
+        }
+        
+        [Fact]
+        public void ProcessImageMetadataPng_WithRealImage_ReturnsPopulatedModel()
+        {
+            // Arrange
+            var filePath = Path.Combine("../../../TestFiles", "yeti_classic.png");
+            var testFile = FileHelper.GetTestFormFile(filePath);
+
+            var dummyUser = new UserModel
+            {
+                Id = 1,
+                FirstName = "Test",
+                LastName = "User",
+                Email = "test@example.com",
+                PasswordHash = "hashed",
+                Role = Role.User,
+                Status = true
+            };
+
+            string tempBasePath = "palette/user1";
+
+            // Act
+            var result = _fixture.submissionEngine.ProcessImageMetadataJpgPng(testFile, tempBasePath, dummyUser);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(dummyUser.Id, result.UserId);
+            Assert.Equal( "yeti_classic", result.Name);
+            Assert.Equal( ".png", result.Extension);
+            Assert.Equal( 271, result.PixelWidth);
+            Assert.Equal( 665, result.PixelHeight);
+            Assert.Equal( 1, result.UserId);
+            Assert.Equal("palette/user1/thumbnails/yeti_classic.png", result.ThumbnailPath);
+            Assert.Equal( "palette/user1/originals/yeti_classic.png", result.OriginalPath);
+            Assert.Equal("palette/user1/views/yeti_classic.png", result.ViewPath);
+            Assert.Equal(null, result.DateTimeOriginal);
+            Assert.Equal(null, result.Make);
+            Assert.Equal(null, result.Model);
+            Assert.Equal(null, result.FocalLength);
+            Assert.Equal(null, result.Aperture);
+            Assert.Equal(null, result.Copyright);
+        }
+
+        [Fact]
         public async Task exifTest()
         {
             // Arrange
@@ -326,37 +410,6 @@ namespace backendTests.SubmissionEngineTests
             var testImagePath = Path.Combine("../../../TestFiles", filePath[5]);
             // Act
             _fixture.submissionEngine.PrintImageMetadata(testImagePath);
-        }
-
-        [Fact]
-        public void ExtractExifMetadata_ShouldReturnCorrectFileModel()
-        {
-            string[] filePath =
-            [
-                "DSC05589.ARW", "DSC03135.JPG", "yeti_classic.png", "DSC03135.ARW", "DSC04569.ARW", "image1.jpeg",
-                "jpgsample.JPG", "jpgsample.JPG"
-            ];
-
-            var testImagePath = Path.Combine("../../../TestFiles", filePath[5]);
-            // Arrange
-
-            // Act
-            // FileModel fileModel = _fixture.submissionEngine.ExtractExifMetadata(testImagePath);
-
-            // Assert
-            // Assert.NotNull(fileModel); // Ensure the object is not null
-            // Assert.Equal("image.jpg", fileModel.Name); // Ensure the Name is correct
-            // Assert.Equal(".jpg", fileModel.Extension); // Ensure the Extension is correct
-            // Assert.Equal(testImagePath, fileModel.OriginalPath); // Ensure the OriginalPath is correct
-            // Assert.True(fileModel.PixelWidth > 0); // Ensure PixelWidth is greater than 0
-            // Assert.True(fileModel.PixelHeight > 0); // Ensure PixelHeight is greater than 0
-
-            // // Check if optional EXIF fields are null if not found in the image
-            // Assert.Null(fileModel.GPSLat);
-            // Assert.Null(fileModel.GPSLon);
-            // Assert.Null(fileModel.GPSAlt);
-            // Assert.Null(fileModel.DateTimeOriginal);
-
         }
     }
 }
