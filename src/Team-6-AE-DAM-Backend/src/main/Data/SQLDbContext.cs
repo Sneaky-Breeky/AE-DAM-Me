@@ -153,6 +153,12 @@ namespace DAMBackend.Models
                 .WithMany(f => f.Logs)
                 .HasForeignKey(l => l.FileId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<LogImage>()
+                      .HasOne(l => l.Project)
+                      .WithMany(f => f.Logs)
+                      .HasForeignKey(l => l.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
             
             base.OnModelCreating(modelBuilder);
         }

@@ -37,10 +37,11 @@
          {
              if (logRequest == null)
              {
-                 return BadRequest(new { error = "Invalid log data." });
+                 return BadRequest(new { error = "Invalid log data" });
              }
 
              var log = new LogImage(logRequest.FileId,
+                                    logRequest.ProjectId,
                                      logRequest.UserId,
                                      logRequest.TypeOfLog,
                                      logRequest.Date);
@@ -55,6 +56,7 @@
      public class LogImageRequest
      {
          public int FileId { get; set; }
+         public int ProjectId { get; set; }
          public int UserId { get; set; }
          public string TypeOfLog { get; set; }
          public DateTime Date { get; set; }
