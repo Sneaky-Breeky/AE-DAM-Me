@@ -83,7 +83,7 @@ describe("UI - Sanity tests", function () {
     });
 });
 
-
+/* -------------------------------- PROJ-ORG -------------------------------- */
 describe("PROJ-ORG - Project organization", function () {
     loadBeforeAndAfter(true);
 
@@ -99,6 +99,16 @@ describe("PROJ-ORG - Project organization", function () {
         location: "Test Project Location",
         date: today.toLocaleDateString("en-US", dateOptions),
         status: "Active"
+    };
+    today.setDate(today.getDate() - 1); // Yesterday
+    let testProjectEdit = {
+        name: "Edited Test Project",
+        description: "Edited Test Project Description",
+        location: "Edited Test Project Location",
+        date: today.toLocaleDateString("en-US", dateOptions),
+        status: "Edited",
+        phase: "Phase Edit",
+        newField: "Added"
     };
     let projectAdded = false;
 
@@ -132,7 +142,7 @@ describe("PROJ-ORG - Project organization", function () {
         assert.equal(postProjects.length, preProjects.length + 1);
         const projectIdElement = await postProjects[postProjects.length - 1].findElement(By.css("td"));
         testProject.id = (await projectIdElement.getText()).replace(/ .*/, '');
-        
+
         // Check if project metadata is correct
         navigateToPage(PAGES.METADATA_MANAGEMENT);
         await driver.wait(until.elementLocated(By.css("tr")));
@@ -149,9 +159,56 @@ describe("PROJ-ORG - Project organization", function () {
         assert.equal(foundStatus, testProject.status);
     });
 
-    // it("PROJ-ORG-003 - Project modification", async function () {
-    //     assert(projectAdded, "Project was not added, no test data to delete");
-    // });
+    it("PROJ-ORG-003 - Project modification", async function () {
+        assert(projectAdded, "Project was not added, no test data to delete");
+        navigateToPage(PAGES.METADATA_MANAGEMENT);
+        const editButton = await findXPathElement("//span[text()='Edit']");
+        await editButton.click();
+
+        // Enter existing fields
+        const nameField = await findIdElement("md_edits_name");
+        const locationField = await findIdElement("md_edits_location");
+        const dateField = await findIdElement("md_edits_date");
+        const statusField = await findIdElement("md_edits_status");
+        const phaseField = await findIdElement("md_edits_phase");
+        await nameField.clear();
+        await nameField.sendKeys(testProjectEdit.name);
+        await locationField.clear();
+        await locationField.sendKeys(testProjectEdit.location);
+        await dateField.clear();
+        await dateField.sendKeys(today.toISOString());
+        await statusField.clear();
+        await statusField.sendKeys(testProjectEdit.status);
+        await phaseField.clear();
+        await phaseField.sendKeys(testProjectEdit.phase);
+        
+        // Add new field
+        const addFieldButton = await findXPathElement("//span[text()='Add field']");
+        await addFieldButton.click();
+        const newFieldNameField = await findIdElement("md_edits_fields_0_field");
+        const newFieldMetadataField = await findIdElement("md_edits_fields_0_fieldMD");
+        await newFieldNameField.sendKeys("New Field");
+        await newFieldMetadataField.sendKeys(testProjectEdit.newField);
+
+        // Submit
+        const submitButton = await findXPathElement("//span[text()='Submit']");
+        await submitButton.click();
+        await findXPathElement("//span[text()='Project updated successfully']");
+
+        // Check if updated information is correct
+        const foundName = await getDisplayedMetadata("Project Name");
+        const foundLocation = await getDisplayedMetadata("Location");
+        const foundDate = await getDisplayedMetadata("Date");
+        const foundStatus = await getDisplayedMetadata("Status");
+        const foundPhase = await getDisplayedMetadata("Phase");
+        const foundNewField = await getDisplayedMetadata("New Field");
+        assert.equal(foundName, testProjectEdit.name);
+        assert.equal(foundLocation, testProjectEdit.location);
+        assert.equal(foundDate, testProjectEdit.date);
+        assert.equal(foundStatus, testProjectEdit.status);
+        assert.equal(foundPhase, testProjectEdit.phase);
+        assert.equal(foundNewField, testProjectEdit.newField);
+    });
 
     it("PROJ-ORG-002 - Project deletion", async function () {
         assert(projectAdded, "Project was not added, no test data to delete");
