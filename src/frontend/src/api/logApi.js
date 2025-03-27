@@ -25,7 +25,9 @@ export async function fetchLog(userId) {
         return { error: "Network error or server unreachable", message: error.message };
     }
 }
+
 export async function addLog(userID, fileID, projectId, typeOfLog) {
+
     const logData = {
         FileId: fileID,
         ProjectId: projectId,
@@ -66,7 +68,7 @@ export async function addLogProject(userID, fileID, typeOfLog) {
         Date: new Date().toISOString(),
     };
     try {
-        const response = await fetch(`${LOG_URL}/addLog}`, {
+        const response = await fetch(`${LOG_URL}/addLog`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -83,7 +85,10 @@ export async function addLogProject(userID, fileID, typeOfLog) {
                 return { error: `HTTP Error ${response.status}: ${errorText}` };
             }
         }
-        return { success: true };
+
+        const createdLog = await response.json();
+        
+        return { success: true, log: createdLog };
     } catch (error) {
         console.error("Network or fetch error:", error);
         return { error: "Network error or server unreachable", message: error.message };

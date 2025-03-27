@@ -43,23 +43,32 @@ export async function fetchProjectsForUser(userId) {
     try {
         const response = await fetch(`${PROJECTS_URL}/AccessList/${userId}`, {
             method: "GET",
-            headers: {
-                "Content-Type": "application/json"
-            }
+            headers: { "Content-Type": "application/json" }
         });
-
         const result = await response.json();
 
         if (!response.ok) {
             throw new Error(result.error || "Failed to fetch user's projects");
         }
 
-        return result.data || result; // `data` is returned because of `Ok(new { data = projects })`
+        // 1. Get the actual project data (array)
+        const projects = result.data || [];
+
+        // 2. Remap the 'imagePath' to a valid URL
+        const processedProjects = projects.map(project => ({
+            ...project,
+            ImagePath: project.imagePath
+                ? `${process.env.PUBLIC_URL}${project.imagePath}`
+                : ''
+        }));
+
+        return processedProjects;
     } catch (error) {
         console.error("Error fetching user projects:", error);
         return { error: error.message };
     }
 }
+
 
 export async function fetchUsersForProject(projectId) {
     try {

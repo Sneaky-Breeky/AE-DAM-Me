@@ -27,7 +27,7 @@ export default function UserDashboard() {
 
     const { user } = useAuth();
     const navigate = useNavigate();
-
+    
     useEffect(() => {
         async function loadProjects() {
             if (!user?.id) return;
