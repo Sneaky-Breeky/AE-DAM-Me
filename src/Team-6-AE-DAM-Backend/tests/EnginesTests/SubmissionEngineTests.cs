@@ -260,21 +260,34 @@ namespace backendTests.SubmissionEngineTests
         //     Assert.Equal("DSC03135.JPG", outputFile);
         // }
 
-        // [Theory]
-        // [InlineData(CompressionLevel.Low)]
-        // [InlineData(CompressionLevel.Medium)]
-        // [InlineData(CompressionLevel.High)]
-        // public async Task UploadJpgPng_ValidPngCompression_Success(CompressionLevel compressionLevel)
-        // {
-        //     // Arrange
-        //     var filePath = Path.Combine("../../../TestFiles", "yeti_classic.png");
-        //     var testFile = FileHelper.GetTestFormFile(filePath);
-        //     // Act
-        //     string outputFile = await  _fixture.submissionEngine.UploadJpgPng(testFile, compressionLevel);
+        [Theory]
+        [InlineData(CompressionLevel.Low)]
+        [InlineData(CompressionLevel.Medium)]
+        [InlineData(CompressionLevel.High)]
+        public async Task UploadJpgPng_ValidPngCompression_Success(CompressionLevel compressionLevel)
+        {
+            // Arrange
+            var filePath = Path.Combine("../../../TestFiles", "yeti_classic.png");
+            var testFile = FileHelper.GetTestFormFile(filePath);
+            // Act
+            var outputFile = await  _fixture.submissionEngine.UploadJpgPng(testFile, compressionLevel);
+            
 
-        //     // Assert
-        //     Assert.NotNull(outputFile);
-        // }
+            // Assert
+            Assert.NotNull(outputFile);
+            if (compressionLevel == CompressionLevel.Low)
+            {
+                Assert.Equal(9884, outputFile.Length);
+            } 
+            else if (compressionLevel == CompressionLevel.Medium)
+            {
+                Assert.Equal(38816, outputFile.Length);
+            }
+            else
+            {
+                Assert.Equal(80321, outputFile.Length);
+            }
+        }
 
         // [Theory]
         // [InlineData(CompressionLevel.Low)]

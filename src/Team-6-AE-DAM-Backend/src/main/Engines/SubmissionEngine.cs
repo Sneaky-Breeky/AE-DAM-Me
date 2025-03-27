@@ -100,59 +100,41 @@ namespace DAMBackend.SubmissionEngine
         }
 
         // compress jpg and png image based on the compression option
-        public async Task<string> UploadJpgPng(IFormFile file, CompressionLevel option)
+        public async Task<IFormFile> UploadJpgPng(IFormFile file, CompressionLevel option)
         {
-            if (file == null || file.Length == 0)
-            {
-                throw new Exception("Invalid file.");
-            }
-
-            // Validate file type
-            var allowedExtensionsPhoto = new[] { ".jpg", ".jpeg", ".png"};
-            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (!allowedExtensionsPhoto.Contains(fileExtension))
-            {
-                throw new Exception("Only JPG or PNG files are allowed.");
-            }
-
-            // Define compression settings based on option
+        
+            // Compression settings
             int quality;
             int maxWidth;
             int maxHeight;
-
-            // Save compressed image
-            string resolution;
             switch (option)
             {
                 case CompressionLevel.Low:
-                    quality = 30; // Reduce quality to 30%
-                    maxWidth = 800; // Resize width
+                    quality = 30;
+                    maxWidth = 800;
                     maxHeight = 600;
-                    resolution = "low";
                     break;
                 case CompressionLevel.Medium:
-                    quality = 60; // Medium quality
+                    quality = 60;
                     maxWidth = 1600;
                     maxHeight = 1200;
-                    resolution = "medium";
                     break;
                 case CompressionLevel.High:
-                    quality = 100; // Keep original quality
+                    quality = 100;
                     maxWidth = int.MaxValue;
                     maxHeight = int.MaxValue;
-                    resolution = "high";
                     break;
                 default:
                     throw new Exception("Invalid compression level.");
             }
-
         
-            var filePath = Path.Combine(_uploadPath, string.Concat(resolution, file.FileName));
-
-            using (var stream = file.OpenReadStream())
-            using (var image = await Image.LoadAsync(stream))
+            // Use a memory stream to hold the compressed image
+            var outputStream = new MemoryStream();
+        
+            using (var inputStream = file.OpenReadStream())
+            using (var image = await Image.LoadAsync(inputStream))
             {
-                // Resize the image if needed
+                // Resize if not high quality
                 if (option != CompressionLevel.High)
                 {
                     image.Mutate(x => x.Resize(new ResizeOptions
@@ -161,12 +143,22 @@ namespace DAMBackend.SubmissionEngine
                         Size = new Size(maxWidth, maxHeight)
                     }));
                 }
-
-                // Save as JPEG with the defined quality
-                await image.SaveAsync(filePath, new JpegEncoder { Quality = quality });
+        
+                // Save as JPEG
+                await image.SaveAsync(outputStream, new JpegEncoder { Quality = quality });
             }
-
-            return file.FileName;
+        
+            // Reset stream position so it's readable
+            outputStream.Position = 0;
+        
+            // Create a new IFormFile from memory stream
+            var compressedFile = new FormFile(outputStream, 0, outputStream.Length, file.Name, file.FileName)
+            {
+                Headers = file.Headers,
+                ContentType = "image/jpeg"
+            };
+        
+            return compressedFile;
         }
 
        	public async Task<string> UploadRaw(IFormFile file, CompressionLevel option)
