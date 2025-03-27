@@ -80,7 +80,61 @@ namespace DAMBackend.SubmissionEngine
            return compressFiles;
         }
         public async Task<string> CompressJpgPng(IFormFile file, CompressionLevel option){
-            return file;
+            int quality;
+            int maxWidth;
+                        int maxHeight;
+                        switch (option)
+                        {
+                            case CompressionLevel.Low:
+                                quality = 30;
+                                maxWidth = 800;
+                                maxHeight = 600;
+                                break;
+                            case CompressionLevel.Medium:
+                                quality = 60;
+                                maxWidth = 1600;
+                                maxHeight = 1200;
+                                break;
+                            case CompressionLevel.High:
+                                quality = 100;
+                                maxWidth = int.MaxValue;
+                                maxHeight = int.MaxValue;
+                                break;
+                            default:
+                                throw new Exception("Invalid compression level.");
+                        }
+
+                        // Use a memory stream to hold the compressed image
+                        var outputStream = new MemoryStream();
+
+                        using (var inputStream = file.OpenReadStream())
+                        using (var image = await Image.LoadAsync(inputStream))
+                        {
+                            // Resize if not high quality
+                            if (option != CompressionLevel.High)
+                            {
+                                image.Mutate(x => x.Resize(new ResizeOptions
+                                {
+                                    Mode = ResizeMode.Max,
+                                    Size = new Size(maxWidth, maxHeight)
+                                }));
+                            }
+
+                            // Save as JPEG
+                            await image.SaveAsync(outputStream, new JpegEncoder { Quality = quality });
+                        }
+
+                        // Reset stream position so it's readable
+                        outputStream.Position = 0;
+
+                        // Create a new IFormFile from memory stream
+                        var compressedFile = new FormFile(outputStream, 0, outputStream.Length, file.Name, file.FileName)
+                        {
+                            Headers = file.Headers,
+                            ContentType = "image/jpeg"
+                        };
+
+                        return compressedFile;
         }
 
        	public async Task<string> CompressRaw(IFormFile file, CompressionLevel option){
