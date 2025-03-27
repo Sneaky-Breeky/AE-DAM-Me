@@ -110,7 +110,6 @@ namespace DAMBackend.SubmissionEngine
                         using (var inputStream = file.OpenReadStream())
                         using (var image = await Image.LoadAsync(inputStream))
                         {
-                            // Resize if not high quality
                             if (option != CompressionLevel.High)
                             {
                                 image.Mutate(x => x.Resize(new ResizeOptions
@@ -120,20 +119,16 @@ namespace DAMBackend.SubmissionEngine
                                 }));
                             }
 
-                            // Save as JPEG
                             await image.SaveAsync(outputStream, new JpegEncoder { Quality = quality });
                         }
 
-                        // Reset stream position so it's readable
                         outputStream.Position = 0;
 
-                        // Create a new IFormFile from memory stream
                         var compressedFile = new FormFile(outputStream, 0, outputStream.Length, file.Name, file.FileName)
                         {
                             Headers = file.Headers,
                             ContentType = "image/jpeg"
                         };
-
                         return compressedFile;
         }
 
