@@ -29,72 +29,34 @@ namespace DAMBackend.SubmissionEngine
     }
     public class SubmissionEngine
     {
-
-        private readonly string _uploadPath = "../../../TestOutput"; //hard coded value
-
         public SubmissionEngine()
         {
         }
-      
-        // upload multiple files to pallete, no compression performed
-        // make use the user has access to the palette
-        // extracts EXIF metadata for each file and put 
         public async Task<List<string>> UploadFiles(List<IFormFile> files) // string useremail
         {
-            // check if the user has access to the palette
-            
-            if (!Directory.Exists(_uploadPath))
-            {
-                Directory.CreateDirectory(_uploadPath);
-                Console.WriteLine($"Directory created: {_uploadPath}");
+            if (files.Count > 100){
+//             throw new Exception("You can upload a maximum of 100 files at once.");
+                return;
             }
-            else
-            {
-                Console.WriteLine($"Directory already exists: {_uploadPath}");
-            }
-
-            if (files.Count > 100)
-            {
-                throw new Exception("You can upload a maximum of 100 files at once.");
-            }
-            Console.WriteLine("The length of files is: " + files.Count);
-
-            List<string> uploadedFileNames = new List<string>();
+            List<IFormFile> validFiles = filterValidFiles(files);
+        }
+         public async Task<List<string>> filterValidFiles(List<IFormFile> files) {
+               List<IFormFile> validFiles = new List<IFormFile>();
+               var allowedExtensionsPhoto = new[] { ".jpg", ".jpeg", ".png", ".raw", ".arw" };
+               var allowedExtensionsVideo = new[] { ".mp4" };
 
             foreach (var file in files)
             {
-                var allowedExtensionsPhoto = new[] { ".jpg", ".jpeg", ".png", ".raw", ".arw" };
-                var allowedExtensionsVideo = new[] { ".mp4" };
                 var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
 
-                if (!allowedExtensionsPhoto.Contains(fileExtension) && !allowedExtensionsVideo.Contains(fileExtension))
+                if ((!allowedExtensionsPhoto.Contains(fileExtension) && !allowedExtensionsVideo.Contains(fileExtension))
+               || (file.Length > 500 * 1024 * 1024))
                 {
-                    throw new Exception($"File {file.FileName} has an unsupported file type.");
+                    continue;
                 }
-
-                if (file.Length > 500 * 1024 * 1024) // 500MB
-                {
-                    throw new Exception($"File {file.FileName} exceeds the maximum allowed size.");
+                validFile.Add(file);
                 }
-
-                var filePath = Path.Combine(_uploadPath, file.FileName);
-
-                using (var stream = System.IO.File.Create(filePath))
-                {
-                    await file.CopyToAsync(stream);
-                }
-                uploadedFileNames.Add(file.FileName);
-            }
-
-            if (uploadedFileNames.Count == 0)
-            {
-                throw new Exception("No valid files were uploaded.");
-            }
-
-
-            // perform the query to the database for 
-
-            return uploadedFileNames;
+            return validFiles;
         }
 
         // compress jpg and png image based on the compression option
