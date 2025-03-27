@@ -9,7 +9,7 @@ import { useAuth } from "./../../contexts/AuthContext"
 const { Title } = Typography;
 
 export default function ActivityLog() {
-    const { user } = useAuth();
+    const { user, isAdmin } = useAuth();
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -71,31 +71,74 @@ export default function ActivityLog() {
                     overflow: 'auto',
                 }}
             >
-
+                <div style={{ overflowY: 'auto', width: '100%', height: '100%' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
-                        <tr>
-                            <th style={{ height: '50px', textAlign: 'left', borderBottom: '1px solid black' }}>
-                                Timestamp
-                            </th>
-                            <th style={{ height: '50px', textAlign: 'left', borderBottom: '1px solid black' }}>
-                                Activities
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {logs.map((log, index) => (
-                            <tr key={log.id || index}>
-                                <td style={{ width: '40%', textAlign: 'left', borderBottom: '1px solid black' }}>
-                                    {dayjs(log.time).format('MMM DD, YYYY h:mma')}
-                                </td>
-                                <td style={{ width: '60%', textAlign: 'left', borderBottom: '1px solid black' }}>
-                                    {log.action}
-                                </td>
+                        {isAdmin ? 
+                        (
+                            <tr style={{ height: '10%' }}>
+                                <th style={{ width: '20%', textAlign: 'left', borderBottom: '1px solid black' }}>
+                                    User
+                                </th>
+                                <th style={{ width: '50%', textAlign: 'left', borderBottom: '1px solid black' }}>
+                                    Activities
+                                </th>
+                                <th style={{ width: '30%', textAlign: 'left', borderBottom: '1px solid black' }}>
+                                    Timestamp
+                                </th>
                             </tr>
-                        ))}
+                        )
+                        : (
+                            <tr style={{ height: '10%' }}>
+                                <th style={{ width: '70%', textAlign: 'left', borderBottom: '1px solid black' }}>
+                                    Activities
+                                </th>
+                                <th style={{ width: '30%', textAlign: 'left', borderBottom: '1px solid black' }}>
+                                    Timestamp
+                                </th>
+                            </tr>
+                        )}
+                        
+                    </thead>
+
+                    <tbody>
+                        {isAdmin ?
+                        (
+                            logs.map((log, index) => (
+                                <tr key={log.id || index}>
+                                    <td style={{ width: '20%', textAlign: 'left', borderBottom: '1px solid black' }}>
+                                        <p style={{margin: '0'}}>{log.UserID}</p>
+                                    </td>
+                                    <td style={{ width: '50%', textAlign: 'left', borderBottom: '1px solid black' }}>
+                                        <p style={{margin: '0'}}>{log.action}</p>
+                                        {log.FileID && 
+                                        (<p style={{margin: '0' }}><span>File ID: </span> <span style={{ color: 'grey', fontStyle: 'italic' }}>{log.FileID} </span></p>)}
+                                        {log.ProjectID && 
+                                        (<p style={{margin: '0' }}><span>Project ID: </span> <span style={{ color: 'grey', fontStyle: 'italic' }}>{log.ProjectID} </span></p>)}
+                                    </td>
+                                    <td style={{ width: '30%', textAlign: 'left', borderBottom: '1px solid black' }}>
+                                        <p style={{margin: '0'}}>{dayjs(log.time).format('MMM DD, YYYY h:mma')}</p>
+                                    </td>
+                                </tr>
+                            ))
+                        )
+                        :(
+                            logs.map((log, index) => (
+                                <tr key={log.id || index}>
+                                    <td style={{ width: '70%', textAlign: 'left', borderBottom: '1px solid black' }}>
+                                        <p style={{margin: '0'}}>{log.action}</p>
+                                        <span style={{margin: '0' }}>File ID: </span> <span style={{ margin: '0', color: 'grey', fontStyle: 'italic' }}>{log.FileID} </span>
+                                    </td>
+                                    <td style={{ width: '30%', textAlign: 'left', borderBottom: '1px solid black' }}>
+                                        <p style={{margin: '0'}}>{dayjs(log.time).format('MMM DD, YYYY h:mma')}</p>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                        
                     </tbody>
                 </table>
+                </div>
 
             </Box>
 
