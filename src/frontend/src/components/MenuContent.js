@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   List, ListItem, ListItemButton, ListItemIcon, ListItemText, Stack,
   Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
@@ -14,6 +14,9 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import PostAddIcon from '@mui/icons-material/PostAdd';
 import SecurityIcon from '@mui/icons-material/Security';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import SupervisedUserCircleIcon from '@mui/icons-material/SupervisedUserCircle';
+
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -35,19 +38,22 @@ var adminPages = [
 ];
 
 
-const secondaryListItems = [
-  { text: 'Logout', icon: <PeopleRoundedIcon /> }
-];
-
 // TODO: put this in utils?
 const GetDirectoryPrefix = (isAdmin) => (isAdmin ? '/admin/' : '/user/');
 
 
 export default function MenuContent({setLoggedIn}) {
   const { isAdmin, logout } = useAuth();
-  const menuItems = isAdmin ? adminPages : userPages;
+  const [adminUser, setAdminUser] = useState(false);
+  const menuItems = isAdmin & !adminUser ? adminPages : userPages;
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    if (sessionStorage.getItem('menu') === null) {
+      sessionStorage.setItem('menu', 0);
+    }
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -63,7 +69,7 @@ export default function MenuContent({setLoggedIn}) {
             <ListItemButton selected={index === parseInt(sessionStorage.getItem('menu'))}
               onClick={() => {
                 sessionStorage.setItem('menu', index);
-                navigate(GetDirectoryPrefix(isAdmin) + item.url)
+                navigate(GetDirectoryPrefix(isAdmin & !adminUser) + item.url)
               }}
             >
               <ListItemIcon sx={{ color: 'white' }} >{item.icon}</ListItemIcon>
@@ -72,16 +78,29 @@ export default function MenuContent({setLoggedIn}) {
           </ListItem>
         ))}
       </List>
+
       <List dense>
-          {secondaryListItems.map((item, index) => (
-            <ListItem key={index} disablePadding sx={{ display: 'block' }}>
+        {isAdmin && 
+            (<ListItem key={1} disablePadding sx={{ display: 'block' }}>
+              <ListItemButton onClick={() => {
+                setAdminUser(!adminUser);
+                sessionStorage.setItem('menu', 0);
+                navigate(GetDirectoryPrefix(isAdmin & adminUser) + 'dashboard')
+              }}>
+                <ListItemIcon sx={{ color: 'white' }}>{adminUser ? <SupervisedUserCircleIcon /> : <AccountCircleIcon />}</ListItemIcon>
+                <ListItemText primary={adminUser ? 'Admin Operations' : 'User Operations'} sx={{ color: 'white' }} />
+              </ListItemButton>
+            </ListItem>)
+        }
+            <ListItem key={0} disablePadding sx={{ display: 'block' }}>
               <ListItemButton onClick={() => setOpen(true)}>
-                <ListItemIcon sx={{ color: 'white' }}>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.text} sx={{ color: 'white' }} />
+                <ListItemIcon sx={{ color: 'white' }}>{<PeopleRoundedIcon />}</ListItemIcon>
+                <ListItemText primary={'Logout'} sx={{ color: 'white' }} />
               </ListItemButton>
             </ListItem>
-          ))}
+
         </List>
+      
     </Stack>
 
     {/* Logout confirm popup */}
