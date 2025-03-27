@@ -11,52 +11,47 @@
 
  namespace DAMBackend.Controllers
  {
-     [Route("api/log")]
-     [ApiController]
-     public class LogController : ControllerBase
-     {
-         private readonly SQLDbContext _context;
+    [Route("api/log")]
+    [ApiController]
+    public class LogController : ControllerBase
+    {
+        private readonly SQLDbContext _context;
 
-         public LogController(SQLDbContext context)
-         {
-             _context = context;
-         }
+        public LogController(SQLDbContext context)
+        {
+            _context = context;
+        }
 
-         [HttpGet("fetch/{userId}")]
-         public async Task<ActionResult<IEnumerable<LogImage>>> GetLogForUser(int userId)
-         {
-             var logs = await _context.LogImage
-                 .Where(upr => upr.UserId == userId)
-                 .ToListAsync();
+        [HttpGet("fetch/{userId}")]
+        public async Task<ActionResult<IEnumerable<LogImage>>> GetLogForUser(int userId)
+        {
+            var logs = await _context.LogImage
+                .Where(upr => upr.UserId == userId)
+                .ToListAsync();
 
-             return Ok(new { data = logs });
-         }
+            return Ok(new { data = logs });
+        }
 
-         [HttpPost("addLog")]
-         public async Task<ActionResult<LogImage>> AddLog([FromBody] LogImageRequest logRequest)
-         {
-             if (logRequest == null)
-             {
-                 return BadRequest(new { error = "Invalid log data." });
-             }
+        [HttpPost("addLog")]
+        public async Task<ActionResult<LogImage>> AddLog([FromBody] LogImage logRequest)
+        {
+            if (logRequest == null)
+            {
+                return BadRequest(new { error = "Invalid log data." });
+            }
 
-             var log = new LogImage(logRequest.FileId,
-                                     logRequest.UserId,
-                                     logRequest.TypeOfLog,
-                                     logRequest.Date);
+            var log = new LogImage
+            {
+                FileId = logRequest.FileId,
+                UserId = logRequest.UserId,
+                TypeOfLog = logRequest.TypeOfLog,
+                Date = logRequest.Date
+            };
+            
+            _context.LogImage.Add(log);
+            await _context.SaveChangesAsync();
 
-             _context.LogImage.Add(log);
-             await _context.SaveChangesAsync();
-
-             return Ok(log);
-         }
-     }
-
-     public class LogImageRequest
-     {
-         public int FileId { get; set; }
-         public int UserId { get; set; }
-         public string TypeOfLog { get; set; }
-         public DateTime Date { get; set; }
-     }
+            return Ok(log);
+        }
+    }
  }

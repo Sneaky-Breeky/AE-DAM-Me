@@ -22,15 +22,5 @@ namespace DAMBackend.Models
         [Required] 
         [Column("LogDate")]
         public DateTime Date { get; set; }
-
-
-
-        public LogImage(int fileId, int userId, string typeOfLog, DateTime date)
-        {
-            FileId = fileId;
-            UserId = userId;
-            TypeOfLog = typeOfLog;
-            Date = date;
-        }
     }
 }
