@@ -338,7 +338,7 @@ namespace DAMBackend.Controllers
 
 
 
-        // POST: api/Projects/Tag
+        // POST: api/Projects/tag
         /* Input format should be:
             {
               "ProjectId": 1,
@@ -350,15 +350,12 @@ namespace DAMBackend.Controllers
          */
         [HttpPost("tag/add")]
         public async Task<IActionResult> AddProjectTag(
-            [FromQuery] int ProjectId,
-            [FromQuery] string Key,
-            [FromQuery] string Value,
-            [FromQuery] value_type type)
+            [FromBody] ProjectTagDTO projectTagDTO)
         {
 
             var engine = new SQLEntryEngine(_context);
 
-            var project = await _context.Projects.FindAsync(ProjectId);
+            var project = await _context.Projects.FindAsync(projectTagDTO.ProjectId);
 
             if (project == null)
             {
@@ -369,9 +366,9 @@ namespace DAMBackend.Controllers
             {
                 var tag = await engine.addProjectTag(
                     project,
-                    Key,
-                    Value,
-                    type
+                    projectTagDTO.Key,
+                    projectTagDTO.Value,
+                    projectTagDTO.Type
                 );
                 return Ok(tag);
             }
