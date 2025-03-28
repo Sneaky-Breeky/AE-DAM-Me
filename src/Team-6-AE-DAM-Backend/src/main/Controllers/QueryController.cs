@@ -35,7 +35,7 @@
                      {
                          query = query.Where(upr => upr.Location == projectRequest.Location);
                      }
-         if (projectRequest.StartDate != DateTime.MinValue)
+         if (projectRequest.StartDate != null && projectRequest.StartDate != DateTime.MinValue)
                      {
                          query = query.Where(upr => upr.StartDate >= projectRequest.StartDate);
                      }
@@ -54,7 +54,7 @@
      {
          public string Status { get; set; }
          public string? Location { get; set; }
-         public DateTime StartDate { get; set; }
+         public DateTime StartDate { get; set; } = DateTime.MinValue;
      }
  }
 
