@@ -245,7 +245,7 @@ namespace DAMBackend.Controllers
 
             return Ok(filesWithTags);
         }
-        public async Task<bool> TagExistsAsync(string tagValue)
+        private async Task<bool> TagExistsAsync(string tagValue)
         {
             return await _context.BasicTags.AnyAsync(t => t.Value == tagValue);
         }
