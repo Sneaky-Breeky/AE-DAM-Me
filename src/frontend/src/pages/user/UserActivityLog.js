@@ -127,7 +127,11 @@ export default function ActivityLog() {
                                 <tr key={log.id || index}>
                                     <td style={{ width: '70%', textAlign: 'left', borderBottom: '1px solid black' }}>
                                         <p style={{margin: '0'}}>{log.action}</p>
-                                        <span style={{margin: '0' }}>File ID: </span> <span style={{ margin: '0', color: 'grey', fontStyle: 'italic' }}>{log.FileID} </span>
+                                        <p style={{margin: '0'}}>{log.action}</p>
+                                        {log.FileID && 
+                                        (<p style={{margin: '0' }}><span>File ID: </span> <span style={{ color: 'grey', fontStyle: 'italic' }}>{log.FileID} </span></p>)}
+                                        {log.ProjectID && 
+                                        (<p style={{margin: '0' }}><span>Project ID: </span> <span style={{ color: 'grey', fontStyle: 'italic' }}>{log.ProjectID} </span></p>)}
                                     </td>
                                     <td style={{ width: '30%', textAlign: 'left', borderBottom: '1px solid black' }}>
                                         <p style={{margin: '0'}}>{dayjs(log.time).format('MMM DD, YYYY h:mma')}</p>
