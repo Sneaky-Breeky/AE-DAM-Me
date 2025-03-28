@@ -23,11 +23,28 @@
 
          public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjectQueryResult(ProjectQueryRequest projectRequest)
          {
-         var projects = await _context.ProjectModel
-                          .Where(upr => upr.Status == projectRequest.Status)
-                          .Where(upr => upr.Location == projectRequest.Location)
-                          .Where(upr => upr.StartDate == projectRequest.StartDate)
-                          .ToListAsync();
+         if (projectRequest == null){
+            return BadRequest("Invalid query request.");
+         }
+         var query = _context.ProjectModel.AsQueryable();
+         if (!string.IsNullOrEmpty(projectRequest.Status))
+                     {
+                         query = query.Where(upr => upr.Status == projectRequest.Status);
+                     }
+         if (!string.IsNullOrEmpty(projectRequest.Location))
+                     {
+                         query = query.Where(upr => upr.Location == projectRequest.Location);
+                     }
+         if (projectRequest.StartDate != DateTime.MinValue)
+                     {
+                         query = query.Where(upr => upr.StartDate == projectRequest.StartDate);
+                     }
+         var projects = await query.ToListAsync();
+         if (projects == null || !projects.Any())
+                     {
+                         return NotFound("No projects found matching the given criteria.");
+                     }
+         return Ok(projects);
          }
          }
 
