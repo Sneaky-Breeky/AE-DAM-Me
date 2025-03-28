@@ -11,6 +11,7 @@ namespace DAMBackend.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int LogId { get; set; }
+        
         public int FileId { get; set; }
         public int ProjectId { get; set; }
         [Required] public int UserId { get; set; }
