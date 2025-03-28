@@ -12,6 +12,7 @@
  namespace DAMBackend.Controllers
  {
      [ApiController]
+     [Route("api/query")]
      public class QueryController : ControllerBase
      {
          private readonly SQLDbContext _context;
@@ -20,7 +21,7 @@
          {
              _context = context;
          }
-
+         [HttpGet("projectQuery")]
          public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjectQueryResult(ProjectQueryRequest projectRequest)
          {
          if (projectRequest == null){
@@ -52,8 +53,6 @@
          return Ok(projects);
          }
          }
-
-
 
      public class ProjectQueryRequest
      {
