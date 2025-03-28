@@ -26,7 +26,7 @@
          if (projectRequest == null){
             return BadRequest("Invalid query request.");
          }
-         var query = _context.ProjectModel.AsQueryable();
+         var query = _context.Projects.AsQueryable();
          if (!string.IsNullOrEmpty(projectRequest.Status))
                      {
                          query = query.Where(upr => upr.Status == projectRequest.Status);
