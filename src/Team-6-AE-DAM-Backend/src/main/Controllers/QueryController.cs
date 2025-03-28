@@ -52,6 +52,30 @@
                      }
          return Ok(projects);
          }
+         // Query projects based on image tags
+         // get all images that contain the tag
+         // show all the projects associated wth those images
+         [HttpGet("projectImageQuery")]
+         public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjectQueryResult(string imageTag){
+
+             var imageFileQuery = _context.Files
+//                                             .Where(fm => fm.bTags.Contains(imageTag.Value))
+                                             .Select(fm => fm.ProjectId);
+
+             var projectIds = await imageFileQuery.ToListAsync();
+             if (projectIds == null || !projectIds.Any())
+                 {
+                     return NotFound("No images found with this tag.");
+                 }
+             var projectsQuery = _context.Projects.Where(p => projectIds.Contains(p.Id));
+             var projects = await projectsQuery.ToListAsync();
+             if (projects == null || !projects.Any())
+                 {
+                     return NotFound("No projects found matching the image tag.");
+                 }
+             return Ok(projects);
+
+         }
          }
 
      public class ProjectQueryRequest
