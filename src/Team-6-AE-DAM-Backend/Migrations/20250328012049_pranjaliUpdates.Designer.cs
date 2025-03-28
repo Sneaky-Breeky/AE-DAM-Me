@@ -4,6 +4,7 @@ using DAMBackend.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DAMBackend.Migrations
 {
     [DbContext(typeof(SQLDbContext))]
-    partial class SQLDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250328012049_pranjaliUpdates")]
+    partial class pranjaliUpdates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -61,10 +64,6 @@ namespace DAMBackend.Migrations
                         .HasPrecision(10, 7)
                         .HasColumnType("decimal(10,7)");
 
-                    b.Property<string>("Location")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Make")
                         .HasColumnType("nvarchar(max)");
 
@@ -89,9 +88,6 @@ namespace DAMBackend.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("ProjectId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Resolution")
                         .HasColumnType("int");
 
                     b.Property<string>("ThumbnailPath")
@@ -137,6 +133,9 @@ namespace DAMBackend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LogId"));
 
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
@@ -150,10 +149,7 @@ namespace DAMBackend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("LogId");
+                    b.HasKey("LogId", "UserId");
 
                     b.HasIndex("FileId");
 
