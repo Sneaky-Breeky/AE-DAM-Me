@@ -11,22 +11,24 @@
 
  namespace DAMBackend.Controllers
  {
-     [Route("api/log")]
      [ApiController]
-     public class LogController : ControllerBase
+     public class QueryController : ControllerBase
      {
          private readonly SQLDbContext _context;
 
-         public LogController(SQLDbContext context)
+         public QueryController(SQLDbContext context)
          {
              _context = context;
          }
 
-         [HttpGet("fetch/{userId}")]
-         public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjectQueryResult()
+         public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjectQueryResult(ProjectQueryRequest projectRequest)
          {
-
-//             return Ok(new { data = logs });
+         var projects = await _context.ProjectModel
+                          .Where(upr => upr.Status == projectRequest.Status)
+                          .Where(upr => upr.Location == projectRequest.Location)
+                          .Where(upr => upr.StartDate == projectRequest.StartDate)
+                          .ToListAsync();
+         }
          }
 
 
