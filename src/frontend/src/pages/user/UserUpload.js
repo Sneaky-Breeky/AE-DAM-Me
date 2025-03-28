@@ -6,6 +6,7 @@ import Cropper from 'react-easy-crop';
 import dayjs from 'dayjs';
 import { projects, users } from '../../utils/dummyData.js';
 import {addLog} from "../../api/logApi";
+import {addUploadExif} from "../../api/exifApi";
 
 const { Title } = Typography;
 const { confirm } = Modal;
@@ -243,6 +244,7 @@ export default function UserUpload() {
 
         console.log("Uploading files:", files);
         userFiles.forEach(file => {
+            addUploadExif(file);
             addLog(userID, file.id, projectId ,'upload');
         });
 
@@ -255,7 +257,7 @@ export default function UserUpload() {
         setSelectedDate(dayjs().format('YYYY-MM-DD'));
         setLocation(null);
         setUploadSuccess(true);
-        addLog(userID, 3, 'upload');
+
 
     };
 
