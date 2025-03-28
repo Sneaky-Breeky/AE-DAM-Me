@@ -43,7 +43,7 @@ namespace DAMBackend.Models
             
             // Key for LogImage 
             modelBuilder.Entity <LogImage>()
-                .HasKey(l => new { l.LogId, l.FileId, l.UserId });
+                .HasKey(l => new { l.LogId });
 
             // Delete tags with Project
             modelBuilder.Entity<ProjectTagModel>()
