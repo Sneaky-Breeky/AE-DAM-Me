@@ -68,11 +68,11 @@ namespace DAMBackend.blob
 
         public async Task<string?> MoveBlobWithinContainerAsync(string sourceFolder, string fileName, string targetFolder)
         {
-            string sourceBlobPath = string.Concat(sourceFolder, "/", fileName);
-            string targetBlobPath = string.Concat(targetFolder, "/", fileName);
-
+            string sourceBlobPath = string.Concat(fileName);
+            string targetBlobPath = string.Concat(fileName);
+            
             BlobClient sourceBlob = _palettesContainer.GetBlobClient(sourceBlobPath);
-            BlobClient targetBlob = _palettesContainer.GetBlobClient(targetBlobPath);
+            BlobClient targetBlob = _projectsContainer.GetBlobClient(targetBlobPath);
 
             if (!await sourceBlob.ExistsAsync())
             {
