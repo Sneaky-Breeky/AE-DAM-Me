@@ -37,7 +37,7 @@
                      }
          if (projectRequest.StartDate != DateTime.MinValue)
                      {
-                         query = query.Where(upr => upr.StartDate == projectRequest.StartDate);
+                         query = query.Where(upr => upr.StartDate >= projectRequest.StartDate);
                      }
          var projects = await query.ToListAsync();
          if (projects == null || !projects.Any())
