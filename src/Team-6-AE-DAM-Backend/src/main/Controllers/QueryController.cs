@@ -42,7 +42,7 @@
 
          if (projectRequest.EndDate != DateTime.MinValue)
                      {
-                         query = query.Where(upr => upr.EndDate <= projectRequest.EndDate);
+                         query = query.Where(upr => upr.StartDate <= projectRequest.EndDate);
                      }
          var projects = await query.ToListAsync();
          if (projects == null || !projects.Any())
