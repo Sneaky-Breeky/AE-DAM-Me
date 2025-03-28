@@ -10,6 +10,7 @@ import {addLog} from "../../api/logApi";
 const { Title } = Typography;
 const { confirm } = Modal;
 const userID = 10;
+const projectId = 6;
 
 const tagStyle = {
     backgroundColor: '#dbdbdb',
@@ -239,10 +240,12 @@ export default function UserUpload() {
     const handleUploadFilesToProject = () => {
         // TODO: add "files" to current "project"'s "files" variable, and other associated info
         // TODO: update user's activity log that they added files to this certain project
+
         console.log("Uploading files:", files);
         userFiles.forEach(file => {
-            addLog(userID, file.file.id, 'upload');
+            addLog(userID, file.id, projectId ,'upload');
         });
+
 
         setFiles([]);
         setUserFiles([]);
@@ -252,6 +255,7 @@ export default function UserUpload() {
         setSelectedDate(dayjs().format('YYYY-MM-DD'));
         setLocation(null);
         setUploadSuccess(true);
+        addLog(userID, 3, 'upload');
 
     };
 

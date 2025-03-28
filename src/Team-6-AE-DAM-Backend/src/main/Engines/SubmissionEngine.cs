@@ -16,382 +16,495 @@ using ImageMagick;
 using System.Diagnostics;
 using File = System.IO.File;
 
-
-
-
 namespace DAMBackend.SubmissionEngine
 {
-    public enum CompressionLevel // used for Compress method
+    public enum CompressionLevel
     {
         Low,
         Medium,
-        High // High means original resolution
+        High
     }
     public class SubmissionEngine
     {
-
-        private readonly string _uploadPath = "../../../TestOutput"; //hard coded value
-
-        public SubmissionEngine()
-        {
+        public SubmissionEngine(){
         }
-      
-        // upload multiple files to pallete, no compression performed
-        // make use the user has access to the palette
-        // extracts EXIF metadata for each file and put 
-        public async Task<List<string>> UploadFiles(List<IFormFile> files) // string useremail
+
+        public async void UploadFiles(List<IFormFile> files, CompressionLevel compressLevel)
         {
-            // check if the user has access to the palette
-            
-            if (!Directory.Exists(_uploadPath))
-            {
-                Directory.CreateDirectory(_uploadPath);
-                Console.WriteLine($"Directory created: {_uploadPath}");
+            if (files.Count > 100){
+                return;
             }
-            else
-            {
-                Console.WriteLine($"Directory already exists: {_uploadPath}");
-            }
-
-            if (files.Count > 100)
-            {
-                throw new Exception("You can upload a maximum of 100 files at once.");
-            }
-            Console.WriteLine("The length of files is: " + files.Count);
-
-            List<string> uploadedFileNames = new List<string>();
+            List<IFormFile> validFiles = await filterValidFiles(files);
+            List<IFormFile> compressedFiles = await CompressFiles(validFiles,compressLevel);
+        }
+         public async Task<List<IFormFile>> filterValidFiles(List<IFormFile> files) {
+               List<IFormFile> validFiles = new List<IFormFile>();
+               var allowedExtensionsPhoto = new[] { ".jpg", ".jpeg", ".png", ".raw", ".arw" };
+               var allowedExtensionsVideo = new[] { ".mp4" };
 
             foreach (var file in files)
             {
-                var allowedExtensionsPhoto = new[] { ".jpg", ".jpeg", ".png", ".raw", ".arw" };
-                var allowedExtensionsVideo = new[] { ".mp4" };
                 var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
 
-                if (!allowedExtensionsPhoto.Contains(fileExtension) && !allowedExtensionsVideo.Contains(fileExtension))
-                {
-                    throw new Exception($"File {file.FileName} has an unsupported file type.");
+                if (file == null  || file.Length == 0){
+                continue;
                 }
-
-                if (file.Length > 500 * 1024 * 1024) // 500MB
+                if ((!allowedExtensionsPhoto.Contains(fileExtension) &&
+                    !allowedExtensionsVideo.Contains(fileExtension))||
+                    (file.Length > 500 * 1024 * 1024))
                 {
-                    throw new Exception($"File {file.FileName} exceeds the maximum allowed size.");
+                    continue;
                 }
-
-                var filePath = Path.Combine(_uploadPath, file.FileName);
-
-                using (var stream = System.IO.File.Create(filePath))
-                {
-                    await file.CopyToAsync(stream);
+                validFiles.Add(file);
                 }
-                uploadedFileNames.Add(file.FileName);
-            }
-
-            if (uploadedFileNames.Count == 0)
-            {
-                throw new Exception("No valid files were uploaded.");
-            }
-
-
-            // perform the query to the database for 
-
-            return uploadedFileNames;
+            return validFiles;
         }
 
-        // compress jpg and png image based on the compression option
-        public async Task<string> UploadJpgPng(IFormFile file, CompressionLevel option)
+        public async Task<List<IFormFile>> CompressFiles(List<IFormFile> files, CompressionLevel compressLevel)
         {
-            if (file == null || file.Length == 0)
-            {
-                throw new Exception("Invalid file.");
-            }
+        List<IFormFile> compressFiles = new List<IFormFile>();
+        var allowedExtensionsPhoto = new[] { ".jpg", ".jpeg", ".png", ".raw", ".arw" };
+        var allowedExtensionsVideo = new[] { ".mp4" };
 
-            // Validate file type
-            var allowedExtensionsPhoto = new[] { ".jpg", ".jpeg", ".png"};
+        foreach (var file in files){
             var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (!allowedExtensionsPhoto.Contains(fileExtension))
-            {
-                throw new Exception("Only JPG or PNG files are allowed.");
+            if(fileExtension == ".jpg" || fileExtension == ".jpeg"|| fileExtension == ".png"){
+                compressFiles.Add(await CompressJpgPng(file,compressLevel));
             }
-
-            // Define compression settings based on option
+            else if(fileExtension == ".raw" || fileExtension == ".arw"){
+                 compressFiles.Add(await CompressRaw(file,compressLevel));
+            }
+            else if(fileExtension == ".mp4"){
+                compressFiles.Add(await CompressMp4(file,compressLevel));
+            }
+           }
+           return compressFiles;
+        }
+        public async Task<IFormFile> CompressJpgPng(IFormFile file, CompressionLevel option){
             int quality;
             int maxWidth;
-            int maxHeight;
+                        int maxHeight;
+                        switch (option)
+                        {
+                            case CompressionLevel.Low:
+                                quality = 30;
+                                maxWidth = 800;
+                                maxHeight = 600;
+                                break;
+                            case CompressionLevel.Medium:
+                                quality = 60;
+                                maxWidth = 1600;
+                                maxHeight = 1200;
+                                break;
+                            case CompressionLevel.High:
+                                quality = 100;
+                                maxWidth = int.MaxValue;
+                                maxHeight = int.MaxValue;
+                                break;
+                            default:
+                                throw new Exception("Invalid compression level.");
+                        }
 
-            // Save compressed image
-            string resolution;
-            switch (option)
-            {
-                case CompressionLevel.Low:
-                    quality = 30; // Reduce quality to 30%
-                    maxWidth = 800; // Resize width
-                    maxHeight = 600;
-                    resolution = "low";
-                    break;
-                case CompressionLevel.Medium:
-                    quality = 60; // Medium quality
-                    maxWidth = 1600;
-                    maxHeight = 1200;
-                    resolution = "medium";
-                    break;
-                case CompressionLevel.High:
-                    quality = 100; // Keep original quality
-                    maxWidth = int.MaxValue;
-                    maxHeight = int.MaxValue;
-                    resolution = "high";
-                    break;
-                default:
-                    throw new Exception("Invalid compression level.");
-            }
+                        // Use a memory stream to hold the compressed image
+                        var outputStream = new MemoryStream();
 
-        
-            var filePath = Path.Combine(_uploadPath, string.Concat(resolution, file.FileName));
+                        using (var inputStream = file.OpenReadStream())
+                        using (var image = await Image.LoadAsync(inputStream))
+                        {
+                            if (option != CompressionLevel.High)
+                            {
+                                image.Mutate(x => x.Resize(new ResizeOptions
+                                {
+                                    Mode = ResizeMode.Max,
+                                    Size = new Size(maxWidth, maxHeight)
+                                }));
+                            }
 
-            using (var stream = file.OpenReadStream())
-            using (var image = await Image.LoadAsync(stream))
-            {
-                // Resize the image if needed
-                if (option != CompressionLevel.High)
-                {
-                    image.Mutate(x => x.Resize(new ResizeOptions
-                    {
-                        Mode = ResizeMode.Max,
-                        Size = new Size(maxWidth, maxHeight)
-                    }));
-                }
+                            await image.SaveAsync(outputStream, new JpegEncoder { Quality = quality });
+                        }
 
-                // Save as JPEG with the defined quality
-                await image.SaveAsync(filePath, new JpegEncoder { Quality = quality });
-            }
+                        outputStream.Position = 0;
 
-            return file.FileName;
+                        var compressedFile = new FormFile(outputStream, 0, outputStream.Length, file.Name, file.FileName)
+                        {
+                            Headers = file.Headers,
+                            ContentType = "image/jpeg"
+                        };
+                        return compressedFile;
         }
 
-       	public async Task<string> UploadRaw(IFormFile file, CompressionLevel option)
-        {
+       	public async Task<IFormFile> CompressRaw(IFormFile file, CompressionLevel option){
+       	    if (file == null || file.Length == 0)
+                        {
+                            throw new Exception("Invalid file.");
+                        }
+
+                        var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                        var allowedExtensionsRaw = new[] { ".arw", ".cr2", ".nef", ".dng" };
+
+                        if (!allowedExtensionsRaw.Contains(fileExtension))
+                        {
+                            throw new Exception("Unsupported RAW file format.");
+                        }
+
+                        if (option == CompressionLevel.High)
+                        {
+                            // Return original RAW file as-is
+                            var rawStream = new MemoryStream();
+                            await file.CopyToAsync(rawStream);
+                            rawStream.Position = 0;
+
+                            return new FormFile(rawStream, 0, rawStream.Length, file.Name, file.FileName)
+                            {
+                                Headers = file.Headers,
+                                ContentType = file.ContentType
+                            };
+                        }
+
+                        // Proceed with compression logic for Medium/Low
+                        uint quality = option == CompressionLevel.Medium ? 60u : 20u;
+
+                        try
+                        {
+                            using (var stream = file.OpenReadStream())
+                            {
+                                var settings = new MagickReadSettings
+                                {
+                                    Density = new Density(300)
+                                };
+
+                                settings.Format = fileExtension switch
+                                {
+                                    ".cr2" => MagickFormat.Cr2,
+                                    ".nef" => MagickFormat.Nef,
+                                    ".arw" => MagickFormat.Arw,
+                                    ".dng" => MagickFormat.Dng,
+                                    _ => settings.Format
+                                };
+
+                                using (var image = new MagickImage(stream, settings))
+                                {
+                                    image.AutoOrient();
+                                    image.Format = MagickFormat.Jpeg;
+                                    image.Quality = quality;
+
+                                    var outputStream = new MemoryStream();
+                                    await image.WriteAsync(outputStream);
+                                    outputStream.Position = 0;
+
+                                    var newFileName = Path.ChangeExtension(file.FileName, ".jpg");
+
+                                    return new FormFile(outputStream, 0, outputStream.Length, file.Name, newFileName)
+                                    {
+                                        Headers = file.Headers,
+                                        ContentType = "image/jpeg"
+                                    };
+                                }
+                            }
+                        }
+                        catch (MagickCoderErrorException ex)
+                        {
+                            throw new Exception($"Failed to process RAW file: {ex.Message}", ex);
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new Exception($"Unexpected error during RAW file processing: {ex.Message}", ex);
+                        }
+       	}
+
+        public async Task<IFormFile> CompressMp4(IFormFile file, CompressionLevel option){
             if (file == null || file.Length == 0)
-            {
-                throw new Exception("Invalid file.");
-            }
-        
-            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            var allowedExtensionsRaw = new[] { ".arw", ".cr2", ".nef", ".dng" };
-            
-            if (!allowedExtensionsRaw.Contains(fileExtension))
-            {
-                throw new Exception("Unsupported RAW file format.");
-            }
-        
-            uint quality;
-			string resolution;
-            switch (option)
-            {
-                case CompressionLevel.Low:
-                    quality = 30;
-					resolution = "low";
-                    break;
-                case CompressionLevel.Medium:
-                    quality = 60;
-					resolution = "medium";
-                    break;
-                case CompressionLevel.High:
-                    quality = 100;
-					resolution = "high";
-                    break;
-                default:
-                    throw new Exception("Invalid compression level.");
-            }
-        
-            var outputFilePath = Path.Combine(_uploadPath, resolution + Path.ChangeExtension(file.FileName, ".jpg"));
-        
-            try
-            {
-                using (var stream = file.OpenReadStream())
-                {
-                    var settings = new MagickReadSettings
-                    {
-                        Density = new Density(300)
-                        // Removed IgnoreWarnings since it's not available in this version.
-                    };
-        
-                    // Explicitly set the format based on the file extension.
-                    switch (fileExtension)
-                    {
-                        case ".cr2":
-                            settings.Format = MagickFormat.Cr2;
-                            break;
-                        case ".nef":
-                            settings.Format = MagickFormat.Nef;
-                            break;
-                        case ".arw":
-                            settings.Format = MagickFormat.Arw;
-                            break;
-                        case ".dng":
-                            settings.Format = MagickFormat.Dng;
-                            break;
-                        // For other RAW types, you can let ImageMagick auto-detect by not setting the format.
-                    }
-        
-                    using (var image = new MagickImage(stream, settings))
-                    {
-						image.AutoOrient(); // Corrects orientation based on EXIF data
-                        image.Format = MagickFormat.Jpeg;
-                        image.Quality = quality;
-                        await image.WriteAsync(outputFilePath);
-                    }
-                }
-                
-                return outputFilePath;
-            }
-            catch (MagickCoderErrorException ex)
-            {
-                throw new Exception($"Failed to process RAW file: {ex.Message}", ex);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Unexpected error during RAW file processing: {ex.Message}", ex);
-            }
+                            throw new Exception("Invalid file.");
+
+                        var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                        if (fileExtension != ".mp4")
+                            throw new Exception("Only MP4 files are supported.");
+
+                        if (option == CompressionLevel.High)
+                        {
+                            // Return original file as-is
+                            var rawStream = new MemoryStream();
+                            await file.CopyToAsync(rawStream);
+                            rawStream.Position = 0;
+
+                            return new FormFile(rawStream, 0, rawStream.Length, file.Name, file.FileName)
+                            {
+                                Headers = file.Headers,
+                                ContentType = file.ContentType
+                            };
+                        }
+
+                        // Save the uploaded file to a temp location
+                        var tempInputPath = Path.GetTempFileName() + ".mp4";
+                        var tempOutputPath = Path.GetTempFileName() + "_compressed.mp4";
+
+                        await using (var stream = new FileStream(tempInputPath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        // Define compression args
+                        string compressionArgs = option switch
+                        {
+                            CompressionLevel.Low => "-crf 32",
+                            CompressionLevel.Medium => "-crf 28",
+                            _ => throw new Exception("Invalid compression level.") // Already handled High
+                        };
+
+                        string ffmpegArgs = $"-i \"{tempInputPath}\" -c:v libx264 -pix_fmt yuv420p {compressionArgs} -threads 4 -preset superfast \"{tempOutputPath}\"";
+
+                        var processInfo = new ProcessStartInfo
+                        {
+                            FileName = "ffmpeg",
+                            Arguments = ffmpegArgs,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        };
+
+                        using (var process = new Process { StartInfo = processInfo })
+                        {
+                            process.Start();
+                            string output = await process.StandardError.ReadToEndAsync(); // Capture FFmpeg logs
+                            await process.WaitForExitAsync();
+
+                            if (process.ExitCode != 0)
+                            {
+                                throw new Exception($"FFmpeg failed: {output}");
+                            }
+                        }
+
+                        // Load compressed video into memory stream
+                        var memoryStream = new MemoryStream(await File.ReadAllBytesAsync(tempOutputPath));
+                        memoryStream.Position = 0;
+
+                        // Clean up temp files
+                        File.Delete(tempInputPath);
+                        File.Delete(tempOutputPath);
+
+                        // Return compressed video as IFormFile
+                        var newFileName = Path.ChangeExtension(file.FileName, ".mp4");
+                        return new FormFile(memoryStream, 0, memoryStream.Length, file.Name, newFileName)
+                        {
+                            Headers = file.Headers,
+                            ContentType = "video/mp4"
+                        };
         }
 
 
-        public async Task<string> UploadMp4(IFormFile file, CompressionLevel option)
-        {
-            if (file == null || file.Length == 0)
-                throw new Exception("Invalid file.");
+//        public FileModel ProcessImageMetadataJpgPng(IFormFile imageFile, string basePath, UserModel currentUser)
+//        {
+//            // Validate input
+//            if (imageFile == null || imageFile.Length == 0)
+//            {
+//                throw new ArgumentException("Invalid image file");
+//            }
+//
+//            // Generate unique file paths
+//            string originalPath = Path.Combine(basePath, "originals", imageFile.FileName);
+//            string viewPath = Path.Combine(basePath, "views", imageFile.FileName);
+//            string thumbnailPath = Path.Combine(basePath, "thumbnails", imageFile.FileName);
+//
+//            // Ensure directories exist
+//            Directory.CreateDirectory(Path.GetDirectoryName(originalPath));
+//            Directory.CreateDirectory(Path.GetDirectoryName(viewPath));
+//            Directory.CreateDirectory(Path.GetDirectoryName(thumbnailPath));
+//
+//            // Create a FileModel instance with required fields
+//            var fileModel = new FileModel
+//            {
+//                Name = Path.GetFileNameWithoutExtension(imageFile.FileName),
+//                Extension = Path.GetExtension(imageFile.FileName),
+//                ThumbnailPath = thumbnailPath,
+//                ViewPath = viewPath,
+//                OriginalPath = originalPath,
+//                PixelWidth = 0,  // Will be updated when image is loaded
+//                PixelHeight = 0, // Will be updated when image is loaded
+//                User = currentUser,
+//                UserId = currentUser.Id
+//            };
+//
+//            // Load the image using ImageSharp
+//            using (var stream = imageFile.OpenReadStream())
+//            using (var image = Image.Load(stream))
+//            {
+//                // Set image dimensions
+//                fileModel.PixelWidth = image.Width;
+//                fileModel.PixelHeight = image.Height;
+//                fileModel.Palette = true;
+//
+//                // Check for EXIF metadata
+//                var exifProfile = image.Metadata.ExifProfile;
+//                if (exifProfile != null)
+//                {
+//                    // Extract common EXIF metadata
+//                    ExtractExifMetadata(exifProfile, fileModel);
+//                }
+//            }
+//
+//            return fileModel;
+//        }
+//
+//        private void ExtractExifMetadata(ImageSharpExif.ExifProfile exifProfile, FileModel fileModel)
+//        {
+//            object? latRef = null;
+//            object? lonRef = null;
+//            foreach (var tag in exifProfile.Values)
+//            {
+//                if (tag.Tag == ImageSharpExifTag.GPSLatitudeRef)
+//                {
+//                    latRef = tag.GetValue();
+//                } else if (tag.Tag == ImageSharpExifTag.GPSLongitudeRef)
+//                {
+//                    lonRef = tag.GetValue();
+//                }
+//                else if (tag.Tag == ImageSharpExifTag.GPSLatitude)
+//                {
+//                    fileModel.GPSLat = ConvertDMSToDecimal(tag.GetValue(), latRef?.ToString());
+//                }
+//                else if (tag.Tag == ImageSharpExifTag.GPSLongitude)
+//                {
+//                    fileModel.GPSLon = ConvertDMSToDecimal(tag.GetValue(), lonRef?.ToString());
+//                }
+//                else if (tag.Tag == ImageSharpExifTag.GPSAltitude && tag.GetValue() is SixLabors.ImageSharp.Rational altitudeRational)
+//                {
+//                    fileModel.GPSAlt = (decimal) altitudeRational.ToDouble();
+//                }
+//                // else if (tag.Tag == ImageSharpExifTag.DateTimeOriginal && tag.GetValue() is string dateTimeStr && DateTime.TryParse(dateTimeStr, out DateTime parsedDate))
+//                // {
+//                //     fileModel.DateTimeOriginal = parsedDate;
+//                // } // we did not take any date since it will be overwriten anyway
+//                else if (tag.Tag == ImageSharpExifTag.Make)
+//                {
+//                    fileModel.Make = tag.GetValue()?.ToString();
+//                }
+//                else if (tag.Tag == ImageSharpExifTag.Model)
+//                {
+//                    fileModel.Model = tag.GetValue()?.ToString();
+//                }
+//                else if (tag.Tag == ImageSharpExifTag.Copyright)
+//                {
+//                    fileModel.Copyright = tag.GetValue()?.ToString();
+//                }
+//                else if (tag.Tag == ImageSharpExifTag.FocalLength)
+//                {
+//                    if (tag.GetValue() is SixLabors.ImageSharp.Rational rational)
+//                    {
+//                        fileModel.FocalLength = (int) rational.ToDouble();
+//                    }
+//                }
+//                else if (tag.Tag == ImageSharpExifTag.FNumber)
+//                {
+//                    if (tag.GetValue() is SixLabors.ImageSharp.Rational rational)
+//                    {
+//                        fileModel.Aperture = (float) rational.ToDouble();
+//                    }
+//                }
+//                else
+//                {
+//                    // do nothing to the tag that we do not need
+//                }
+//            }
+//        }
+//
+//        private decimal? ConvertDMSToDecimal(object dmsValue, string? reference)
+//        {
+//            if (dmsValue is SixLabors.ImageSharp.Rational[] dmsArray && dmsArray.Length == 3)
+//            {
+//                decimal degrees = (decimal)dmsArray[0].ToDouble();
+//                decimal minutes = (decimal)dmsArray[1].ToDouble();
+//                decimal seconds = (decimal)dmsArray[2].ToDouble();
+//
+//                decimal decimalDegrees = degrees + (minutes / 60) + (seconds / 3600);
+//
+//                if (reference == "S" || reference == "W")
+//                {
+//                    decimalDegrees = -decimalDegrees;
+//                }
+//
+//                return decimalDegrees;
+//            }
+//
+//            return null;
+//        }
+//
+//        public  void PrintImageMetadata(string imagePath)
+//        {
+//            // Load the image
+//            using (Image image = Image.Load(imagePath))
+//            {
+//                Console.WriteLine($"Image loaded with dimensions: {image.Width}x{image.Height}");
+//
+//                // Check for EXIF metadata
+//                if (image.Metadata.ExifProfile != null)
+//                {
+//                    Console.WriteLine("\nEXIF Metadata:");
+//                    foreach (var tag in image.Metadata.ExifProfile.Values)
+//                    {
+//                        Console.WriteLine($"Tag: {tag.Tag}, Value: {tag.GetValue()}");
+//                    }
+//                }
+//                else
+//                {
+//                    Console.WriteLine("\nNo EXIF metadata found in the image.");
+//                }
+//            }
+//        }
+//
+//        // Extract EXIF data from the file using ExifTool
+//        public Dictionary<string, string> ExtractExifData(string file)
+//        {
+//            var metadata = new Dictionary<string, string>();
+//
+//            try
+//            {
+//                // TODO:  Run ExifTool on the file and capture output
+//                // nedded fields can be seen on ER diagram
+//
+//            }
+//            catch (Exception ex)
+//            {
+//                Console.WriteLine($"Error extracting EXIF data from {file}: {ex.Message}");
+//            }
+//
+//            return metadata;
+//        }
+//
+//        public void EditFile(string file, string action)
+//        {
+//            // Stub for editing file actions (crop, rotate, highlight, resize)
+//            // Call respective helper for each action
+//
+//            switch (action.ToLower())
+//            {
+//                case "crop":
+//                    // TODO: Call Crop function
+//                    break;
+//                case "rotate":
+//                    // TODO: Call Rotate function
+//                    break;
+//                case "highlight":
+//                    // TODO: Call Highlight function
+//                    break;
+//                case "resize":
+//                    // TODO: Call Resize function
+//                    break;
+//                default:
+//                    throw new ArgumentException("Unknown action");
+//            }
+//        }
+//
+//        // Method to upload files to a project
+//        public void UploadToProject(int projectId)
+//        {
+//            // Stub for uploading files to project
+//            // TODO:
+//            // - Validate if files ar`e added
+//            // - Ensure project is selected
+//            // - Set resolution (low, medium, high)
+//        }
 
-            var tempFilePath = Path.GetTempFileName() + ".mp4";  // Temporary input file
-
-
-            // Save the uploaded file to disk
-            using (var stream = new FileStream(tempFilePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-        string bitrate;
-        string compressionArgs;
-        switch (option)
-        {
-            case CompressionLevel.Low:
-                compressionArgs = "-crf 32";
-                bitrate = "32"; // Lower quality
-                break;
-            case CompressionLevel.Medium:
-                compressionArgs = "-crf 28";
-                bitrate = "28"; // Medium quality
-                break;
-            case CompressionLevel.High:
-                compressionArgs = "-crf 23";
-                bitrate = "23"; // High quality
-                break;
-            default:
-                throw new Exception("Invalid compression level.");
-        }
-            
-
-            var outputFilePath = Path.Combine(_uploadPath, bitrate + file.FileName);
-            // FFmpeg command
-            string ffmpegArgs = $"-i \"{tempFilePath}\" {"-c:v libx264 -pix_fmt yuv420p " + compressionArgs + " -threads 4 -preset superfast"} \"{outputFilePath}\"";
-            // Execute FFmpeg
-            var processInfo = new ProcessStartInfo
-            {
-                FileName = "ffmpeg",
-                Arguments = ffmpegArgs,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using (var process = new Process { StartInfo = processInfo })
-            {
-                process.Start();
-                string output = await process.StandardError.ReadToEndAsync(); // Capture errors
-                await process.WaitForExitAsync();
-
-                if (process.ExitCode != 0)
-                {
-                    throw new Exception($"FFmpeg failed: {output}");
-                }
-            }
-
-
-            return file.FileName;
-        }
-
-        public  void PrintImageMetadata(string imagePath)
-        {
-            // Load the image
-            using (Image image = Image.Load(imagePath))
-            {
-                Console.WriteLine($"Image loaded with dimensions: {image.Width}x{image.Height}");
-
-                // Check for EXIF metadata
-                if (image.Metadata.ExifProfile != null)
-                {
-                    Console.WriteLine("\nEXIF Metadata:");
-                    foreach (var tag in image.Metadata.ExifProfile.Values)
-                    {
-                        Console.WriteLine($"Tag: {tag.Tag}, Value: {tag.GetValue()}");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("\nNo EXIF metadata found in the image.");
-                }
-            }
-        }
-
-        // Extract EXIF data from the file using ExifTool
-        public Dictionary<string, string> ExtractExifData(string file)
-        {
-            var metadata = new Dictionary<string, string>();
-
-            try
-            {
-                // TODO:  Run ExifTool on the file and capture output
-                // nedded fields can be seen on ER diagram
-              
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error extracting EXIF data from {file}: {ex.Message}");
-            }
-
-            return metadata;
-        }
-
-        public void EditFile(string file, string action)
-        {
-            // Stub for editing file actions (crop, rotate, highlight, resize)
-            // Call respective helper for each action
-
-            switch (action.ToLower())
-            {
-                case "crop":
-                    // TODO: Call Crop function
-                    break;
-                case "rotate":
-                    // TODO: Call Rotate function
-                    break;
-                case "highlight":
-                    // TODO: Call Highlight function
-                    break;
-                case "resize":
-                    // TODO: Call Resize function
-                    break;
-                default:
-                    throw new ArgumentException("Unknown action");
-            }
-        }
-        
-        // Method to upload files to a project
-        public void UploadToProject(int projectId)
-        {
-            // Stub for uploading files to project
-            // TODO:
-            // - Validate if files ar`e added
-            // - Ensure project is selected
-            // - Set resolution (low, medium, high)
-        }
-    }
+//    }
+}
 }
