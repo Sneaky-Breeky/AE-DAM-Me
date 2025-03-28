@@ -17,8 +17,8 @@ File and Fileid assigned to know which file is referenced
 {
 
     public enum value_type {
-        String,
-        Integer
+        String=0,
+        Integer=1
     }
 
     public class MetadataTagModel
