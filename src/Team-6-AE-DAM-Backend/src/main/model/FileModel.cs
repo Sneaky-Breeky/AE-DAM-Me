@@ -18,12 +18,6 @@ Project that it was added to with id
 
 */
 {
-    public enum Resolution
-    {
-        Low = 0,
-        Medium = 1,
-        High = 2
-    }
     // some of the data might not be found on exif, so i changed some collumn to be nullable
     public class FileModel 
     {
@@ -40,7 +34,7 @@ Project that it was added to with id
         public required string OriginalPath { get; set; }
         public string Location { get; set; }
         
-        public Resolution Resolution { get; set; }
+        public ImageResolution Resolution { get; set; }
 
         public decimal? GPSLat { get; set; }
         public decimal? GPSLon { get; set; }
