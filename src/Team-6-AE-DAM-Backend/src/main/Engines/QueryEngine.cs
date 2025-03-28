@@ -10,7 +10,7 @@ namespace DAMBackend.Engine
 //    public string Name { get; set; }
     public string Status { get; set; }
     public string? Location { get; set; }
-     public DateTime StartDate { get; set; }
+    public DateTime StartDate { get; set; }
 
             public QueryEngine(string status, string location, DateTime date)
             {
