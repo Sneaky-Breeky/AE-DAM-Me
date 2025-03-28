@@ -21,7 +21,6 @@
          {
              _context = context;
          }
-
           [HttpPost("upload")]
                  public async Task<IActionResult> UploadFiles([FromForm] List<IFormFile> files, [FromForm] int userId)
                  {
@@ -38,22 +37,18 @@
                          {
                              try
                              {
-                                 // Process each file's EXIF data using ExifEngine
                                  var exifEngine = new ExifEngine(file, userId);
-                                 var fileModel = exifEngine.FileModel;
-
-                                 // Add the processed fileModel to the list
+                                 var fileModel = exifEngine.FileModelExif;
                                  fileModels.Add(fileModel);
                              }
                              catch (Exception ex)
                              {
-                                 // Log the error and continue with the next file
                                  return StatusCode(500, new { error = $"Failed to process {file.FileName}: {ex.Message}" });
                              }
                          }
                      }
-                     }
-                     }
-                     }
+          }
+}
+}
 
 

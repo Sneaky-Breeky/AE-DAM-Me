@@ -24,11 +24,11 @@ namespace DAMBackend.ExifEngine
 
 public class ExifEngine
     {
-    public FileModel FileModel { get; private set; }
+    public FileModel FileModelExif { get; private set; }
 
     public ExifEngine(IFormFile file, int userId)
     {
-        FileModel = ProcessImageToExif(file, "need to add", userId);
+        FileModelExif = ProcessImageToExif(file, "need to add", userId);
     }
 
  public FileModel ProcessImageToExif(IFormFile imageFile, string basePath, int userId){
