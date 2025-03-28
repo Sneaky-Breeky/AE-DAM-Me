@@ -156,8 +156,9 @@ ON DELETE CASCADE where appropriate s
 
         // Prereq: ProjectId references a valid Project
         public async Task<ProjectTagModel> addProjectTag(ProjectModel Project, string Key, string Value,
-            value_type v_type)
+            int type)
         {
+            value_type v_type = (value_type) type;
             var tag = new ProjectTagModel
             {
                 Project = Project,
@@ -169,12 +170,14 @@ ON DELETE CASCADE where appropriate s
             if (v_type == value_type.String)
             {
                 tag.sValue = Value;
+                tag.iValue = 0;
             }
             else
             {
                 try
                 {
                     tag.iValue = Int32.Parse(Value);
+                    tag.sValue = "";
                 }
                 catch (FormatException)
                 {
