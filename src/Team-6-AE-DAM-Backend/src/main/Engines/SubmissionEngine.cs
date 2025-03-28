@@ -323,6 +323,67 @@ namespace DAMBackend.SubmissionEngine
             };
         }
         
+        public async Task<IFormFile> GenerateMp4ThumbnailAsync(IFormFile videoFile)
+        {
+            if (videoFile == null || videoFile.Length == 0)
+                throw new Exception("Invalid video file.");
+        
+            var fileExtension = Path.GetExtension(videoFile.FileName).ToLowerInvariant();
+            if (fileExtension != ".mp4")
+                throw new Exception("Only MP4 files are supported.");
+        
+            // Save the video to a temporary file so FFmpeg can access it
+            string tempVideoPath = Path.GetTempFileName() + ".mp4";
+            string tempThumbnailPath = Path.GetTempFileName() + ".jpg";
+        
+            await using (var stream = new FileStream(tempVideoPath, FileMode.Create))
+            {
+                await videoFile.CopyToAsync(stream);
+            }
+
+            string timestamp = "00:00:01";
+            // FFmpeg arguments: extract a frame at the given timestamp
+            string ffmpegArgs = $"-ss {timestamp} -i \"{tempVideoPath}\" -frames:v 1 -q:v 2 \"{tempThumbnailPath}\"";
+        
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = "ffmpeg",
+                Arguments = ffmpegArgs,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+        
+            using (var process = new Process { StartInfo = processInfo })
+            {
+                process.Start();
+                string output = await process.StandardError.ReadToEndAsync(); // Capture FFmpeg logs
+                await process.WaitForExitAsync();
+        
+                if (process.ExitCode != 0)
+                {
+                    throw new Exception($"FFmpeg thumbnail generation failed: {output}");
+                }
+            }
+        
+            // Load the thumbnail into memory
+            var thumbnailStream = new MemoryStream(await File.ReadAllBytesAsync(tempThumbnailPath));
+            thumbnailStream.Position = 0;
+        
+            // Clean up temporary files
+            File.Delete(tempVideoPath);
+            File.Delete(tempThumbnailPath);
+        
+            // Create and return an IFormFile
+            string thumbnailFileName = Path.GetFileNameWithoutExtension(videoFile.FileName) + "_thumbnail.jpg";
+            return new FormFile(thumbnailStream, 0, thumbnailStream.Length, "thumbnail", thumbnailFileName)
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "image/jpeg"
+            };
+        }
+        
         public FileModel ProcessImageMetadataJpgPng(IFormFile imageFile, string basePath, UserModel currentUser)
         {
             // Validate input

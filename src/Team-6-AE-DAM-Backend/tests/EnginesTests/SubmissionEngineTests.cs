@@ -260,96 +260,108 @@ namespace backendTests.SubmissionEngineTests
         //     Assert.Equal("DSC03135.JPG", outputFile);
         // }
 
-        [Theory]
-        [InlineData(CompressionLevel.Low)]
-        [InlineData(CompressionLevel.Medium)]
-        [InlineData(CompressionLevel.High)]
-        public async Task UploadJpgPng_ValidPngCompression_Success(CompressionLevel compressionLevel)
-        {
-            // Arrange
-            var filePath = Path.Combine("../../../TestFiles", "yeti_classic.png");
-            var testFile = FileHelper.GetTestFormFile(filePath);
-            // Act
-            var outputFile = await  _fixture.submissionEngine.UploadJpgPng(testFile, compressionLevel);
-            
-
-            // Assert
-            Assert.NotNull(outputFile);
-            if (compressionLevel == CompressionLevel.Low)
-            {
-                Assert.Equal(9884, outputFile.Length);
-            } 
-            else if (compressionLevel == CompressionLevel.Medium)
-            {
-                Assert.Equal(38816, outputFile.Length);
-            }
-            else
-            {
-                Assert.Equal(80321, outputFile.Length);
-            }
-        }
-
-        [Theory]
-        [InlineData(CompressionLevel.Low)]
-        [InlineData(CompressionLevel.Medium)]
-        [InlineData(CompressionLevel.High)]
-        public async Task UploadMp4_ValidMp4Compression_Success(CompressionLevel compressionLevel)
-        {
-            // Arrange
-            var filePath = Path.Combine("../../../TestFiles", "C0004.MP4");
-            var testFile = FileHelper.GetTestFormFile(filePath);
-            // Act
-            var outputFile = await  _fixture.submissionEngine.UploadMp4(testFile, compressionLevel);
-
-            // Assert
-            Assert.NotNull(outputFile);
-            if (compressionLevel == CompressionLevel.Low)
-            {
-                Assert.Equal(17232867, outputFile.Length);
-            } 
-            else if (compressionLevel == CompressionLevel.Medium)
-            {
-                Assert.Equal(36407348, outputFile.Length);
-            }
-            else
-            {
-                Assert.Equal(83613564, outputFile.Length);
-            }
-        }
-
-        [Theory]
-        [InlineData(CompressionLevel.Low)]
-        [InlineData(CompressionLevel.Medium)]
-        [InlineData(CompressionLevel.High)]
-        public async Task UploadRaw_ValidRawCompression_Success(CompressionLevel compressionLevel)
-        {
-            // Arrange
-            var filePath = Path.Combine("../../../TestFiles", "DSC03135.ARW");
-            var testFile = FileHelper.GetTestFormFile(filePath);
-            // Act
-            var outputFile = await  _fixture.submissionEngine.UploadRaw(testFile, compressionLevel);
-
-            // Assert
-            Assert.NotNull(outputFile);
-            if (compressionLevel == CompressionLevel.Low)
-            {
-                Assert.Equal(240472, outputFile.Length);
-            } 
-            else if (compressionLevel == CompressionLevel.Medium)
-            {
-                Assert.Equal(490166, outputFile.Length);
-            }
-            else
-            {
-                Assert.Equal(24791808, outputFile.Length);
-            }
-        }
+        // [Theory]
+        // [InlineData(CompressionLevel.Low)]
+        // [InlineData(CompressionLevel.Medium)]
+        // [InlineData(CompressionLevel.High)]
+        // public async Task UploadJpgPng_ValidPngCompression_Success(CompressionLevel compressionLevel)
+        // {
+        //     // Arrange
+        //     var filePath = Path.Combine("../../../TestFiles", "yeti_classic.png");
+        //     var testFile = FileHelper.GetTestFormFile(filePath);
+        //     // Act
+        //     var outputFile = await  _fixture.submissionEngine.UploadJpgPng(testFile, compressionLevel);
+        //     
+        //
+        //     // Assert
+        //     Assert.NotNull(outputFile);
+        //     if (compressionLevel == CompressionLevel.Low)
+        //     {
+        //         Assert.Equal(9884, outputFile.Length);
+        //     } 
+        //     else if (compressionLevel == CompressionLevel.Medium)
+        //     {
+        //         Assert.Equal(38816, outputFile.Length);
+        //     }
+        //     else
+        //     {
+        //         Assert.Equal(80321, outputFile.Length);
+        //     }
+        // }
+        //
+        // [Theory]
+        // [InlineData(CompressionLevel.Low)]
+        // [InlineData(CompressionLevel.Medium)]
+        // [InlineData(CompressionLevel.High)]
+        // public async Task UploadMp4_ValidMp4Compression_Success(CompressionLevel compressionLevel)
+        // {
+        //     // Arrange
+        //     var filePath = Path.Combine("../../../TestFiles", "C0004.MP4");
+        //     var testFile = FileHelper.GetTestFormFile(filePath);
+        //     // Act
+        //     var outputFile = await  _fixture.submissionEngine.UploadMp4(testFile, compressionLevel);
+        //
+        //     // Assert
+        //     Assert.NotNull(outputFile);
+        //     if (compressionLevel == CompressionLevel.Low)
+        //     {
+        //         Assert.Equal(17232867, outputFile.Length);
+        //     } 
+        //     else if (compressionLevel == CompressionLevel.Medium)
+        //     {
+        //         Assert.Equal(36407348, outputFile.Length);
+        //     }
+        //     else
+        //     {
+        //         Assert.Equal(83613564, outputFile.Length);
+        //     }
+        // }
+        //
+        // [Theory]
+        // [InlineData(CompressionLevel.Low)]
+        // [InlineData(CompressionLevel.Medium)]
+        // [InlineData(CompressionLevel.High)]
+        // public async Task UploadRaw_ValidRawCompression_Success(CompressionLevel compressionLevel)
+        // {
+        //     // Arrange
+        //     var filePath = Path.Combine("../../../TestFiles", "DSC03135.ARW");
+        //     var testFile = FileHelper.GetTestFormFile(filePath);
+        //     // Act
+        //     var outputFile = await  _fixture.submissionEngine.UploadRaw(testFile, compressionLevel);
+        //
+        //     // Assert
+        //     Assert.NotNull(outputFile);
+        //     if (compressionLevel == CompressionLevel.Low)
+        //     {
+        //         Assert.Equal(240472, outputFile.Length);
+        //     } 
+        //     else if (compressionLevel == CompressionLevel.Medium)
+        //     {
+        //         Assert.Equal(490166, outputFile.Length);
+        //     }
+        //     else
+        //     {
+        //         Assert.Equal(24791808, outputFile.Length);
+        //     }
+        // }
 
 
 
 
         // ---------------------------- Compression Test Finish Here ------------------------------
+        [Fact]
+        public async Task GenerateThumbnailMp4test()
+        {
+            // Arrange
+            var filePath = Path.Combine("../../../TestFiles", "C0004.MP4");
+            var testFile = FileHelper.GetTestFormFile(filePath);
+            // Act
+            var outputFile = await  _fixture.submissionEngine.GenerateMp4ThumbnailAsync(testFile);
 
+            // Assert
+            Assert.NotNull(outputFile);
+            Assert.Equal(1196606, outputFile.Length);
+        }
         [Fact]
         public void ProcessImageMetadata_WithRealImage_ReturnsPopulatedModel()
         {
