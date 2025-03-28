@@ -26,18 +26,21 @@ namespace DAMBackend.SubmissionEngine
     }
     public class SubmissionEngine
     {
-        public SubmissionEngine(List<IFormFile> files, CompressionLevel compressLevel){
+        public SubmissionEngine(){
         }
 
-        public async Task<List<string>> UploadFiles(List<IFormFile> files)
+        public async void UploadFiles(List<IFormFile> files, CompressionLevel compressLevel)
         {
             if (files.Count > 100){
                 return;
             }
-            List<IFormFile> validFiles = filterValidFiles(files);
-            List<IFormFile> compressedFiles = filterValidFiles(validFiles);
+            List<IFormFile> validFiles = await filterValidFiles(files);
+//            get exif data
+//            put exif to database
+            List<IFormFile> compressedFiles = await CompressFiles(validFiles,compressLevel);
+
         }
-         public async Task<List<string>> filterValidFiles(List<IFormFile> files) {
+         public async Task<List<IFormFile>> filterValidFiles(List<IFormFile> files) {
                List<IFormFile> validFiles = new List<IFormFile>();
                var allowedExtensionsPhoto = new[] { ".jpg", ".jpeg", ".png", ".raw", ".arw" };
                var allowedExtensionsVideo = new[] { ".mp4" };
@@ -49,17 +52,18 @@ namespace DAMBackend.SubmissionEngine
                 if (file == null  || file.Length == 0){
                 continue;
                 }
-                if (!allowedExtensionsPhoto.Contains(fileExtension) && !allowedExtensionsVideo.Contains(fileExtension))
-               || (file.Length > 500 * 1024 * 1024))
+                if ((!allowedExtensionsPhoto.Contains(fileExtension) &&
+                    !allowedExtensionsVideo.Contains(fileExtension))||
+                    (file.Length > 500 * 1024 * 1024))
                 {
                     continue;
                 }
-                validFile.Add(file);
+                validFiles.Add(file);
                 }
             return validFiles;
         }
 
-        public async Task<string> CompressFiles(List<IFormFile> files, CompressionLevel compressLevel)
+        public async Task<List<IFormFile>> CompressFiles(List<IFormFile> files, CompressionLevel compressLevel)
         {
         List<IFormFile> compressFiles = new List<IFormFile>();
         var allowedExtensionsPhoto = new[] { ".jpg", ".jpeg", ".png", ".raw", ".arw" };
@@ -68,18 +72,18 @@ namespace DAMBackend.SubmissionEngine
         foreach (var file in files){
             var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
             if(fileExtension == ".jpg" || fileExtension == ".jpeg"|| fileExtension == ".png"){
-                compressFiles.Add(CompressJpgPng(file,compressLevel));
+                compressFiles.Add(await CompressJpgPng(file,compressLevel));
             }
             else if(fileExtension == ".raw" || fileExtension == ".arw"){
-                 compressFiles.Add(CompressJpgPng(file,compressLevel));
+                 compressFiles.Add(await CompressRaw(file,compressLevel));
             }
             else if(fileExtension == ".mp4"){
-                compressFiles.Add(CompressMp4(file,compressLevel));
+                compressFiles.Add(await CompressMp4(file,compressLevel));
             }
            }
            return compressFiles;
         }
-        public async Task<string> CompressJpgPng(IFormFile file, CompressionLevel option){
+        public async Task<IFormFile> CompressJpgPng(IFormFile file, CompressionLevel option){
             int quality;
             int maxWidth;
                         int maxHeight;
@@ -132,12 +136,163 @@ namespace DAMBackend.SubmissionEngine
                         return compressedFile;
         }
 
-       	public async Task<string> CompressRaw(IFormFile file, CompressionLevel option){
-       	    return file;
+       	public async Task<IFormFile> CompressRaw(IFormFile file, CompressionLevel option){
+       	    if (file == null || file.Length == 0)
+                        {
+                            throw new Exception("Invalid file.");
+                        }
+
+                        var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                        var allowedExtensionsRaw = new[] { ".arw", ".cr2", ".nef", ".dng" };
+
+                        if (!allowedExtensionsRaw.Contains(fileExtension))
+                        {
+                            throw new Exception("Unsupported RAW file format.");
+                        }
+
+                        if (option == CompressionLevel.High)
+                        {
+                            // Return original RAW file as-is
+                            var rawStream = new MemoryStream();
+                            await file.CopyToAsync(rawStream);
+                            rawStream.Position = 0;
+
+                            return new FormFile(rawStream, 0, rawStream.Length, file.Name, file.FileName)
+                            {
+                                Headers = file.Headers,
+                                ContentType = file.ContentType
+                            };
+                        }
+
+                        // Proceed with compression logic for Medium/Low
+                        uint quality = option == CompressionLevel.Medium ? 60u : 20u;
+
+                        try
+                        {
+                            using (var stream = file.OpenReadStream())
+                            {
+                                var settings = new MagickReadSettings
+                                {
+                                    Density = new Density(300)
+                                };
+
+                                settings.Format = fileExtension switch
+                                {
+                                    ".cr2" => MagickFormat.Cr2,
+                                    ".nef" => MagickFormat.Nef,
+                                    ".arw" => MagickFormat.Arw,
+                                    ".dng" => MagickFormat.Dng,
+                                    _ => settings.Format
+                                };
+
+                                using (var image = new MagickImage(stream, settings))
+                                {
+                                    image.AutoOrient();
+                                    image.Format = MagickFormat.Jpeg;
+                                    image.Quality = quality;
+
+                                    var outputStream = new MemoryStream();
+                                    await image.WriteAsync(outputStream);
+                                    outputStream.Position = 0;
+
+                                    var newFileName = Path.ChangeExtension(file.FileName, ".jpg");
+
+                                    return new FormFile(outputStream, 0, outputStream.Length, file.Name, newFileName)
+                                    {
+                                        Headers = file.Headers,
+                                        ContentType = "image/jpeg"
+                                    };
+                                }
+                            }
+                        }
+                        catch (MagickCoderErrorException ex)
+                        {
+                            throw new Exception($"Failed to process RAW file: {ex.Message}", ex);
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new Exception($"Unexpected error during RAW file processing: {ex.Message}", ex);
+                        }
        	}
 
-        public async Task<string> CompressMp4(IFormFile file, CompressionLevel option){
-            return file;
+        public async Task<IFormFile> CompressMp4(IFormFile file, CompressionLevel option){
+            if (file == null || file.Length == 0)
+                            throw new Exception("Invalid file.");
+
+                        var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                        if (fileExtension != ".mp4")
+                            throw new Exception("Only MP4 files are supported.");
+
+                        if (option == CompressionLevel.High)
+                        {
+                            // Return original file as-is
+                            var rawStream = new MemoryStream();
+                            await file.CopyToAsync(rawStream);
+                            rawStream.Position = 0;
+
+                            return new FormFile(rawStream, 0, rawStream.Length, file.Name, file.FileName)
+                            {
+                                Headers = file.Headers,
+                                ContentType = file.ContentType
+                            };
+                        }
+
+                        // Save the uploaded file to a temp location
+                        var tempInputPath = Path.GetTempFileName() + ".mp4";
+                        var tempOutputPath = Path.GetTempFileName() + "_compressed.mp4";
+
+                        await using (var stream = new FileStream(tempInputPath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        // Define compression args
+                        string compressionArgs = option switch
+                        {
+                            CompressionLevel.Low => "-crf 32",
+                            CompressionLevel.Medium => "-crf 28",
+                            _ => throw new Exception("Invalid compression level.") // Already handled High
+                        };
+
+                        string ffmpegArgs = $"-i \"{tempInputPath}\" -c:v libx264 -pix_fmt yuv420p {compressionArgs} -threads 4 -preset superfast \"{tempOutputPath}\"";
+
+                        var processInfo = new ProcessStartInfo
+                        {
+                            FileName = "ffmpeg",
+                            Arguments = ffmpegArgs,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        };
+
+                        using (var process = new Process { StartInfo = processInfo })
+                        {
+                            process.Start();
+                            string output = await process.StandardError.ReadToEndAsync(); // Capture FFmpeg logs
+                            await process.WaitForExitAsync();
+
+                            if (process.ExitCode != 0)
+                            {
+                                throw new Exception($"FFmpeg failed: {output}");
+                            }
+                        }
+
+                        // Load compressed video into memory stream
+                        var memoryStream = new MemoryStream(await File.ReadAllBytesAsync(tempOutputPath));
+                        memoryStream.Position = 0;
+
+                        // Clean up temp files
+                        File.Delete(tempInputPath);
+                        File.Delete(tempOutputPath);
+
+                        // Return compressed video as IFormFile
+                        var newFileName = Path.ChangeExtension(file.FileName, ".mp4");
+                        return new FormFile(memoryStream, 0, memoryStream.Length, file.Name, newFileName)
+                        {
+                            Headers = file.Headers,
+                            ContentType = "video/mp4"
+                        };
         }
 
 
@@ -352,5 +507,7 @@ namespace DAMBackend.SubmissionEngine
 //            // - Ensure project is selected
 //            // - Set resolution (low, medium, high)
 //        }
+
 //    }
+}
 }
