@@ -35,10 +35,7 @@ namespace DAMBackend.SubmissionEngine
                 return;
             }
             List<IFormFile> validFiles = await filterValidFiles(files);
-//            get exif data
-//            put exif to database
             List<IFormFile> compressedFiles = await CompressFiles(validFiles,compressLevel);
-
         }
          public async Task<List<IFormFile>> filterValidFiles(List<IFormFile> files) {
                List<IFormFile> validFiles = new List<IFormFile>();
