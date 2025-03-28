@@ -33,7 +33,7 @@ namespace DAMBackend.Controllers
             return Ok(files);
         }
 
-        // GET: api/Files/5
+        // GET: api/Files/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<FileModel>> GetFile(int id)
         {
@@ -47,7 +47,7 @@ namespace DAMBackend.Controllers
             return Ok(@file);
         }
 
-        // PUT: api/Files/5
+        // PUT: api/Files/{id}
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutFile(int id, FileModel @file)
@@ -77,11 +77,25 @@ namespace DAMBackend.Controllers
 
             return NoContent();
         }
+        
+        /*
+         * Must be called with AddFiles
+         * Example FileDTO
+         * [
+              {
+                "date": "2024-03-25T12:30:00Z",
+                "metadata": ["tag1", "tag2"],
+                "projectId": 123,
+                "location": "New York",
+                "filePath": "https://example.com/image1.jpg",
+                "userId": 456,
+                "palette": true,
+                "resolution": "High"
+              }
+            ]
+         */
 
-        // POST: api/Files
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-
-        // Call function in submission engine
+        // POST: api/Files/upload
         [HttpPost("upload")]
         [Consumes("multipart/form-data")]
         public async Task<ActionResult<List<FileModel>>> UploadFiles(List<IFormFile> files)
@@ -123,11 +137,12 @@ namespace DAMBackend.Controllers
             return Ok(filesLinks);
         }
 
+        // POST: api/Files
         [HttpPost]
         public async Task<ActionResult<List<FileModel>>> AddFiles(List<FileDTO> files)
         {
             // Check if the number of files exceeds 100
-            if (files.Count > 100)
+            if (files.Count > 100) 
             {
                 return BadRequest("You can upload a maximum of 100 files at once.");
             }
@@ -156,11 +171,12 @@ namespace DAMBackend.Controllers
 
                 FileModel fileModel = new FileModel
                 {
-                    Id = _context.Files
-                                        .Select(f => f.Id)
-                                        .AsEnumerable()
-                                        .DefaultIfEmpty(0)
-                                        .Max(),
+                    // Id assigned automatically on backend
+                    // Id = _context.Files
+                    //                     .Select(f => f.Id)
+                    //                     .AsEnumerable()
+                    //                     .DefaultIfEmpty(0)
+                    //                     .Max(),
                     Name = Path.GetFileName(new Uri(file.filePath).LocalPath),
                     Extension = Path.GetExtension(new Uri(file.filePath).LocalPath),
                     Description = "",
