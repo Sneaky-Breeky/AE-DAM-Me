@@ -26,8 +26,18 @@ namespace DAMBackend.Controllers
         }
 
         // GET: api/Files
+        [HttpGet("{userId}/palette")]
+        public async Task<ActionResult<IEnumerable<FileModel>>> GetFiles(int userId)
+        {
+            var files = await _context.Files
+                              .Where(f => f.UserId == userId && f.Palette)
+                              .Include(f => f.bTags)
+                              .ToListAsync();
+            return Ok(files);
+        }
+         // GET: api/Files
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<FileModel>>> GetFiles()
+        public async Task<ActionResult<IEnumerable<FileModel>>> GetFilesFromPalette()
         {
             var files = await _context.Files.ToListAsync();
             return Ok(files);
@@ -77,25 +87,11 @@ namespace DAMBackend.Controllers
 
             return NoContent();
         }
-        
-        /*
-         * Must be called with AddFiles
-         * Example FileDTO
-         * [
-              {
-                "date": "2024-03-25T12:30:00Z",
-                "metadata": ["tag1", "tag2"],
-                "projectId": 123,
-                "location": "New York",
-                "filePath": "https://example.com/image1.jpg",
-                "userId": 456,
-                "palette": true,
-                "resolution": "High"
-              }
-            ]
-         */
 
-        // POST: api/Files/upload
+        // POST: api/Files
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+
+        // Call function in submission engine
         [HttpPost("upload")]
         [Consumes("multipart/form-data")]
         public async Task<ActionResult<List<FileModel>>> UploadFiles(List<IFormFile> files)
@@ -137,16 +133,30 @@ namespace DAMBackend.Controllers
             return Ok(filesLinks);
         }
 
-        // POST: api/Files
         [HttpPost]
         public async Task<ActionResult<List<FileModel>>> AddFiles(List<FileDTO> files)
         {
             // Check if the number of files exceeds 100
-            if (files.Count > 100) 
+            if (files.Count > 100)
             {
                 return BadRequest("You can upload a maximum of 100 files at once.");
             }
+
+            //Delete any old file before inserting
+            var filesToDelete = await _context.Files
+                .Where(f => f.UserId == files[0].userId && f.ProjectId == files[0].projectId)
+                .ToListAsync();
+
+            if (filesToDelete.Any())
+            {
+                _context.Files.RemoveRange(filesToDelete);
+                await _context.SaveChangesAsync();
+            }
+
             var savedFiles = new List<FileModel> { };
+            var tagsExists = new List<String>{};
+            var tagsDoNotExists = new List<String>{};
+            var existingTags = new List<TagBasicModel>{};
             foreach (var file in files)
             {
 
@@ -168,15 +178,29 @@ namespace DAMBackend.Controllers
                     updatedPath = await _azureBlobService.MoveBlobWithinContainerAsync("palettes", Path.GetFileName(new Uri(file.filePath).LocalPath), "projects");
                 }
                 var dimensions = FileEngine.GetDimensions(file.filePath);
+                
+                foreach(var _file in files){
+                    foreach(var tag in _file.metadata){
+                        bool exists = await TagExistsAsync(tag);
+                        if(exists){
+                            tagsExists.Add(tag);
+                        }else{
+                            tagsDoNotExists.Add(tag);
+                        }
+                    }
+                }
+                
+                existingTags = await _context.BasicTags
+                .Where(t => tagsExists.Contains(t.Value))
+                .ToListAsync();
+                
+                var newTags = tagsDoNotExists
+                .Where(t => !existingTags.Any(et => et.Value == t))
+                .Select(t => new TagBasicModel { Value = t })
+                .ToHashSet();
 
                 FileModel fileModel = new FileModel
                 {
-                    // Id assigned automatically on backend
-                    // Id = _context.Files
-                    //                     .Select(f => f.Id)
-                    //                     .AsEnumerable()
-                    //                     .DefaultIfEmpty(0)
-                    //                     .Max(),
                     Name = Path.GetFileName(new Uri(file.filePath).LocalPath),
                     Extension = Path.GetExtension(new Uri(file.filePath).LocalPath),
                     Description = "",
@@ -189,18 +213,44 @@ namespace DAMBackend.Controllers
                     Project = project,
                     Palette = file.palette,
                     ProjectId = file.projectId,
-                    bTags = file.metadata
-                                .Where(t => !string.IsNullOrWhiteSpace(t))
-                                .Select(t => new TagBasicModel { Value = t })
-                                .ToHashSet(),
                     PixelHeight = dimensions.HasValue ? dimensions.Value.Height : 0,
-                    PixelWidth = dimensions.HasValue ? dimensions.Value.Width : 0
+                    PixelWidth = dimensions.HasValue ? dimensions.Value.Width : 0,
+                    bTags = newTags,
                 };
+                //call exif function and update fileModel object before saving
+                //addExifData(fileModel)
                 _context.Files.Add(fileModel);
                 savedFiles.Add(fileModel);
             }
-            return Ok(savedFiles);
+            await _context.SaveChangesAsync();
+            
+            foreach(var file in savedFiles){
+               foreach (var tag in existingTags)
+                {
+                    _context.FileTags.Add(new FileTag
+                    {
+                        FileId = file.Id,
+                        TagId = tag.Value
+                    });
+                }
+            }
+            
+            await _context.SaveChangesAsync();
+            var savedFileIds = savedFiles.Select(f => f.Id).ToList();
+
+            var filesWithTags = await _context.Files
+                .Where(f => savedFileIds.Contains(f.Id))
+                .Include(f => f.bTags) // Ensure tags are loaded
+                .ToListAsync();
+
+            return Ok(filesWithTags);
         }
+        public async Task<bool> TagExistsAsync(string tagValue)
+        {
+            return await _context.BasicTags.AnyAsync(t => t.Value == tagValue);
+        }
+
+
 
         // DELETE: api/Files/5
         [HttpDelete("{id}")]

@@ -3,8 +3,6 @@ using Microsoft.EntityFrameworkCore;
 namespace DAMBackend.Models
 
 {
-//
-//
     public class SQLDbContext : DbContext
     {
         public SQLDbContext(DbContextOptions<SQLDbContext> options) : base(options) { }
@@ -24,6 +22,8 @@ namespace DAMBackend.Models
         public DbSet<UserProjectRelation> UserProjectRelations { get; set; }
 
         public DbSet<LogImage> LogImage { get; set; }
+        
+        public DbSet<FileTag> FileTags { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) 
 

@@ -139,6 +139,7 @@ namespace DAMBackend.Migrations
                     b.Property<int>("FileId")
                         .HasColumnType("int");
 
+
                     b.Property<int>("ProjectId")
                         .HasColumnType("int");
 
@@ -146,7 +147,7 @@ namespace DAMBackend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("LogId", "UserId");
+                    b.HasKey("LogId");
 
                     b.HasIndex("FileId");
 
