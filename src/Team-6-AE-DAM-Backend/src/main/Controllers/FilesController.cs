@@ -9,6 +9,19 @@ using DAMBackend.Data;
 using DAMBackend.Models;
 using NuGet.Protocol;
 using DAMBackend.blob;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Processing;
+using Xabe.FFmpeg;
+using SixLabors.ImageSharp.Metadata;
+using SixLabors.ImageSharp.Metadata.Profiles.Exif;
+using DAMBackend.Models;
+using ImageMagick;
+using System.Diagnostics;
+using File = System.IO.File;
+using ImageSharpExif = SixLabors.ImageSharp.Metadata.Profiles.Exif;
+using ImageSharpExifTag = SixLabors.ImageSharp.Metadata.Profiles.Exif.ExifTag;
+
 
 namespace DAMBackend.Controllers
 {
@@ -220,19 +233,19 @@ namespace DAMBackend.Controllers
                 //call exif function and update fileModel object before saving
                 //addExifData(fileModel)
                 // ADDING EXIF
-                using (var stream = imageFile.OpenReadStream())
-                            using (var image = Image.Load(stream))
-                            {
-                                fileModel.PixelWidth = image.Width;
-                                fileModel.PixelHeight = image.Height;
-                                fileModel.Palette = true;
-
-                                var exifProfile = image.Metadata.ExifProfile;
-                                if (exifProfile != null)
-                                {
-                                    ExtractExifMetadata(exifProfile, fileModel);
-                                }
-                            }
+//                using (var stream = imageFile.OpenReadStream())
+//                            using (var image = Image.Load(stream))
+//                            {
+//                                fileModel.PixelWidth = image.Width;
+//                                fileModel.PixelHeight = image.Height;
+//                                fileModel.Palette = true;
+//
+//                                var exifProfile = image.Metadata.ExifProfile;
+//                                if (exifProfile != null)
+//                                {
+//                                    ExtractExifMetadata(exifProfile, fileModel);
+//                                }
+//                            }
                 //
                 _context.Files.Add(fileModel);
                 savedFiles.Add(fileModel);
@@ -365,4 +378,3 @@ namespace DAMBackend.Controllers
                 }
             }
     }
-}
