@@ -217,6 +217,7 @@ namespace DAMBackend.Controllers
                     PixelWidth = dimensions.HasValue ? dimensions.Value.Width : 0,
                     bTags = newTags,
                 };
+                // TODO: 
                 //call exif function and update fileModel object before saving
                 //addExifData(fileModel)
                 _context.Files.Add(fileModel);
@@ -245,7 +246,7 @@ namespace DAMBackend.Controllers
 
             return Ok(filesWithTags);
         }
-        public async Task<bool> TagExistsAsync(string tagValue)
+        private async Task<bool> TagExistsAsync(string tagValue)
         {
             return await _context.BasicTags.AnyAsync(t => t.Value == tagValue);
         }

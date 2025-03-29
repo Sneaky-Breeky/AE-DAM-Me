@@ -19,6 +19,8 @@ File and fileid that it is attached too
         // public int Id { get; set; }
         public required string Value { get; set; }
         [JsonIgnore]
+        public ICollection<ProjectModel> Projects { get; set; } = new HashSet<ProjectModel>();
+        [JsonIgnore]
         public ICollection<FileModel> Files { get; set; } = new HashSet<FileModel>();
     }
 }
