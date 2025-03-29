@@ -24,15 +24,12 @@
          [HttpGet("projectQuery/{status}/{location}/{startDate}/{endDate}")]
          public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjectQueryResult(string status, string location, DateTime startDate, DateTime endDate)
          {
-         // if (projectRequest == null){
-         //    return BadRequest("Invalid query request.");
-         // }
          var query = _context.Projects.AsQueryable();
-         if (!string.IsNullOrEmpty(status))
+         if (status != "nothing")
                      {
                          query = query.Where(upr => upr.Status == status);
                      }
-         if (!string.IsNullOrEmpty(location))
+         if (location != "nothing")
                      {
                          query = query.Where(upr => upr.Location == location);
                      }
@@ -46,10 +43,7 @@
                          query = query.Where(upr => upr.StartDate <= endDate);
                      }
          var projects = await query.ToListAsync();
-         if (projects == null || !projects.Any())
-                     {
-                         return NotFound("No projects found matching the given criteria.");
-                     }
+
          return Ok(projects);
          }
          // Query projects based on image tags
