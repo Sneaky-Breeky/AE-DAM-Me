@@ -11,7 +11,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddScoped<CsvEngine>();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "DAM Backend API",
+        Version = "v1",
+        Description = "API documentation for DAM Backend"
+    });
+});
+
 
 // var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
 // note: this one should reside in appsettings.json, not here!

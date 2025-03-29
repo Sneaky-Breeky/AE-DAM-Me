@@ -320,6 +320,7 @@ namespace DAMBackend.Controllers
 
 
         // DELETE: api/damprojects/{id}
+        // manually delete files
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProject(int id)
         {
@@ -328,8 +329,12 @@ namespace DAMBackend.Controllers
             {
                 return NotFound();
             }
-
-            _context.Projects.Remove(project);
+            var files = await _context.Files.Where(f => f.ProjectId == id).ToListAsync();
+            if (files.Any())
+            {
+                
+                _context.Files.RemoveRange(files);
+            }
             await _context.SaveChangesAsync();
 
             return NoContent();

@@ -38,7 +38,7 @@ File and Fileid assigned to know which file is referenced
 
         public required value_type type {get; set;}
 
-        
+
 
     }
 }

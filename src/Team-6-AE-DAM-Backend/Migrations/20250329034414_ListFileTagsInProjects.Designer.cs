@@ -4,6 +4,7 @@ using DAMBackend.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DAMBackend.Migrations
 {
     [DbContext(typeof(SQLDbContext))]
-    partial class SQLDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250329034414_ListFileTagsInProjects")]
+    partial class ListFileTagsInProjects
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -90,7 +93,7 @@ namespace DAMBackend.Migrations
                     b.Property<int?>("ProjectId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("Resolution")
+                    b.Property<int>("Resolution")
                         .HasColumnType("int");
 
                     b.Property<string>("ThumbnailPath")
@@ -184,21 +187,6 @@ namespace DAMBackend.Migrations
                     b.HasKey("FileId", "Key");
 
                     b.ToTable("MetadataTags");
-                });
-
-            modelBuilder.Entity("DAMBackend.Models.ProjectBasicTag", b =>
-                {
-                    b.Property<string>("BasicTagValue")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("int");
-
-                    b.HasKey("BasicTagValue", "ProjectId");
-
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("ProjectBasicTag");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.ProjectModel", b =>
@@ -338,6 +326,21 @@ namespace DAMBackend.Migrations
                     b.ToTable("UserProjectRelations");
                 });
 
+            modelBuilder.Entity("ProjectBasicTag", b =>
+                {
+                    b.Property<string>("BasicTagId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.HasKey("BasicTagId", "ProjectId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("ProjectBasicTag");
+                });
+
             modelBuilder.Entity("DAMBackend.Models.FileModel", b =>
                 {
                     b.HasOne("DAMBackend.Models.ProjectModel", "Project")
@@ -412,25 +415,6 @@ namespace DAMBackend.Migrations
                     b.Navigation("File");
                 });
 
-            modelBuilder.Entity("DAMBackend.Models.ProjectBasicTag", b =>
-                {
-                    b.HasOne("DAMBackend.Models.TagBasicModel", "BasicTag")
-                        .WithMany()
-                        .HasForeignKey("BasicTagValue")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DAMBackend.Models.ProjectModel", "Project")
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("BasicTag");
-
-                    b.Navigation("Project");
-                });
-
             modelBuilder.Entity("DAMBackend.Models.ProjectTagModel", b =>
                 {
                     b.HasOne("DAMBackend.Models.ProjectModel", "Project")
@@ -466,6 +450,21 @@ namespace DAMBackend.Migrations
                     b.Navigation("Project");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ProjectBasicTag", b =>
+                {
+                    b.HasOne("DAMBackend.Models.TagBasicModel", null)
+                        .WithMany()
+                        .HasForeignKey("BasicTagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAMBackend.Models.ProjectModel", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("DAMBackend.Models.FileModel", b =>
