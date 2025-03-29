@@ -111,28 +111,28 @@ ON DELETE CASCADE where appropriate s
 
         }
 
-        public TagBasicModel addTags(FileModel file, string value)
-        {
-
-            var tag = new TagBasicModel
-            {
-                Value = value
-            };
-
-            if (file != null)
-            {
-                tag.Files.Add(file);
-                file.bTags.Add(tag);
-            }
-            else
-            {
-                throw new Exception("File was not added to tag, please attach a File");
-            }
-
-            // database.Tags.Add(tag);
-            // await database.SaveChanges();
-            return tag;
-        }
+        // public TagBasicModel addTags(FileModel file, string value)
+        // {
+        //
+        //     var tag = new TagBasicModel
+        //     {
+        //         Value = value
+        //     };
+        //
+        //     if (file != null)
+        //     {
+        //         tag.Files.Add(file);
+        //         file.bTags.Add(tag);
+        //     }
+        //     else
+        //     {
+        //         throw new Exception("File was not added to tag, please attach a File");
+        //     }
+        //
+        //     // database.Tags.Add(tag);
+        //     // await database.SaveChanges();
+        //     return tag;
+        // }
 
         public async Task<ProjectModel> addProject(string name, string status, string location, string imagePath,
             string phase, AccessLevel al, DateTime lastUp, string desription, DateTime startDate)

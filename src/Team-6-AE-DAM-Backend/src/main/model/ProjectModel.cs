@@ -43,4 +43,13 @@ namespace DAMBackend.Models
         // Collection of tags with the files associated with this project
         public ICollection<TagBasicModel> bTagsFiles { get; set; } = new HashSet<TagBasicModel>();
     }
+    public class ProjectBasicTag
+    {
+        public int ProjectId { get; set; }
+        public ProjectModel Project { get; set; }
+
+        public string BasicTagValue { get; set; }
+        public TagBasicModel BasicTag { get; set; }
+
+    }
 }
