@@ -11,8 +11,8 @@
 
  namespace DAMBackend.Controllers
  {
-     [Route("api/[controller]")]
      [ApiController]
+     [Route("api/query")]
      public class QueryController : ControllerBase
      {
          private readonly SQLDbContext _context;
@@ -21,9 +21,7 @@
          {
              _context = context;
          }
-
-        
-        [HttpPost]
+         [HttpGet("projectQuery")]
          public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjectQueryResult(ProjectQueryRequest projectRequest)
          {
          if (projectRequest == null){
@@ -54,9 +52,31 @@
                      }
          return Ok(projects);
          }
+         // Query projects based on image tags
+         // get all images that contain the tag
+         // show all the projects associated wth those images
+         [HttpGet("projectImageQuery")]
+         public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjectQueryResult(string imageTag){
+
+             var imageFileQuery = _context.Files
+//                                             .Where(fm => fm.bTags.Contains(imageTag.Value))
+                                             .Select(fm => fm.ProjectId);
+
+             var projectIds = await imageFileQuery.ToListAsync();
+             if (projectIds == null || !projectIds.Any())
+                 {
+                     return NotFound("No images found with this tag.");
+                 }
+             var projectsQuery = _context.Projects.Where(p => projectIds.Contains(p.Id));
+             var projects = await projectsQuery.ToListAsync();
+             if (projects == null || !projects.Any())
+                 {
+                     return NotFound("No projects found matching the image tag.");
+                 }
+             return Ok(projects);
+
          }
-
-
+         }
 
      public class ProjectQueryRequest
      {
@@ -66,4 +86,3 @@
          public DateTime EndDate { get; set; } = DateTime.MinValue;
      }
  }
-
