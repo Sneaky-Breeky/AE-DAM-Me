@@ -11,6 +11,7 @@
 
  namespace DAMBackend.Controllers
  {
+     [Route("api/[controller]")]
      [ApiController]
      public class QueryController : ControllerBase
      {
@@ -21,6 +22,8 @@
              _context = context;
          }
 
+        
+        [HttpPost]
          public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjectQueryResult(ProjectQueryRequest projectRequest)
          {
          if (projectRequest == null){

@@ -81,7 +81,6 @@ export default function UserUpload() {
             const data = await response.json();
             if (data.length) {
                 handleProjectChange(data[0].projectId);
-                handleDateChange(data[0].dateTimeOriginal);
                 setLocation(data[0].location || "");
                 setSelectedDate(data[0].dateTimeOriginal.split("T")[0])
             }
@@ -247,6 +246,8 @@ export default function UserUpload() {
     };
 
     const handleProjectChange = (value) => {
+        if(!value) return;
+
         const selectedProject = projects.find(proj => proj.id === value);
         setProject(selectedProject);
         setFiles(prevFiles => prevFiles.map(file => ({ ...file, projectId: selectedProject.id })));
@@ -323,6 +324,7 @@ export default function UserUpload() {
     };
 
     const handleDateChange = (date, dateString) => {
+        if(!dateString) return;
         setSelectedDate(dateString);
         setFiles(prevFiles => prevFiles.map(file => ({ ...file, date: dateString })));
     };
@@ -516,7 +518,7 @@ export default function UserUpload() {
                             <Button style={{ margin: '10px' }} type="primary" color="cyan" variant="solid" onClick={handleUploadFilesToProject} disabled={files.length === 0 || project === null}>
                                 Upload Files to Project
                             </Button>
-                            <Button style={{ margin: '10px' }} type="secondary" color="green" variant="solid" disabled={files.length === 0 || project === null} onClick={handleUploadFilesToPalette}>
+                            <Button style={{ margin: '10px' }} type="secondary" color="green" variant="solid" disabled={files.length == 0} onClick={handleUploadFilesToPalette}>
                                 Save To Palette
                             </Button>
                         </div>
