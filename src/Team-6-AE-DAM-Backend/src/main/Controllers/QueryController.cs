@@ -38,7 +38,12 @@
                      }
          if (projectRequest.StartDate != DateTime.MinValue)
                      {
-                         query = query.Where(upr => upr.StartDate == projectRequest.StartDate);
+                         query = query.Where(upr => upr.StartDate >= projectRequest.StartDate);
+                     }
+
+         if (projectRequest.EndDate != DateTime.MinValue)
+                     {
+                         query = query.Where(upr => upr.StartDate <= projectRequest.EndDate);
                      }
          var projects = await query.ToListAsync();
          if (projects == null || !projects.Any())
@@ -55,7 +60,8 @@
      {
          public string Status { get; set; }
          public string? Location { get; set; }
-         public DateTime StartDate { get; set; }
+         public DateTime StartDate { get; set; } = DateTime.MinValue;
+         public DateTime EndDate { get; set; } = DateTime.MinValue;
      }
  }
 
