@@ -21,7 +21,7 @@
          {
              _context = context;
          }
-         [HttpGet("projectQuery")]
+         [HttpGet("projectQuery/{status}/{location}/{startDate}/{endDate}")]
          public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjectQueryResult(string status, string location, DateTime startDate, DateTime endDate)
          {
          if (projectRequest == null){
