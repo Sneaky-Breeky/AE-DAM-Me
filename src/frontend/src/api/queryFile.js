@@ -21,9 +21,9 @@ export async function fetchProjectsByDateRange({ StartDate, EndDate }) {
         //     body: JSON.stringify(body),
         // });
         
-        const sD = startDate ? new Date(startDate).toISOString() : '0001-01-01T00:00:00Z';
-        const eD = endDate ? new Date(endDate).toISOString() : '0001-01-01T00:00:00Z';
-        const url = ${QUERY_URL}/${status}/${location}/${formattedStartDate}/${formattedEndDate}`;
+        const sD = StartDate ? new Date(StartDate).toISOString() : '0001-01-01T00:00:00Z';
+        const eD = EndDate ? new Date(EndDate).toISOString() : '0001-01-01T00:00:00Z';
+        const url = `${QUERY_URL}/${null}/${null}/${sD}/${eD}`;
 
         const response = await fetch(url, {
             method: 'GET',
