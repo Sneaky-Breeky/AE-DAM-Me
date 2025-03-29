@@ -37,6 +37,10 @@ namespace DAMBackend.Models
         public ICollection<LogImage> Logs { get; set;} = new HashSet<LogImage>();
 
         public ICollection<ProjectTagModel> Tags { get; set; } = new HashSet<ProjectTagModel>();
+        
         public ICollection<UserProjectRelation> UserProjectRelations { get; set; } = new HashSet<UserProjectRelation>();
+        
+        // Collection of tags with the files associated with this project
+        public ICollection<TagBasicModel> bTagsFiles { get; set; } = new HashSet<TagBasicModel>();
     }
 }

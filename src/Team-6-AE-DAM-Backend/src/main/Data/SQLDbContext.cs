@@ -59,22 +59,47 @@ namespace DAMBackend.Models
                 .HasMany(f => f.mTags)
                 .WithOne(t => t.File)
                 .HasForeignKey(t => t.FileId)
-                .IsRequired();
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Many to many betwen file and basictag model
             modelBuilder.Entity<FileModel>()
                 .HasMany(f => f.bTags)
                 .WithMany(t => t.Files)
                 .UsingEntity<FileTag>(
-                    j => j.HasOne(ft => ft.Tag).WithMany().HasForeignKey(ft => ft.TagId),
-                    j => j.HasOne(ft => ft.File).WithMany().HasForeignKey(ft => ft.FileId),
+                    j => j.HasOne(ft => ft.Tag).WithMany().HasForeignKey(ft => ft.TagId)
+                        .OnDelete(DeleteBehavior.Restrict),
+                    j => j.HasOne(ft => ft.File).WithMany().HasForeignKey(ft => ft.FileId)
+                        .OnDelete(DeleteBehavior.Restrict),
                     j =>
                     {
-                        // Optionally, specify the table name if needed
                         j.ToTable("FileTag");
+                         // Or any other behavior you need
                     });
+            
+            // Many to many between project and basictag model
+            modelBuilder.Entity<ProjectModel>()
+                .HasMany(p => p.bTagsFiles)
+                .WithMany(tb => tb.Projects)
+                .UsingEntity<Dictionary<string, object>>(
+                    "ProjectBasicTag", // Name of the join table
+                    j => j.HasOne<TagBasicModel>()
+                        .WithMany()
+                        .HasForeignKey("BasicTagId"),
+                    j => j.HasOne<ProjectModel>()
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                );
+            
+            // One to many from projects to metadatatag model
+            // modelBuilder.Entity<ProjectModel>()
+            //     .HasMany(p => p.mTagsFiles)
+            //     .WithOne(mt => mt.Project)
+            //     .HasForeignKey(mt => mt.ProjectId)
+            //     .OnDelete(DeleteBehavior.Restrict);
+            
 
             // One to many from projects to files
+            // files will be deleted when project is deleted
             modelBuilder.Entity<ProjectModel>()
                 .HasMany(p => p.Files)
                 .WithOne(f => f.Project)

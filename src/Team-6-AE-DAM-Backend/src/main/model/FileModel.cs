@@ -38,7 +38,7 @@ Project that it was added to with id
         public required string ThumbnailPath { get; set; }
         public required string ViewPath { get; set; }
         public required string OriginalPath { get; set; }
-        public string Location { get; set; }
+        public string? Location { get; set; }
         
         public Resolution Resolution { get; set; }
 
