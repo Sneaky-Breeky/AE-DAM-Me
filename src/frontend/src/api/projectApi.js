@@ -338,7 +338,21 @@ export async function addProjectTag(ProjectId, Key, Value, type) {
             }
         });
 
-        if (!response.ok) {
+        // const response = await fetch(`${PROJECTS_URL}/tag/add`, {
+        //     method: "POST",
+        //     headers: {
+        //         "Content-Type": "application/json"
+        //     },
+        //     body: JSON.stringify({
+        //         ProjectId: ProjectId,
+        //         Key: Key,
+        //         Value: Value,
+        //         Type: type
+        //     })
+        // });
+        
+                
+                if (!response.ok) {
             const errorText = await response.text();
             try {
                 const errorData = JSON.parse(errorText);

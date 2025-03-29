@@ -4,7 +4,7 @@ import { Input, Typography, DatePicker, Button, Form, Select, Tag, Flex, Image, 
 import { PlusOutlined, RotateLeftOutlined, RotateRightOutlined, ExclamationCircleOutlined, CalendarOutlined, DownOutlined, CloseOutlined } from '@ant-design/icons';
 import Cropper from 'react-easy-crop';
 import dayjs from 'dayjs';
-import { addLog } from "../../api/logApi";
+import { addLog, addLogProject } from "../../api/logApi";
 import { API_BASE_URL } from '../../api/apiURL.js';
 import { Palette } from '@mui/icons-material';
 import { fetchProjectsForUser } from '../../api/projectApi';
@@ -101,6 +101,7 @@ export default function UserUpload() {
             const data = await response.json();
             if (data.length) {
                 handleProjectChange(data[0].projectId);
+                handleDateChange(data[0].dateTimeOriginal);
                 setLocation(data[0].location || "");
                 setSelectedDate(data[0].dateTimeOriginal.split("T")[0])
             }
@@ -414,7 +415,7 @@ export default function UserUpload() {
         setSelectedDate(dayjs().format('YYYY-MM-DD'));
         setLocation(null);
         setUploadSuccess(true);
-        addLog(user.id, 3, 'upload');
+        addLogProject(user.id, 3, 'upload');
 
     };
 
