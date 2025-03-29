@@ -24,8 +24,11 @@ namespace DAMBackend.Models
         public DbSet<LogImage> LogImage { get; set; }
         
         public DbSet<FileTag> FileTags { get; set; }
+        
+        public DbSet<ProjectBasicTag> ProjectBasicTag {get; set;}
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) 
+        
 
         {
             
@@ -80,14 +83,13 @@ namespace DAMBackend.Models
             modelBuilder.Entity<ProjectModel>()
                 .HasMany(p => p.bTagsFiles)
                 .WithMany(tb => tb.Projects)
-                .UsingEntity<Dictionary<string, object>>(
-                    "ProjectBasicTag", // Name of the join table
-                    j => j.HasOne<TagBasicModel>()
+                .UsingEntity<ProjectBasicTag>(
+                    j => j.HasOne(pt => pt.BasicTag)
                         .WithMany()
-                        .HasForeignKey("BasicTagId"),
-                    j => j.HasOne<ProjectModel>()
+                        .HasForeignKey(pt => pt.BasicTagValue),
+                    j => j.HasOne(pt => pt.Project)
                         .WithMany()
-                        .HasForeignKey("ProjectId")
+                        .HasForeignKey(pt => pt.ProjectId)
                 );
             
             // One to many from projects to metadatatag model

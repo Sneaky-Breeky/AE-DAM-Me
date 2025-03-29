@@ -18,12 +18,14 @@ namespace DAMBackend.Models
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public ImageResolution resolution { get; set; }
     }
+    
     public class MetadataTagDTO
     {
         public string Key { get; set; }
         public string Value { get; set; }
         public value_type Type { get; set; }
     }
+
     public enum ImageResolution
     {
         Low,
