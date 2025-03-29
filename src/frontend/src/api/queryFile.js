@@ -4,22 +4,32 @@ const QUERY_URL = `${API_BASE_URL}/api/query/projectQuery`;
 
 export async function fetchProjectsByDateRange({ StartDate, EndDate }) {
     try {
-        const defaultDate = '0001-01-01T00:00:00Z';
+        // const defaultDate = '0001-01-01T00:00:00Z';
 
-        const body = {
-            StartDate: StartDate || defaultDate,
-            EndDate: EndDate || defaultDate,
-            Status: null,
-            Location: null
-        };
+        // const body = {
+        //     StartDate: StartDate || defaultDate,
+        //     EndDate: EndDate || defaultDate,
+        //     Status: null,
+        //     Location: null
+        // };
+        // const response = await fetch(QUERY_URL, {
+        //     method: 'POST',
+        //     headers: {
+        //         'Content-Type': 'application/json',
+        //         Accept: 'application/json',
+        //     },
+        //     body: JSON.stringify(body),
+        // });
+        
+        const sD = startDate ? new Date(startDate).toISOString() : '0001-01-01T00:00:00Z';
+        const eD = endDate ? new Date(endDate).toISOString() : '0001-01-01T00:00:00Z';
+        const url = ${QUERY_URL}/${status}/${location}/${formattedStartDate}/${formattedEndDate}`;
 
-        const response = await fetch(QUERY_URL, {
-            method: 'POST',
+        const response = await fetch(url, {
+            method: 'GET',
             headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json',
+                'Accept': 'application/json',
             },
-            body: JSON.stringify(body),
         });
 
         if (!response.ok) {
