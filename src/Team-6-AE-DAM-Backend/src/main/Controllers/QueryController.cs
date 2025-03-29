@@ -24,9 +24,9 @@
          [HttpGet("projectQuery/{status}/{location}/{startDate}/{endDate}")]
          public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjectQueryResult(string status, string location, DateTime startDate, DateTime endDate)
          {
-         if (projectRequest == null){
-            return BadRequest("Invalid query request.");
-         }
+         // if (projectRequest == null){
+         //    return BadRequest("Invalid query request.");
+         // }
          var query = _context.Projects.AsQueryable();
          if (!string.IsNullOrEmpty(status))
                      {
