@@ -4,16 +4,15 @@ import { Input, Typography, DatePicker, Button, Form, Select, Tag, Flex, Image, 
 import { PlusOutlined, RotateLeftOutlined, RotateRightOutlined, ExclamationCircleOutlined, CalendarOutlined, DownOutlined, CloseOutlined } from '@ant-design/icons';
 import Cropper from 'react-easy-crop';
 import dayjs from 'dayjs';
-import { projects, users } from '../../utils/dummyData.js';
 import { addLog } from "../../api/logApi";
 import { API_BASE_URL } from '../../api/apiURL.js';
-import { useAuth } from '../../contexts/AuthContext.js';
 import { Palette } from '@mui/icons-material';
+import { fetchProjectsForUser } from '../../api/projectApi';
 import { useEffect } from "react";
+import { useAuth } from '../../contexts/AuthContext';
 
 const { Title } = Typography;
 const { confirm } = Modal;
-const userID = 10;
 const projectId = 6;
 
 const tagStyle = {
@@ -34,12 +33,11 @@ export default function UserUpload() {
     const [taggingMode, setTaggingMode] = useState(false);
     const [selectedFiles, setSelectedFiles] = useState(new Set());
     const [userFiles, setUserFiles] = useState([]);
-    const { user } = useAuth();
     const [spinning, setSpinning] = React.useState(false);
     const [percent, setPercent] = React.useState(0);
 
 
-
+    const [userProjects, setUserProjects] = useState([]);
     const [project, setProject] = useState(null);
     const [metadataTagsInput, setMetadataTagsInput] = useState();
     const [metadataTags, setMetadataTags] = useState([]);
@@ -57,6 +55,28 @@ export default function UserUpload() {
         marginBottom: '12px',
         width: '100%'
     };
+
+    const { user } = useAuth();
+
+
+    useEffect(() => {
+        const fetchPaletteAndProjects = async () => {
+            await getUserPalette();
+            if (user?.id) {
+                const result = await fetchProjectsForUser(user.id);
+                if (!result.error) {
+                    setUserProjects(result);
+                } else {
+                    console.error("Failed to load projects:", result.error);
+                }
+            }
+        };
+
+        fetchPaletteAndProjects();
+    }, [user]);
+
+    
+    
     useEffect(() => {
         const fetchPalette = async () => {
             await getUserPalette();
@@ -81,7 +101,6 @@ export default function UserUpload() {
             const data = await response.json();
             if (data.length) {
                 handleProjectChange(data[0].projectId);
-                handleDateChange(data[0].dateTimeOriginal);
                 setLocation(data[0].location || "");
                 setSelectedDate(data[0].dateTimeOriginal.split("T")[0])
             }
@@ -247,7 +266,9 @@ export default function UserUpload() {
     };
 
     const handleProjectChange = (value) => {
-        const selectedProject = projects.find(proj => proj.id === value);
+        if(!value) return;
+
+        const selectedProject = userProjects.find(proj => proj.id === value);
         setProject(selectedProject);
         setFiles(prevFiles => prevFiles.map(file => ({ ...file, projectId: selectedProject.id })));
     };
@@ -323,6 +344,7 @@ export default function UserUpload() {
     };
 
     const handleDateChange = (date, dateString) => {
+        if(!dateString) return;
         setSelectedDate(dateString);
         setFiles(prevFiles => prevFiles.map(file => ({ ...file, date: dateString })));
     };
@@ -380,7 +402,7 @@ export default function UserUpload() {
         await saveFiles(filesToSave);
         setSpinning(false);
         userFiles.forEach(file => {
-            addLog(userID, file.id, projectId, 'upload');
+            addLog(user.id, file.id, projectId, 'upload');
         });
 
 
@@ -392,7 +414,7 @@ export default function UserUpload() {
         setSelectedDate(dayjs().format('YYYY-MM-DD'));
         setLocation(null);
         setUploadSuccess(true);
-        addLog(userID, 3, 'upload');
+        addLog(user.id, 3, 'upload');
 
     };
 
@@ -516,7 +538,7 @@ export default function UserUpload() {
                             <Button style={{ margin: '10px' }} type="primary" color="cyan" variant="solid" onClick={handleUploadFilesToProject} disabled={files.length === 0 || project === null}>
                                 Upload Files to Project
                             </Button>
-                            <Button style={{ margin: '10px' }} type="secondary" color="green" variant="solid" disabled={files.length === 0 || project === null} onClick={handleUploadFilesToPalette}>
+                            <Button style={{ margin: '10px' }} type="secondary" color="green" variant="solid" disabled={files.length == 0} onClick={handleUploadFilesToPalette}>
                                 Save To Palette
                             </Button>
                         </div>
@@ -535,7 +557,7 @@ export default function UserUpload() {
                         filterOption={(input, option) =>
                             (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                         }
-                        options={projects.map(proj => ({
+                        options={userProjects.map(proj => ({
                             value: proj.id,
                             label: `${proj.id}: ${proj.name}`
                         }))}
