@@ -22,28 +22,28 @@
              _context = context;
          }
          [HttpGet("projectQuery")]
-         public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjectQueryResult(ProjectQueryRequest projectRequest)
+         public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjectQueryResult(string status, string location, DateTime startDate, DateTime endDate)
          {
          if (projectRequest == null){
             return BadRequest("Invalid query request.");
          }
          var query = _context.Projects.AsQueryable();
-         if (!string.IsNullOrEmpty(projectRequest.Status))
+         if (!string.IsNullOrEmpty(status))
                      {
-                         query = query.Where(upr => upr.Status == projectRequest.Status);
+                         query = query.Where(upr => upr.Status == status);
                      }
-         if (!string.IsNullOrEmpty(projectRequest.Location))
+         if (!string.IsNullOrEmpty(location))
                      {
-                         query = query.Where(upr => upr.Location == projectRequest.Location);
+                         query = query.Where(upr => upr.Location == location);
                      }
-         if (projectRequest.StartDate != DateTime.MinValue)
+         if (startDate != DateTime.MinValue)
                      {
-                         query = query.Where(upr => upr.StartDate >= projectRequest.StartDate);
+                         query = query.Where(upr => upr.StartDate >= startDate);
                      }
 
-         if (projectRequest.EndDate != DateTime.MinValue)
+         if (endDate != DateTime.MinValue)
                      {
-                         query = query.Where(upr => upr.StartDate <= projectRequest.EndDate);
+                         query = query.Where(upr => upr.StartDate <= endDate);
                      }
          var projects = await query.ToListAsync();
          if (projects == null || !projects.Any())
@@ -78,11 +78,11 @@
          }
          }
 
-     public class ProjectQueryRequest
-     {
-         public string Status { get; set; }
-         public string? Location { get; set; }
-         public DateTime StartDate { get; set; } = DateTime.MinValue;
-         public DateTime EndDate { get; set; } = DateTime.MinValue;
-     }
+     // public class ProjectQueryRequest
+     // {
+     //     public string Status { get; set; }
+     //     public string? Location { get; set; }
+     //     public DateTime StartDate { get; set; } = DateTime.MinValue;
+     //     public DateTime EndDate { get; set; } = DateTime.MinValue;
+     // }
  }
