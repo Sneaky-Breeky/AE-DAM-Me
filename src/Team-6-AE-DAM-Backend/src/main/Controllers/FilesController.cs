@@ -217,6 +217,7 @@ namespace DAMBackend.Controllers
                     PixelWidth = dimensions.HasValue ? dimensions.Value.Width : 0,
                     bTags = newTags,
                 };
+                // TODO: 
                 //call exif function and update fileModel object before saving
                 //addExifData(fileModel)
                 _context.Files.Add(fileModel);
