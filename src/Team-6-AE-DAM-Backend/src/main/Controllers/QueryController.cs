@@ -11,6 +11,7 @@
 
  namespace DAMBackend.Controllers
  {
+     [Route("api/[controller]")]
      [ApiController]
      public class QueryController : ControllerBase
      {
