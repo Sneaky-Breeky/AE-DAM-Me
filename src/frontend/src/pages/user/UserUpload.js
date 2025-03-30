@@ -5,11 +5,10 @@ import { PlusOutlined, RotateLeftOutlined, RotateRightOutlined, ExclamationCircl
 import Cropper from 'react-easy-crop';
 import dayjs from 'dayjs';
 import { projects, users } from '../../utils/dummyData.js';
-import {addLog} from "../../api/logApi";
+import { API_BASE_URL } from '../../api/apiURL.js';
 
 const { Title } = Typography;
 const { confirm } = Modal;
-const userID = 10;
 
 const tagStyle = {
     backgroundColor: '#dbdbdb',
@@ -239,7 +238,31 @@ export default function UserUpload() {
     const handleUploadFilesToProject = () => {
         // TODO: add "files" to current "project"'s "files" variable, and other associated info
         // TODO: update user's activity log that they added files to this certain project
+        console.log("Uploading files:", files);
 
+        files.forEach((file) => {
+
+            const formdata = new FormData();
+            formdata.append("file", file.file);
+            formdata.append("date", file.date);
+            formdata.append("bTags", file.metadata);
+            formdata.append("location", file.location);
+            formdata.append("projectId", file.projectId);
+            formdata.append("resolution", "High");
+
+            const requestOptions = {
+                method: "POST",
+                body: formdata,
+                redirect: "follow"
+            };
+
+
+            fetch(`${API_BASE_URL}/api/Files`, requestOptions)
+                .then((response) => response.json())
+                .then((result) => console.log(result))
+                .catch((error) => console.error(error));
+
+        });
 
         setFiles([]);
         setUserFiles([]);
@@ -249,8 +272,6 @@ export default function UserUpload() {
         setSelectedDate(dayjs().format('YYYY-MM-DD'));
         setLocation(null);
         setUploadSuccess(true);
-        addLog(userID, 3, 'upload');
-
     };
 
     const resetUploadState = () => {
@@ -471,7 +492,6 @@ export default function UserUpload() {
                     <Title level={5}>Add Date:</Title>
                     <DatePicker
                         placeholder="Select date"
-                        maxDate={dayjs()}
                         onChange={handleDateChange}
                         suffixIcon={<CalendarOutlined />}
                         style={{ width: '100%' }}

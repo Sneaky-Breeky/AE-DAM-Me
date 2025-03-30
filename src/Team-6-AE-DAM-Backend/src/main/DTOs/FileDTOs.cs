@@ -3,7 +3,6 @@ using System.Text.Json.Serialization;
 
 namespace DAMBackend.Models
 {
-
     public class FileDTO
     {
         public FileDTO() { }
@@ -18,6 +17,7 @@ namespace DAMBackend.Models
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public ImageResolution resolution { get; set; }
     }
+
     public enum ImageResolution
     {
         Low,

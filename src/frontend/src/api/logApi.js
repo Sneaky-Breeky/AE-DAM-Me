@@ -53,7 +53,7 @@ export async function addLog(userID, fileID, typeOfLog) {
         }
 
         const createdLog = await response.json();
-        
+
         return { success: true, log: createdLog };
     } catch (error) {
         console.error("Network or fetch error:", error);
