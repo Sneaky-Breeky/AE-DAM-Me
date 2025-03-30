@@ -320,7 +320,7 @@ export default function UserDashboard() {
                                                 e.stopPropagation();
                                                 sessionStorage.setItem('menu', 1);
                                                 navigate(`/projectDirectory/projectOverview/${project.id}`, { state: { project } });
-                                                window.location.reload();
+                                                //window.location.reload();
                                             }}
                                             style={{ borderRadius: '10px', overflow: 'hidden' }}
                                         >

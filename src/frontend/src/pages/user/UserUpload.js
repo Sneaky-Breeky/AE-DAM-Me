@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import { Input, Typography, DatePicker, Button, Form, Select, Tag, Flex, Image, Modal, Slider, message, Result, Spin } from "antd";
-import { PlusOutlined, RotateLeftOutlined, RotateRightOutlined, ExclamationCircleOutlined, CalendarOutlined, DownOutlined, CloseOutlined } from '@ant-design/icons';
+import { PlusOutlined, RotateLeftOutlined, RotateRightOutlined, ExclamationCircleOutlined, CalendarOutlined, DownOutlined, CloseOutlined, DownloadOutlined } from '@ant-design/icons';
 import Cropper from 'react-easy-crop';
 import dayjs from 'dayjs';
 import { addLog, addLogProject } from "../../api/logApi";
@@ -35,6 +35,8 @@ export default function UserUpload() {
     const [userFiles, setUserFiles] = useState([]);
     const [spinning, setSpinning] = React.useState(false);
     const [percent, setPercent] = React.useState(0);
+
+    const [selectMode, setSelectMode] = useState(false);
 
 
     const [userProjects, setUserProjects] = useState([]);
@@ -280,6 +282,12 @@ export default function UserUpload() {
         setSelectedFiles(new Set());
     };
 
+    const handleToggleSelect = () => {
+        setSelectMode((prev) => !prev);
+        setTaggingMode(false);
+        setSelectedFiles(new Set());
+    };
+
 
     const toggleFileSelection = (fileObj) => {
 
@@ -297,6 +305,12 @@ export default function UserUpload() {
 
     const handleTagAllFiles = () => {
         setTaggingMode(true);
+        const allFiles = new Set(files.map(({ file }) => file.name));
+        setSelectedFiles(allFiles);
+    };
+
+    const handleSelectAll = () => {
+        setSelectMode(true)
         const allFiles = new Set(files.map(({ file }) => file.name));
         setSelectedFiles(allFiles);
     };
@@ -452,10 +466,39 @@ export default function UserUpload() {
                 </Box>
 
                 {/* Image preview & edit options */}
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: 2, paddingBottom: '0', gap: '10px' }}>
+                    <Button disabled={files.length === 0} danger={selectMode} type="primary" variant="solid" onClick={handleToggleSelect}>
+                        {selectMode ? "Close" : "Select"}
+                    </Button>
+                    <Button disabled={files.length === 0} variant="filled" onClick={handleSelectAll}>
+                        Select All
+                    </Button>
+                </Box>
+                
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, padding: 4 }}>
+                    
                     {files.map(({ file, preview }, index) => (
                         <div key={index} style={{ position: 'relative', width: '150px' }}>
-                            <Image src={preview} width={150} preview={false} />
+                            {selectMode ? 
+                            <div
+                            key={file.Id}
+                            style={{ position: 'relative', cursor: 'pointer' }}
+                            onClick={() => toggleFileSelection(files[index])}
+                        >
+                            <Image
+                                src={preview}
+                                width={150}
+                                preview={false}
+                                style={{
+                                    border: selectedFiles.has(files[index].file.name) ? '4px solid blue' : 'none',
+                                    borderRadius: '8px',
+                                    transition: '0.2s ease-in-out',
+                                }}
+                            />
+                            </div>
+                            : <Image src={preview} width={150} preview={false} />
+                            }
+                            
                             {taggingMode && (
                                 <div
                                     onClick={() => toggleFileSelection(files[index])}
@@ -568,6 +611,13 @@ export default function UserUpload() {
                     />
                 </Box>
 
+                {selectMode ? 
+                <Box sx={metadataBoxStyle}>
+
+                    <Title level={5}>Metatdat to project</Title>
+                    
+                </Box>
+                :
                 <Box sx={metadataBoxStyle}>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                         <Button type="primary" color="cyan" variant="solid" onClick={handleToggleTagging} disabled={files.length === 0}>
@@ -620,6 +670,7 @@ export default function UserUpload() {
                         ))}
                     </Box>
                 </Box>
+                }
 
                 <Box sx={metadataBoxStyle}>
                     <Title level={5}>Adjust Resolution:</Title>
