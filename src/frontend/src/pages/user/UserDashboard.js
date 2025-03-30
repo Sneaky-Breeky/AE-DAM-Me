@@ -11,16 +11,19 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import {addFavorite, removeFavorite, fetchProjectsForUser, fetchFavoriteProjects} from '../../api/projectApi';
+import {addFavorite, removeFavorite, fetchProjects, fetchFavoriteProjects} from '../../api/projectApi';
+import {fetchProjectsByDateRange} from '../../api/queryFile';
 import { useAuth } from '../../contexts/AuthContext';
 
 const { Title } = Typography;
 const { Meta } = Card;
+const { RangePicker } = DatePicker;
 
 
 export default function UserDashboard() {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedDate, setSelectedDate] = useState(null);
+    const [dateRange, setDateRange] = useState(null);
     const [projects, setProjects] = useState([]);
     const [filteredProjects, setFilteredProjects] = useState([]);
     const [favProjects, setFavProjects] = useState(new Set());
@@ -31,7 +34,7 @@ export default function UserDashboard() {
     useEffect(() => {
         async function loadProjects() {
             if (!user?.id) return;
-            const response = await fetchProjectsForUser(user.id);
+            const response = await fetchProjects();
             if (!response.error) {
                 setProjects(response);
                 setFilteredProjects(response);
@@ -56,29 +59,56 @@ export default function UserDashboard() {
         console.log('Current user from AuthContext:', user);
     }, [user]);
 
+
     const handleSearch = () => {
         let filtered = [...projects];
 
         if (searchQuery.trim() !== '') {
-            const query = searchQuery.toLowerCase();
+            const lowerQuery = searchQuery.toLowerCase();
 
             filtered = filtered.filter(project =>
-                project.name.toLowerCase() === query ||
-                project.id.toString() === query ||
-                project.location.toLowerCase() === query ||
-                project.files.some(file =>
-                    file.Metadata.some(tag => tag.toLowerCase() === query)
-                )
+                project.name.toLowerCase().includes(lowerQuery) ||
+                project.id.toString().includes(lowerQuery) ||
+                (project.location && project.location.toLowerCase().includes(lowerQuery))
             );
         }
 
-        if (selectedDate) {
-            filtered = filtered.filter(project =>
-                dayjs(project.startDate).isSame(selectedDate, 'day')
-            );
-        }
-        setFilteredProjects([...filtered]);
+        setFilteredProjects(filtered);
     };
+
+    
+    
+    // const handleSearch = async () => {
+    //     const [start, end] = dateRange || [];
+    //
+    //     const query = {
+    //         StartDate: start ? dayjs(start).toISOString() : '0001-01-01T00:00:00Z',
+    //         EndDate: end ? dayjs(end).toISOString() : '0001-01-01T00:00:00Z'
+    //     };
+    //
+    //
+    //     try {
+    //         const response = await fetchProjectsByDateRange(query);
+    //         let filtered = response;
+    //        
+    //         console.log("THE RESPONSE: ", response);
+    //
+    //         if (searchQuery.trim() !== '') {
+    //             const lowerQuery = searchQuery.toLowerCase();
+    //
+    //             filtered = filtered.filter(project =>
+    //                 project.name.toLowerCase().includes(lowerQuery) ||
+    //                 project.id.toString().includes(lowerQuery) ||
+    //                 project.location.toLowerCase().includes(lowerQuery)
+    //             );
+    //         }
+    //
+    //         setProjects(response);
+    //         setFilteredProjects(filtered);
+    //     } catch (error) {
+    //         console.error("Error fetching projects:", error);
+    //     }
+    // };
 
     const handleClearFilters = () => {
         setSearchQuery('');
@@ -153,11 +183,10 @@ export default function UserDashboard() {
                     </Form.Item>
 
                     <Form.Item>
-                        <DatePicker
-                            placeholder="Select date"
-                            maxDate={dayjs()}
-                            onChange={(date, dateString) => setSelectedDate(dateString)}
+                        <RangePicker
+                            placeholder={["Start date", "End date"]}
                             suffixIcon={<CalendarOutlined />}
+                            onChange={(dates) => setDateRange(dates)}
                         />
                     </Form.Item>
 

@@ -268,7 +268,7 @@ namespace DAMBackend.Controllers
             return Ok(project);
         }
 
-        // PUT: api/damprojects/{id}
+// PUT: api/damprojects/{id}
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProject(int id, [FromBody] ProjectModel projectData)
@@ -279,7 +279,7 @@ namespace DAMBackend.Controllers
                 return BadRequest("Project ID in URL does not match project ID in body.");
             }
 
-            var currentProject = await _context.Projects.FindAsync(id);
+            var currentProject = await _context.Projects.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == projectData.Id);
 
             if (currentProject == null)
             {
@@ -288,6 +288,22 @@ namespace DAMBackend.Controllers
 
             _context.Entry(currentProject).CurrentValues.SetValues(projectData);
             currentProject.LastUpdate = DateTime.UtcNow;
+            
+
+            // Track tags to be updated
+            var tagsToUpdate = projectData.Tags.Where(updatedTag => currentProject.Tags
+                    .Any(existingTag => existingTag.Key == updatedTag.Key 
+                                        && (existingTag.iValue != updatedTag.iValue || existingTag.sValue != updatedTag.sValue)))
+                .ToList();
+
+            // Update existing tags
+            foreach (var tagToUpdate in tagsToUpdate)
+            {
+                var existingTag = currentProject.Tags.First(t => t.Key == tagToUpdate.Key);
+                // mukund be better
+                existingTag.sValue = tagToUpdate.sValue;
+                existingTag.iValue = tagToUpdate.iValue;
+            }
 
             try
             {
@@ -304,6 +320,7 @@ namespace DAMBackend.Controllers
 
 
         // DELETE: api/damprojects/{id}
+        // manually delete files
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProject(int id)
         {
@@ -312,8 +329,12 @@ namespace DAMBackend.Controllers
             {
                 return NotFound();
             }
-
-            _context.Projects.Remove(project);
+            var files = await _context.Files.Where(f => f.ProjectId == id).ToListAsync();
+            if (files.Any())
+            {
+                
+                _context.Files.RemoveRange(files);
+            }
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -338,7 +359,7 @@ namespace DAMBackend.Controllers
 
 
 
-        // POST: api/Projects/Tag
+        // POST: api/Projects/tag
         /* Input format should be:
             {
               "ProjectId": 1,
@@ -350,15 +371,12 @@ namespace DAMBackend.Controllers
          */
         [HttpPost("tag/add")]
         public async Task<IActionResult> AddProjectTag(
-            [FromQuery] int ProjectId,
-            [FromQuery] string Key,
-            [FromQuery] string Value,
-            [FromQuery] value_type type)
+            [FromBody] ProjectTagDTO projectTagDTO)
         {
 
             var engine = new SQLEntryEngine(_context);
 
-            var project = await _context.Projects.FindAsync(ProjectId);
+            var project = await _context.Projects.FindAsync(projectTagDTO.ProjectId);
 
             if (project == null)
             {
@@ -369,9 +387,9 @@ namespace DAMBackend.Controllers
             {
                 var tag = await engine.addProjectTag(
                     project,
-                    Key,
-                    Value,
-                    type
+                    projectTagDTO.Key,
+                    projectTagDTO.Value,
+                    projectTagDTO.Type
                 );
                 return Ok(tag);
             }
@@ -387,24 +405,26 @@ namespace DAMBackend.Controllers
         }
 
 
-        // DELETE: api/damprojects/{key}/{pId}
-        [HttpDelete("{key}/{pId}")]
-        public async Task<IActionResult> DeleteProject(string key, int pId)
-        {
-            var tag = await _context.ProjectTags
-                .Where(pt => pt.Key == key && pt.ProjectId == pId)
-                .FirstOrDefaultAsync();
-
-            if (tag == null)
-            {
-                return NotFound();
-            }
-
-            _context.ProjectTags.Remove(tag);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
+        // // DELETE: api/damprojects/{key}/{pId}
+        // [HttpDelete("{key}/{pId}")]
+        // public async Task<IActionResult> DeleteProject(string key, int pId)
+        // {
+        //     var tag = await _context.ProjectTags
+        //         .Where(pt => pt.Key == key && pt.ProjectId == pId)
+        //         .FirstOrDefaultAsync();
+        //
+        //     if (tag == null)
+        //     {
+        //         return NotFound();
+        //     }
+        //
+        //     _context.ProjectTags.Remove(tag);
+        //     await _context.SaveChangesAsync();
+        //
+        //     return NoContent();
+        // }
+        
+        
 
         [HttpPost("postproj/bulk")]
         public async Task<ActionResult<List<ProjectModel>>> bulkUploadProjects(IFormFile file)

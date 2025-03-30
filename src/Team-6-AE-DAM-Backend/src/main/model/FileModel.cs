@@ -32,6 +32,11 @@ Project that it was added to with id
         public required string ThumbnailPath { get; set; }
         public required string ViewPath { get; set; }
         public required string OriginalPath { get; set; }
+        public string? Location { get; set; }
+        
+
+        public ImageResolution Resolution { get; set; }
+
 
         public decimal? GPSLat { get; set; }
         public decimal? GPSLon { get; set; }
