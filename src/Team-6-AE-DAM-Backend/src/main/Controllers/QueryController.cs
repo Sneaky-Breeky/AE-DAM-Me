@@ -54,23 +54,23 @@
          return Ok(projects);
          }
 
-         [HttpPost("searchProject/{pid}")]
-         public async Task<ActionResult<IEnumerable<FileModel>>> GetFilesProjectQuery([FromBody] ProjectFilesQuery request, int pid)
-                  {
+//          [HttpPost("searchProject/{pid}")]
+//          public async Task<ActionResult<IEnumerable<FileModel>>> GetFilesProjectQuery([FromBody] ProjectFilesQuery request, int pid)
+//                   {
 
-                      var project = await _context.Projects.FindAsync(pid);
-                      if (project == null)
-                      {
-                          return NotFound("Project not found.");
-                      }
+//                       var project = await _context.Projects.FindAsync(pid);
+//                       if (project == null)
+//                       {
+//                           return NotFound("Project not found.");
+//                       }
 
-                      // Query basictags first, then metadataTags
+//                       // Query basictags first, then metadataTags
 
-                      var bTags = request.BasicTags?.bTags;
-                      IQueryable<FileModel> files ;
-                        files = await GetFilesBasicTagQuery(bTags, project);
-                      return Ok(files);
-                      }
+//                       var bTags = request.BasicTags?.bTags;
+//                       IQueryable<FileModel> files ;
+//                         files = await GetFilesBasicTagQuery(bTags, project);
+//                       return Ok(files);
+//                       }
                       //                      }
 
 //                      if (bTags == null || !bTags.Any())
@@ -308,7 +308,7 @@
           * Function to take a project, a list of strings (BasicTagList), and a list of <MetadataTagDTO
           * Return files filtered by the 2 lists
           *
-          * GET: api/query/searchProject/{pid}
+          * POST: api/query/searchProject/{pid}
           *
           * Example Input
           * {
@@ -324,6 +324,74 @@
           *
           *
           */
+
+
+         [HttpPost("searchProject/{pid}")]
+         public async Task<ActionResult<IEnumerable<FileModel>>> GetFilesProjectQuery([FromBody] ProjectFilesQuery request, int pid)
+         {
+             
+             var project = await _context.Projects.FindAsync(pid);
+             if (project == null)
+             {
+                 return NotFound("Project not found.");
+             }
+             
+             // Query basictags first, then metadataTags
+
+             var bTags = request.BasicTags?.bTags;
+             IQueryable<FileModel> files;
+             
+             if (bTags == null || !bTags.Any())
+             {
+                 files  = _context.Files.Where(f => f.ProjectId == pid);
+             }
+             else
+             {
+                 files = await GetFilesBasicTagQuery(bTags, project);
+             }
+
+             if (files == null || !files.Any())
+             {
+                 return BadRequest("No files match the criteria.");
+             }
+             
+             
+             // Metadata tags associated with the project
+             IQueryable<MetadataTagModel> mTags = _context.MetadataTags
+                 .Where(mt => files.Any(f => f.ProjectId == pid && f.Id == mt.FileId));
+             
+             
+             foreach (MetadataTagQueryDTO mTag in request.MetadataTags ?? new List<MetadataTagQueryDTO>())
+             {
+                 try
+                 {
+                     value_type v_type = (value_type)mTag.v_type;
+                     mTags = GetFilesMetadataTagQuery(mTag.Key, mTag.Op, mTag.Value, mTags, v_type);
+                     
+                 }
+                 catch (Exception e)
+                 {
+                     return BadRequest(new { message = e.Message });
+                 }
+                 
+             }
+             
+             var filteredFileIds = await mTags.Select(mt => mt.FileId).ToListAsync();
+             
+             if (filteredFileIds == null || !filteredFileIds.Any())
+             {
+                 return BadRequest("No files match the metadata criteria.");
+             }
+
+             // Filter files by metadata tag matching file IDs
+             var filteredFiles = await files.Where(f => filteredFileIds.Contains(f.Id)).ToListAsync();
+
+             if (filteredFiles == null || !filteredFiles.Any())
+             {
+                 return BadRequest("No files match the criteria.");
+             }
+
+             return Ok(filteredFiles);
 
 
 
