@@ -289,10 +289,17 @@ export default function UserUpload() {
     const [currentCreatedMDkey, setCurrentCreatedMDkey] = useState(null);
     const [currentCreatedMDvalue, setCurrentCreatedMDvalue] = useState(null);
 
+    const [currentSelectedExistingTag, setCurrentSelectedExistingTag] = useState(null);
+
+    const [currentCreatedTag, setCurrentCreatedTag] = useState(null);
+
     const handleApplyFileMD = () => {
         console.log(selectedFiles);
         console.log(selectProjectMD);
         console.log(selectProjectTags);
+
+        setSelectProjectMD({});
+        setSelectProjectTags([]);
     }
 
     // WHEN PROJECT IS SELECTED AND SELECTED FILE MD NEEDS TO BE SET
@@ -310,11 +317,8 @@ export default function UserUpload() {
             ...prevState,
             [currentSelectedExistingMDkey]: currentSelectedExistingMDvalue,
         }));
-        console.log(selectProjectMD);
         setCurrentSelectedExistingMDkey(null);
         setCurrentSelectedExistingMDvalue(null);
-        console.log(currentSelectedExistingMDkey);
-        console.log(currentSelectedExistingMDvalue);
     };
 
     const handleCreateMD = () => {
@@ -327,10 +331,24 @@ export default function UserUpload() {
     };
 
     const handleRemoveSelectMD = (md) => {
-        console.log(md)
         const updateProjectMD = {...selectProjectMD};
         delete updateProjectMD[md];
         setSelectProjectMD(updateProjectMD);
+    };
+
+    const handleSelectExistingTag = () => {
+        setSelectProjectTags([...selectProjectTags, currentSelectedExistingTag]);
+        setCurrentSelectedExistingTag(null);
+    };
+
+    const handleCreateTag = () => {
+        setSelectProjectTags([...selectProjectTags, currentCreatedTag]);
+        setCurrentCreatedTag(null);
+    };
+
+    const handleRemoveSelectTag = (tag) => {
+        const updateTags = selectProjectTags.filter((t) => t !== tag);
+        setSelectProjectTags(updateTags);
     };
 
     const handleToggleTagging = () => {
@@ -691,7 +709,7 @@ export default function UserUpload() {
                         value={selectProject !== null ? selectProject.id : undefined}
                     />
 
-                    <table style={{ width: '100%', borderCollapse: 'collapse', borderBottomWidth: 'thin', borderBottomStyle:'solid', paddingBottom:'5%'}}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', borderBottomWidth: 'thin', borderBottomStyle:'solid', borderColor: 'LightGray', paddingBottom:'5%'}}>
                         <thead>
                         <tr style={{ height: '10%' }}>
                             <th colSpan={2} style={{ width: '100%', textAlign: 'center', fontWeight:'600'}}>
@@ -736,11 +754,11 @@ export default function UserUpload() {
                         </div>
                         <div><span style={{fontSize: '90%'}}>Value: </span>
                         <Input
-                        onChange={e => setCurrentSelectedExistingMDvalue(e.target.value)}
-                        style={{ width:'80%' ,marginBottom:'5%', overflow:'atuo'}}
-                        placeholder="apply metadata value"
-                        disabled={selectProject === null}
-                        value={currentSelectedExistingMDvalue !== null ? currentSelectedExistingMDvalue : undefined}/>
+                            onChange={e => setCurrentSelectedExistingMDvalue(e.target.value)}
+                            style={{ width:'80%' ,marginBottom:'5%', overflow:'atuo'}}
+                            placeholder="apply metadata value"
+                            disabled={selectProject === null}
+                            value={currentSelectedExistingMDvalue !== null ? currentSelectedExistingMDvalue : undefined}/>
                         </div>
                         <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleSelectExistingMD} 
                         disabled={selectProject === null || currentSelectedExistingMDkey === null || currentSelectedExistingMDvalue === null} >
@@ -748,23 +766,23 @@ export default function UserUpload() {
                         </Button>
                     </div>
 
-                    <div style={{borderBottomWidth: 'thin', borderBottomStyle:'solid', borderColor: 'LightGray', paddingBottom:'5%'}}>
+                    <div style={{paddingBottom:'5%'}}>
                         <p style={{width: '100%', textAlign: 'left', fontWeight:'550',fontSize: '90%'}}>Create Metadata</p>
                         <div><span style={{fontSize: '90%'}}>Key: </span>
                         <Input
-                        onChange={e => setCurrentCreatedMDkey(e.target.value)}
-                        style={{ width:'80%' ,marginBottom:'5%', overflow:'atuo'}}
-                        placeholder="set metadata key"
-                        disabled={selectProject === null}
-                        value={currentCreatedMDkey !== null ? currentCreatedMDkey : undefined}/>
+                            onChange={e => setCurrentCreatedMDkey(e.target.value)}
+                            style={{ width:'80%' ,marginBottom:'5%', overflow:'atuo'}}
+                            placeholder="set metadata key"
+                            disabled={selectProject === null}
+                            value={currentCreatedMDkey !== null ? currentCreatedMDkey : undefined}/>
                         </div>
                         <div><span style={{fontSize: '90%'}}>Value: </span>
                         <Input
-                        onChange={e => setCurrentCreatedMDvalue(e.target.value)}
-                        style={{ width:'80%' ,marginBottom:'5%', overflow:'atuo'}}
-                        placeholder="set metadata value"
-                        disabled={selectProject === null}
-                        value={currentCreatedMDvalue !== null ? currentCreatedMDvalue : undefined}/>
+                            onChange={e => setCurrentCreatedMDvalue(e.target.value)}
+                            style={{ width:'80%' ,marginBottom:'5%', overflow:'atuo'}}
+                            placeholder="set metadata value"
+                            disabled={selectProject === null}
+                            value={currentCreatedMDvalue !== null ? currentCreatedMDvalue : undefined}/>
                         </div>
                         <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleCreateMD} 
                         disabled={selectProject === null || currentCreatedMDkey === null || currentCreatedMDvalue === null || 
@@ -773,7 +791,9 @@ export default function UserUpload() {
                         </Button>
                     </div>
 
-                    <table style={{ width: '100%', borderCollapse: 'collapse'}}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', 
+                        borderTopWidth: 'thin', borderTopStyle:'solid', borderTopColor: 'black',
+                        borderBottomWidth: 'thin', borderBottomStyle:'solid', borderBottomColor: 'LightGray', paddingBottom:'5%'}}>
                         <thead>
                         <tr style={{ height: '10%' }}>
                             <th style={{ width: '100%', textAlign: 'center', fontWeight:'600'}}>
@@ -783,53 +803,62 @@ export default function UserUpload() {
                         </thead>
 
                         <tbody style={{borderBottomWidth: 'thin', borderBottomStyle:'solid', borderColor: 'LightGray', padding:'20%'}}>
-                            {/*selectProject.metadata.map((metadata, index) => (
-                                <tr key={index}>
-                                    <td style={{ width: '20%', textAlign: 'left' }}>
-                                        <span style={{fontSize: '90%'}}>{metadata.key}</span> : <span style={{fontSize: '90%', color: 'grey', fontStyle: 'italic' }}>{metadata.value}</span>
-                                    </td>
-                                </tr>
-                            ))*/}
-                            <tr key={0} style={{ marginBottom: '5%', display: 'block' }}>
-                                <td style={{ width: '20%', textAlign: 'left' }}>
-                                    <span style={{fontSize: '90%'}}>tag</span>
-                                </td>
-                            </tr>
-                        </tbody>
-
-                        <thead>
-                            <tr style={{ height: '10%' }}>
-                                <th style={{ width: '100%', textAlign: 'left', fontWeight:'550'}}>
-                                    <span style={{fontSize: '90%'}}>Add Tags from Project</span>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody style={{borderBottomWidth: 'thin', borderBottomStyle:'solid', borderColor: 'LightGray'}}>
-                            <tr key={0} style={{ marginBottom: '5%', display: 'block' }}>
-                                <td style={{ width: '20%', textAlign: 'left' }}>
-                                    <span style={{fontSize: '90%'}}>tag</span>
-                                </td>
-                            </tr>
-                        </tbody>
-
-                        <thead>
-                            <tr style={{ height: '10%' }}>
-                                <th style={{ width: '100%', textAlign: 'left', fontWeight:'550'}}>
-                                    <span style={{fontSize: '90%'}}>Create Tags</span>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr key={0} style={{ marginBottom: '5%', display: 'block' }}>
-                                <td style={{ width: '20%', textAlign: 'left' }}>
-                                    <span style={{fontSize: '90%'}}>tag</span>
-                                </td>
-                            </tr>
+                            <Flex wrap="wrap" style={{ marginTop: '10px' }}>
+                                {selectProjectTags.map((tag) => (
+                                   <Tag
+                                        style={tagStyle}
+                                        key={tag}
+                                        closable={true}
+                                        onClose={() => handleRemoveSelectTag(tag)}
+                                    >
+                                        {tag}
+                                    </Tag>
+                                ))}
+                            </Flex>
                         </tbody>
                     </table>
+                    <div style={{borderBottomWidth: 'thin', borderBottomStyle:'solid', borderColor: 'LightGray', paddingBottom:'5%'}}>
+                        <p style={{width: '100%', textAlign: 'left', fontWeight:'550',fontSize: '90%'}}>Create Metadata</p>
+                        <div><span style={{fontSize: '90%'}}>Tag: </span>
+                        <Select
+                            showSearch
+                            placeholder="pick existing tag"
+                            filterOption={(input, option) =>
+                                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                            }
+                            options={existingSelectProjectTags.map(tag => ({
+                                value: tag,
+                                disabled: selectProjectTags.includes(tag),
+                                label: `${tag}`
+                            }))}
+                            onChange={setCurrentSelectedExistingTag}
+                            style={{ width:'80%', marginBottom:'5%', overflow:'atuo'}}
+                            disabled={selectProject === null}
+                            value={currentSelectedExistingTag !== null ? currentSelectedExistingTag : undefined}
+                        />
+                        </div>
+                        <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleSelectExistingTag} 
+                        disabled={selectProject === null || currentSelectedExistingTag === null} >
+                            Add Tag
+                        </Button>
+                    </div>
 
-
-                    
+                    <div style={{paddingBottom:'5%'}}>
+                        <p style={{width: '100%', textAlign: 'left', fontWeight:'550',fontSize: '90%'}}>Create Metadata</p>
+                        <div><span style={{fontSize: '90%'}}>Tag: </span>
+                        <Input
+                            onChange={e => setCurrentCreatedTag(e.target.value)}
+                            style={{ width:'80%' ,marginBottom:'5%', overflow:'atuo'}}
+                            placeholder="input tag"
+                            disabled={selectProject === null}
+                            value={currentCreatedTag !== null ? currentCreatedTag : undefined}/>
+                        </div>
+                        <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleCreateTag} 
+                        disabled={selectProject === null || currentCreatedTag === null || 
+                                selectProjectTags.includes(currentCreatedTag) || existingSelectProjectTags.includes(currentCreatedTag)} >
+                            Create Tag
+                        </Button>
+                    </div>
                 </Box>
                 :
                 <Box sx={metadataBoxStyle}>
