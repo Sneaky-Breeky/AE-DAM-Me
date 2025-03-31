@@ -423,6 +423,7 @@ namespace DAMBackend.Controllers
         //
         //     return NoContent();
         // }
+
         
         
 
@@ -495,5 +496,16 @@ namespace DAMBackend.Controllers
             var url = await _csvService.GenerateCsvAndUploadAsync(project, files);
             return Ok(url);
         }
+
+        [HttpGet("files/{pid}")]
+        public async Task<ActionResult<IEnumerable<FileModel>>> GetProjectFiles(int pid)
+        {
+            var files = await _context.Files.Where(f => f.ProjectId == pid).ToListAsync();
+
+            return Ok(files);
+        }
+
+
+        
     }
 }

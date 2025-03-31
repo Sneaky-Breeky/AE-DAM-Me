@@ -274,8 +274,16 @@ export default function UserUpload() {
         if(!value) return;
 
         const selectedProject = userProjects.find(proj => proj.id === value);
+        if (!selectedProject) {
+            console.warn("Selected project not found");
+            return;
+        }
+
         setProject(selectedProject);
-        setFiles(prevFiles => prevFiles.map(file => ({ ...file, projectId: selectedProject.id })));
+        setFiles(prevFiles => prevFiles.map(file => ({
+            ...file,
+            projectId: selectedProject.id
+        })));
     };
 
     // TO BE DELETED, assume these are values from selectedProject.metadata and selectedProject.tags
@@ -681,7 +689,7 @@ export default function UserUpload() {
                         }))}
                         onChange={handleProjectChange}
                         style={{ width: '100%' }}
-                        value={project !== null ? project.id : undefined}
+                        value={project ? project.id : undefined}
                     />
                 </Box>
 
