@@ -59,37 +59,56 @@ export default function UserDashboard() {
         console.log('Current user from AuthContext:', user);
     }, [user]);
 
-    const handleSearch = async () => {
-        const [start, end] = dateRange || [];
 
-        const query = {
-            StartDate: start ? dayjs(start).toISOString() : '0001-01-01T00:00:00Z',
-            EndDate: end ? dayjs(end).toISOString() : '0001-01-01T00:00:00Z'
-        };
+    const handleSearch = () => {
+        let filtered = [...projects];
 
+        if (searchQuery.trim() !== '') {
+            const lowerQuery = searchQuery.toLowerCase();
 
-        try {
-            const response = await fetchProjectsByDateRange(query);
-            let filtered = response;
-            
-            console.log("THE RESPONSE: ", response);
-
-            if (searchQuery.trim() !== '') {
-                const lowerQuery = searchQuery.toLowerCase();
-
-                filtered = filtered.filter(project =>
-                    project.name.toLowerCase().includes(lowerQuery) ||
-                    project.id.toString().includes(lowerQuery) ||
-                    project.location.toLowerCase().includes(lowerQuery)
-                );
-            }
-
-            setProjects(response);
-            setFilteredProjects(filtered);
-        } catch (error) {
-            console.error("Error fetching projects:", error);
+            filtered = filtered.filter(project =>
+                project.name.toLowerCase().includes(lowerQuery) ||
+                project.id.toString().includes(lowerQuery) ||
+                (project.location && project.location.toLowerCase().includes(lowerQuery))
+            );
         }
+
+        setFilteredProjects(filtered);
     };
+
+    
+    
+    // const handleSearch = async () => {
+    //     const [start, end] = dateRange || [];
+    //
+    //     const query = {
+    //         StartDate: start ? dayjs(start).toISOString() : '0001-01-01T00:00:00Z',
+    //         EndDate: end ? dayjs(end).toISOString() : '0001-01-01T00:00:00Z'
+    //     };
+    //
+    //
+    //     try {
+    //         const response = await fetchProjectsByDateRange(query);
+    //         let filtered = response;
+    //        
+    //         console.log("THE RESPONSE: ", response);
+    //
+    //         if (searchQuery.trim() !== '') {
+    //             const lowerQuery = searchQuery.toLowerCase();
+    //
+    //             filtered = filtered.filter(project =>
+    //                 project.name.toLowerCase().includes(lowerQuery) ||
+    //                 project.id.toString().includes(lowerQuery) ||
+    //                 project.location.toLowerCase().includes(lowerQuery)
+    //             );
+    //         }
+    //
+    //         setProjects(response);
+    //         setFilteredProjects(filtered);
+    //     } catch (error) {
+    //         console.error("Error fetching projects:", error);
+    //     }
+    // };
 
     const handleClearFilters = () => {
         setSearchQuery('');

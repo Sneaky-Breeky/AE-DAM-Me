@@ -21,21 +21,20 @@
          {
              _context = context;
          }
+         
          [HttpGet("projectQuery/{status}/{location}/{startDate}/{endDate}")]
          public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjectQueryResult(string status, string location, DateTime startDate, DateTime endDate)
          {
-         // if (projectRequest == null){
-         //    return BadRequest("Invalid query request.");
-         // }
          var query = _context.Projects.AsQueryable();
-         if (!string.IsNullOrEmpty(status))
-                     {
-                         query = query.Where(upr => upr.Status == status);
-                     }
-         if (!string.IsNullOrEmpty(location))
-                     {
-                         query = query.Where(upr => upr.Location == location);
-                     }
+         if (!string.IsNullOrEmpty(status) && status != "null")
+             {
+                 query = query.Where(upr => upr.Status == status);
+             }
+
+         if (!string.IsNullOrEmpty(location) && location != "null")
+             {
+                 query = query.Where(upr => upr.Location == location);
+             }
          if (startDate != DateTime.MinValue)
                      {
                          query = query.Where(upr => upr.StartDate >= startDate);
@@ -46,6 +45,8 @@
                          query = query.Where(upr => upr.StartDate <= endDate);
                      }
          var projects = await query.ToListAsync();
+
+
          if (projects == null || !projects.Any())
                      {
                          return NotFound("No projects found matching the given criteria.");
@@ -339,8 +340,8 @@
 
              return Ok(filteredFiles);
              
-
          }
+
          
          // Query projects based on image tags
          // get all images that contain the tag
@@ -392,3 +393,4 @@
      //     public DateTime StartDate { get; set; } = DateTime.MinValue;
      //     public DateTime EndDate { get; set; } = DateTime.MinValue;
      // }
+

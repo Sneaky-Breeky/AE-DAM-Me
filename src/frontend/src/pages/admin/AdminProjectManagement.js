@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Input, Form, Button, Tag, Flex, message, Spin, Popconfirm, DatePicker, CalendarOutlined } from "antd"
+import { Typography, Input, Form, Button, Tag, Flex, message, Spin, Popconfirm, DatePicker, CalendarOutlined, Upload } from "antd"
 import Box from '@mui/material/Box';
 import { CloseOutlined, SearchOutlined, DeleteOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import CreateNewFolderOutlinedIcon from '@mui/icons-material/CreateNewFolderOutlined';
 import FolderDeleteOutlinedIcon from '@mui/icons-material/FolderDeleteOutlined';
-import {fetchProjects, postProject, deleteProject} from '../../api/projectApi';
+import { fetchProjects, postProject, deleteProject } from '../../api/projectApi';
 import { fetchUsers } from '../../api/authApi';
 import { giveUserAccess } from '../../api/userApi';
-
+import { API_BASE_URL } from "../../api/apiURL.js";
+import { UploadOutlined } from '@ant-design/icons';
 const { Title } = Typography;
 
 const tagStyle = {
@@ -22,6 +23,22 @@ export default function ProjectManagement() {
     const [fetchedProjects, setFetchedProjects] = useState([]);
     const [messageApi, contextHolder] = message.useMessage();
     const [form] = Form.useForm();
+    const fileUpload = {
+        name: 'file',
+        action: `${API_BASE_URL}/api/damprojects/postproj/bulk`,
+        headers: {},
+        onChange(info) {
+            if (info.file.status !== 'uploading') {
+                console.log(info.file, info.fileList);
+                message.success(`${info.file.name} uploading`);
+            }
+            if (info.file.status === 'done') {
+                message.success(`${info.file.name} file uploaded successfully`);
+            } else if (info.file.status === 'error') {
+                message.error(`${info.file.name} file upload failed.`);
+            }
+        }
+    }
 
 
     // Fetch projects
@@ -68,11 +85,11 @@ export default function ProjectManagement() {
             if (result.error) {
                 throw new Error(result.error);
             }
-            
+
             // give admin access to this project
             const users = await fetchUsers();
             const admins = users.filter((user) => user.role === 1);
-            
+
             for (const admin of admins) {
                 await giveUserAccess(admin.id, result.id);
             }
@@ -146,7 +163,7 @@ export default function ProjectManagement() {
                         overflow: 'hidden',
                     }}
                 >
-                
+
                     {/*Create a project*/}
                     <Box
                         onClick={() => {
@@ -154,22 +171,22 @@ export default function ProjectManagement() {
                             setCreateOpen(!createOpen);
                         }}
                         sx={{
-                        textAlign: 'center',
-                        width: '80%',
-                        height: '100%',
-                        margin: '20px auto',
-                        backgroundColor: 'grey.300',
-                        border: 1,
-                        borderColor: 'grey.500',
-                        borderRadius: '16px',
-                        '&:hover': { boxShadow: 3 },
+                            textAlign: 'center',
+                            width: '80%',
+                            height: '100%',
+                            margin: '20px auto',
+                            backgroundColor: 'grey.300',
+                            border: 1,
+                            borderColor: 'grey.500',
+                            borderRadius: '16px',
+                            '&:hover': { boxShadow: 3 },
                         }}
                     >
-                        {!createOpen ? 
-                            <CreateNewFolderOutlinedIcon style={{ marginTop: '10%',  marginBottom: '0', fontSize: '500%' }} />
-                            : <CloseOutlined style={{ marginTop: '10%',  marginBottom: '0', fontSize: '500%' }} />
+                        {!createOpen ?
+                            <CreateNewFolderOutlinedIcon style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
+                            : <CloseOutlined style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
                         }
-                        <h4  style={{ margin: '0', marginBottom: '10%'}}>{!createOpen ? "Create Project" : "Close"}</h4>
+                        <h4 style={{ margin: '0', marginBottom: '10%' }}>{!createOpen ? "Create Project" : "Close"}</h4>
                     </Box>
 
                     {/*Delete a project*/}
@@ -179,23 +196,23 @@ export default function ProjectManagement() {
                             setDeleteOpen(!deleteOpen);
                         }}
                         sx={{
-                        textAlign: 'center',
-                        width: '80%',
-                        height: '100%',
-                        margin: '20px auto',
-                        backgroundColor: 'grey.300',
-                        border: 1,
-                        borderColor: 'grey.500',
-                        borderRadius: '16px',
-                        '&:hover': { boxShadow: 3 },
+                            textAlign: 'center',
+                            width: '80%',
+                            height: '100%',
+                            margin: '20px auto',
+                            backgroundColor: 'grey.300',
+                            border: 1,
+                            borderColor: 'grey.500',
+                            borderRadius: '16px',
+                            '&:hover': { boxShadow: 3 },
                         }}
                     >
-                        {!deleteOpen ? 
+                        {!deleteOpen ?
                             <FolderDeleteOutlinedIcon style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
-                            : <CloseOutlined style={{ marginTop: '10%',  marginBottom: '0', fontSize: '500%' }} />
+                            : <CloseOutlined style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
                         }
-                        <h4 style={{ margin: '0', marginBottom: '10%'}}>{!deleteOpen ? "Delete Project" : "Close"}</h4>
-                    </Box> 
+                        <h4 style={{ margin: '0', marginBottom: '10%' }}>{!deleteOpen ? "Delete Project" : "Close"}</h4>
+                    </Box>
 
                 </Box>
 
@@ -212,167 +229,195 @@ export default function ProjectManagement() {
                     }}
                 >
 
-                {/* Container with inputs */}
-                {createOpen && 
-                <Box
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'flex-start',
-                        alignItems: 'left',
-                        width: '80%',
-                        height: "fit-content",
-                        margin: '20px auto',
-                        backgroundColor: '#f5f5f5',
-                        borderRadius: '10px',
-                        padding: '20px',
-                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                        overflow: 'hidden',
-                    }}
-                >
-                    <Title level={4} style={{textAlign: 'center', marginTop: '0'}}>Create Directory</Title>
-                    <Form
-                        form={form}
-                        name="project_creation"
-                        layout="vertical"
-                        autoComplete="off"
-                        onFinish={handleAddProjectButton}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                e.preventDefault();
-                            }
-                        }}
-                    >
-                        <Title level={5} style={{ marginTop: '10px' }}>
-                            Project Name <span style={{ color: 'red' }}>*</span>
-                        </Title>
-                        <Form.Item
-                            name="projectName"
-                            rules={[{ required: true, message: "Please enter a project name" }]}
+                    {/* Container with inputs */}
+                    {createOpen &&
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'flex-start',
+                                alignItems: 'left',
+                                width: '80%',
+                                height: "fit-content",
+                                margin: '20px auto',
+                                backgroundColor: '#f5f5f5',
+                                borderRadius: '10px',
+                                padding: '20px',
+                                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                                overflow: 'hidden',
+                            }}
                         >
-                            <Input placeholder="Enter project name" />
-                        </Form.Item>
-
-                        <Title level={5} style={{ marginTop: '10px' }}>
-                            Description <span style={{ color: 'red' }}>*</span>
-                        </Title>
-                        <Form.Item
-                            name="description"
-                            rules={[{ required: true, message: "Please enter a description" }]}
-                        >
-                            <Input placeholder="Enter description" />
-                        </Form.Item>
-
-                        <Title level={5} style={{ marginTop: '10px' }}>
-                            Start Date <span style={{ color: 'red' }}>*</span>
-                        </Title>
-                        <Form.Item
-                            name="startDate"
-                            rules={[{ required: true, message: "Please select a start date" }]}
-                        >
-                            <DatePicker
-                                style={{ width: '100%' }}
-                                format="YYYY-MM-DD"
-                            />
-                        </Form.Item>
-
-
-                        <Title level={5} style={{ marginTop: '10px' }}>Location</Title>
-                        <Form.Item name="location">
-                            <Input placeholder="Enter location" />
-                        </Form.Item>
-                        {contextHolder}
-
-                        <div style={{ textAlign: "center", marginTop: "10px" }}>
-                            <Button
-                                htmlType="submit"
-                                style={{
-                                    marginTop: "10px",
-                                    padding: "10px 20px",
-                                    backgroundColor: "#00bcd4",
-                                    borderColor: "#00bcd4",
-                                    color: "white",
-                                    fontWeight: "bold",
+                            <Title level={4} style={{ textAlign: 'center', marginTop: '0' }}>Create Directory</Title>
+                            <Form
+                                form={form}
+                                name="project_creation"
+                                layout="vertical"
+                                autoComplete="off"
+                                onFinish={handleAddProjectButton}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                    }
                                 }}
-                                type="primary"
                             >
-                                Add Project
-                            </Button>
-                        </div>
-                    </Form>
-                </Box>}
+                                <Title level={5} style={{ marginTop: '10px' }}>
+                                    Project Name <span style={{ color: 'red' }}>*</span>
+                                </Title>
+                                <Form.Item
+                                    name="projectName"
+                                    rules={[{ required: true, message: "Please enter a project name" }]}
+                                >
+                                    <Input placeholder="Enter project name" />
+                                </Form.Item>
 
-                {deleteOpen &&
-                <Box
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'flex-start',
-                        alignItems: 'left',
-                        width: '80%',
-                        height: "60vh",
-                        margin: '20px auto',
-                        backgroundColor: '#f5f5f5',
-                        borderRadius: '10px',
-                        padding: '20px',
-                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                        overflow: 'auto',
-                    }}
-                >
-                    <Title level={4} style={{textAlign: 'center', marginTop: '0'}}>Delete Directory</Title>
+                                <Title level={5} style={{ marginTop: '10px' }}>
+                                    Description <span style={{ color: 'red' }}>*</span>
+                                </Title>
+                                <Form.Item
+                                    name="description"
+                                    rules={[{ required: true, message: "Please enter a description" }]}
+                                >
+                                    <Input placeholder="Enter description" />
+                                </Form.Item>
 
-                    <Input
-                    placeholder="Search for a project.."
-                    prefix={<SearchOutlined />}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    style={{ width: '50%', marginBottom: '2%'}}
-                    disabled={loading}
-                    />
+                                <Title level={5} style={{ marginTop: '10px' }}>
+                                    Start Date <span style={{ color: 'red' }}>*</span>
+                                </Title>
+                                <Form.Item
+                                    name="startDate"
+                                    rules={[{ required: true, message: "Please select a start date" }]}
+                                >
+                                    <DatePicker
+                                        style={{ width: '100%' }}
+                                        format="YYYY-MM-DD"
+                                    />
+                                </Form.Item>
 
-                    <div style={{overflowY: 'auto', width: '100%', height: '100%'}}>
-                        {loading ? (
-                            <div style={{ textAlign: 'center', padding: '20px' }}>
-                                <Spin size="large" />
-                                <p>Loading projects...</p>
-                            </div>
-                        ) : (
-                            <table style={{ width: '100%', borderCollapse: 'collapse', borderTop: '1px solid black'}}>
-                                {(fetchedProjects.filter((p) =>
-                                    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                    p.id.toString().includes(searchQuery)
-                                )).map((p) => (
-                                    <tr
-                                        key={p.id}
-                                        
-                                        style={{ height: '50px' }}
+
+                                <Title level={5} style={{ marginTop: '10px' }}>Location</Title>
+                                <Form.Item name="location">
+                                    <Input placeholder="Enter location" />
+                                </Form.Item>
+                                {contextHolder}
+
+                                <div style={{ textAlign: "center", marginTop: "10px" }}>
+                                    <Button
+                                        htmlType="submit"
+                                        style={{
+                                            marginTop: "10px",
+                                            padding: "10px 20px",
+                                            backgroundColor: "#00bcd4",
+                                            borderColor: "#00bcd4",
+                                            color: "white",
+                                            fontWeight: "bold",
+                                        }}
+                                        type="primary"
                                     >
-                                        <td style={{ fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black' }}>
-                                            {p.id} <span style={{ color: 'gray', fontStyle: 'italic' }}> - {p.name}</span>
-                                        </td>
+                                        Add Project
+                                    </Button>
+                                </div>
+                            </Form>
+                            <div style={{
+                                display: "flex",
+                                justifyContent: "space-between"
+                            }}>
 
 
-                                        <td style={{ fontSize: '12px', textAlign: 'center', borderBottom: '1px solid black' }}>
-                                        <Popconfirm
-                                            title="Delete Project Directory"
-                                            description="Are you sure you want to delete the selected project directory?"
-                                            onConfirm={() => handleDeleteProject(p)}
-                                            icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
-                                            okText="Yes"
-                                            cancelText="No"
-                                        >
-                                            <Button type="primary" danger icon={<DeleteOutlined />}>
-                                                Delete
-                                            </Button>
-                                        </Popconfirm>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </table>
-                        )}
-                    </div>
-                    
-                </Box>}
+                                <Upload {...fileUpload}>
+                                    <Button style={{
+                                        marginTop: "10px",
+                                        padding: "10px 20px",
+                                        backgroundColor: "#4096ff",
+                                        borderColor: "#4096ff",
+                                        color: "white",
+                                        fontWeight: "bold",
+                                    }} icon={<UploadOutlined />}>Import Projects</Button>
+                                </Upload>
+
+                                <Button onClick={() => window.open("https://dambeblob.blob.core.windows.net/assets/sample-project-bulk-upload.csv", "_self")} type="link"
+                                    style={{
+                                        marginTop: "10px",
+                                        padding: "10px 20px",
+                                        color: "#4096ff",
+                                        fontWeight: "bold",
+                                    }}
+                                >
+                                    Sample File- Import Projects
+                                </Button>
+                            </div>
+                        </Box>}
+
+                    {deleteOpen &&
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'flex-start',
+                                alignItems: 'left',
+                                width: '80%',
+                                height: "60vh",
+                                margin: '20px auto',
+                                backgroundColor: '#f5f5f5',
+                                borderRadius: '10px',
+                                padding: '20px',
+                                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                                overflow: 'auto',
+                            }}
+                        >
+                            <Title level={4} style={{ textAlign: 'center', marginTop: '0' }}>Delete Directory</Title>
+
+                            <Input
+                                placeholder="Search for a project.."
+                                prefix={<SearchOutlined />}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                style={{ width: '50%', marginBottom: '2%' }}
+                                disabled={loading}
+                            />
+
+                            <div style={{ overflowY: 'auto', width: '100%', height: '100%' }}>
+                                {loading ? (
+                                    <div style={{ textAlign: 'center', padding: '20px' }}>
+                                        <Spin size="large" />
+                                        <p>Loading projects...</p>
+                                    </div>
+                                ) : (
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', borderTop: '1px solid black' }}>
+                                        {(fetchedProjects.filter((p) =>
+                                            p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                            p.id.toString().includes(searchQuery)
+                                        )).map((p) => (
+                                            <tr
+                                                key={p.id}
+
+                                                style={{ height: '50px' }}
+                                            >
+                                                <td style={{ fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black' }}>
+                                                    {p.id} <span style={{ color: 'gray', fontStyle: 'italic' }}> - {p.name}</span>
+                                                </td>
+
+
+                                                <td style={{ fontSize: '12px', textAlign: 'center', borderBottom: '1px solid black' }}>
+                                                    <Popconfirm
+                                                        title="Delete Project Directory"
+                                                        description="Are you sure you want to delete the selected project directory?"
+                                                        onConfirm={() => handleDeleteProject(p)}
+                                                        icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+                                                        okText="Yes"
+                                                        cancelText="No"
+                                                    >
+                                                        <Button type="primary" danger icon={<DeleteOutlined />}>
+                                                            Delete
+                                                        </Button>
+                                                    </Popconfirm>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </table>
+                                )}
+                            </div>
+
+                        </Box>}
 
                 </Box>
             </Box>

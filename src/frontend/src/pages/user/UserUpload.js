@@ -4,7 +4,7 @@ import { Input, Typography, DatePicker, Button, Form, Select, Tag, Flex, Image, 
 import { PlusOutlined, RotateLeftOutlined, RotateRightOutlined, ExclamationCircleOutlined, CalendarOutlined, DownOutlined, CloseOutlined } from '@ant-design/icons';
 import Cropper from 'react-easy-crop';
 import dayjs from 'dayjs';
-import { addLog } from "../../api/logApi";
+import { addLog, addLogProject } from "../../api/logApi";
 import { API_BASE_URL } from '../../api/apiURL.js';
 import { Palette } from '@mui/icons-material';
 import { fetchProjectsForUser } from '../../api/projectApi';
@@ -101,6 +101,7 @@ export default function UserUpload() {
             const data = await response.json();
             if (data.length) {
                 handleProjectChange(data[0].projectId);
+                handleDateChange(data[0].dateTimeOriginal);
                 setLocation(data[0].location || "");
                 setSelectedDate(data[0].dateTimeOriginal.split("T")[0])
             }
@@ -269,8 +270,16 @@ export default function UserUpload() {
         if(!value) return;
 
         const selectedProject = userProjects.find(proj => proj.id === value);
+        if (!selectedProject) {
+            console.warn("Selected project not found");
+            return;
+        }
+
         setProject(selectedProject);
-        setFiles(prevFiles => prevFiles.map(file => ({ ...file, projectId: selectedProject.id })));
+        setFiles(prevFiles => prevFiles.map(file => ({
+            ...file,
+            projectId: selectedProject.id
+        })));
     };
 
 
@@ -414,7 +423,7 @@ export default function UserUpload() {
         setSelectedDate(dayjs().format('YYYY-MM-DD'));
         setLocation(null);
         setUploadSuccess(true);
-        addLog(user.id, 3, 'upload');
+        addLogProject(user.id, 3, 'upload');
 
     };
 
@@ -563,7 +572,7 @@ export default function UserUpload() {
                         }))}
                         onChange={handleProjectChange}
                         style={{ width: '100%' }}
-                        value={project !== null ? project.id : undefined}
+                        value={project ? project.id : undefined}
                     />
                 </Box>
 
