@@ -941,6 +941,7 @@ export default function UserUpload() {
                     <Title level={5}>Add Date:</Title>
                     <DatePicker
                         placeholder="Select date"
+                        maxDate={dayjs()}
                         onChange={handleDateChange}
                         suffixIcon={<CalendarOutlined />}
                         style={{ width: '100%' }}

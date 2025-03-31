@@ -9,6 +9,7 @@ namespace DAMBackend.blob
     {
         private readonly BlobContainerClient _projectsContainer;
         private readonly BlobContainerClient _palettesContainer;
+        private readonly BlobContainerClient _assetsContainer;
 
         private readonly BlobContainerClient _projectExportContainer;
 
@@ -18,6 +19,7 @@ namespace DAMBackend.blob
             {
                 var projectsContainerName = "projects";
                 var palettesContainerName = "palettes";
+                var assetsContainerName = "assets";
                 var projectExportContainerName = "export";
 
 
@@ -32,6 +34,10 @@ namespace DAMBackend.blob
                 _projectExportContainer = blobServiceClient.GetBlobContainerClient(projectExportContainerName);
                 _projectExportContainer.CreateIfNotExists();
                 Console.WriteLine($"Azure Blob container '{projectExportContainerName}' is ready.");
+
+                _assetsContainer = blobServiceClient.GetBlobContainerClient(assetsContainerName);
+                _assetsContainer.CreateIfNotExists();
+                Console.WriteLine($"Azure Blob container '{assetsContainerName}' is ready.");
             }
             catch (Exception ex)
             {
@@ -53,6 +59,7 @@ namespace DAMBackend.blob
             await blobClient.UploadAsync(stream, overwrite: true);
             return blobClient.Uri.ToString();
         }
+        
         public async Task<string> UploadAsync(MemoryStream stream, string blobName)
         {
             BlobContainerClient container = _projectExportContainer;
@@ -101,6 +108,7 @@ namespace DAMBackend.blob
 
             return null;
         }
+
         public async Task<Stream> DownloadFileFromUrlAsync(string fileUrl)
         {
             try
