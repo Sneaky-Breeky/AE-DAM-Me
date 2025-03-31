@@ -293,183 +293,184 @@ namespace DAMBackend.SubmissionEngine
         }
 
 
-//        public FileModel ProcessImageMetadataJpgPng(IFormFile imageFile, string basePath, UserModel currentUser)
-//        {
-//            // Validate input
-//            if (imageFile == null || imageFile.Length == 0)
-//            {
-//                throw new ArgumentException("Invalid image file");
-//            }
-//
-//            // Generate unique file paths
-//            string originalPath = Path.Combine(basePath, "originals", imageFile.FileName);
-//            string viewPath = Path.Combine(basePath, "views", imageFile.FileName);
-//            string thumbnailPath = Path.Combine(basePath, "thumbnails", imageFile.FileName);
-//
-//            // Ensure directories exist
-//            Directory.CreateDirectory(Path.GetDirectoryName(originalPath));
-//            Directory.CreateDirectory(Path.GetDirectoryName(viewPath));
-//            Directory.CreateDirectory(Path.GetDirectoryName(thumbnailPath));
-//
-//            // Create a FileModel instance with required fields
-//            var fileModel = new FileModel
-//            {
-//                Name = Path.GetFileNameWithoutExtension(imageFile.FileName),
-//                Extension = Path.GetExtension(imageFile.FileName),
-//                ThumbnailPath = thumbnailPath,
-//                ViewPath = viewPath,
-//                OriginalPath = originalPath,
-//                PixelWidth = 0,  // Will be updated when image is loaded
-//                PixelHeight = 0, // Will be updated when image is loaded
-//                User = currentUser,
-//                UserId = currentUser.Id
-//            };
-//
-//            // Load the image using ImageSharp
-//            using (var stream = imageFile.OpenReadStream())
-//            using (var image = Image.Load(stream))
-//            {
-//                // Set image dimensions
-//                fileModel.PixelWidth = image.Width;
-//                fileModel.PixelHeight = image.Height;
-//                fileModel.Palette = true;
-//
-//                // Check for EXIF metadata
-//                var exifProfile = image.Metadata.ExifProfile;
-//                if (exifProfile != null)
-//                {
-//                    // Extract common EXIF metadata
-//                    ExtractExifMetadata(exifProfile, fileModel);
-//                }
-//            }
-//
-//            return fileModel;
-//        }
-//
-//        private void ExtractExifMetadata(ImageSharpExif.ExifProfile exifProfile, FileModel fileModel)
-//        {
-//            object? latRef = null;
-//            object? lonRef = null;
-//            foreach (var tag in exifProfile.Values)
-//            {
-//                if (tag.Tag == ImageSharpExifTag.GPSLatitudeRef)
-//                {
-//                    latRef = tag.GetValue();
-//                } else if (tag.Tag == ImageSharpExifTag.GPSLongitudeRef)
-//                {
-//                    lonRef = tag.GetValue();
-//                }
-//                else if (tag.Tag == ImageSharpExifTag.GPSLatitude)
-//                {
-//                    fileModel.GPSLat = ConvertDMSToDecimal(tag.GetValue(), latRef?.ToString());
-//                }
-//                else if (tag.Tag == ImageSharpExifTag.GPSLongitude)
-//                {
-//                    fileModel.GPSLon = ConvertDMSToDecimal(tag.GetValue(), lonRef?.ToString());
-//                }
-//                else if (tag.Tag == ImageSharpExifTag.GPSAltitude && tag.GetValue() is SixLabors.ImageSharp.Rational altitudeRational)
-//                {
-//                    fileModel.GPSAlt = (decimal) altitudeRational.ToDouble();
-//                }
-//                // else if (tag.Tag == ImageSharpExifTag.DateTimeOriginal && tag.GetValue() is string dateTimeStr && DateTime.TryParse(dateTimeStr, out DateTime parsedDate))
-//                // {
-//                //     fileModel.DateTimeOriginal = parsedDate;
-//                // } // we did not take any date since it will be overwriten anyway
-//                else if (tag.Tag == ImageSharpExifTag.Make)
-//                {
-//                    fileModel.Make = tag.GetValue()?.ToString();
-//                }
-//                else if (tag.Tag == ImageSharpExifTag.Model)
-//                {
-//                    fileModel.Model = tag.GetValue()?.ToString();
-//                }
-//                else if (tag.Tag == ImageSharpExifTag.Copyright)
-//                {
-//                    fileModel.Copyright = tag.GetValue()?.ToString();
-//                }
-//                else if (tag.Tag == ImageSharpExifTag.FocalLength)
-//                {
-//                    if (tag.GetValue() is SixLabors.ImageSharp.Rational rational)
-//                    {
-//                        fileModel.FocalLength = (int) rational.ToDouble();
-//                    }
-//                }
-//                else if (tag.Tag == ImageSharpExifTag.FNumber)
-//                {
-//                    if (tag.GetValue() is SixLabors.ImageSharp.Rational rational)
-//                    {
-//                        fileModel.Aperture = (float) rational.ToDouble();
-//                    }
-//                }
-//                else
-//                {
-//                    // do nothing to the tag that we do not need
-//                }
-//            }
-//        }
-//
-//        private decimal? ConvertDMSToDecimal(object dmsValue, string? reference)
-//        {
-//            if (dmsValue is SixLabors.ImageSharp.Rational[] dmsArray && dmsArray.Length == 3)
-//            {
-//                decimal degrees = (decimal)dmsArray[0].ToDouble();
-//                decimal minutes = (decimal)dmsArray[1].ToDouble();
-//                decimal seconds = (decimal)dmsArray[2].ToDouble();
-//
-//                decimal decimalDegrees = degrees + (minutes / 60) + (seconds / 3600);
-//
-//                if (reference == "S" || reference == "W")
-//                {
-//                    decimalDegrees = -decimalDegrees;
-//                }
-//
-//                return decimalDegrees;
-//            }
-//
-//            return null;
-//        }
-//
-//        public  void PrintImageMetadata(string imagePath)
-//        {
-//            // Load the image
-//            using (Image image = Image.Load(imagePath))
-//            {
-//                Console.WriteLine($"Image loaded with dimensions: {image.Width}x{image.Height}");
-//
-//                // Check for EXIF metadata
-//                if (image.Metadata.ExifProfile != null)
-//                {
-//                    Console.WriteLine("\nEXIF Metadata:");
-//                    foreach (var tag in image.Metadata.ExifProfile.Values)
-//                    {
-//                        Console.WriteLine($"Tag: {tag.Tag}, Value: {tag.GetValue()}");
-//                    }
-//                }
-//                else
-//                {
-//                    Console.WriteLine("\nNo EXIF metadata found in the image.");
-//                }
-//            }
-//        }
-//
-//        // Extract EXIF data from the file using ExifTool
-//        public Dictionary<string, string> ExtractExifData(string file)
-//        {
-//            var metadata = new Dictionary<string, string>();
-//
-//            try
-//            {
-//                // TODO:  Run ExifTool on the file and capture output
-//                // nedded fields can be seen on ER diagram
-//
-//            }
-//            catch (Exception ex)
-//            {
-//                Console.WriteLine($"Error extracting EXIF data from {file}: {ex.Message}");
-//            }
-//
-//            return metadata;
-//        }
+        public FileModel ProcessImageMetadataJpgPng(IFormFile imageFile, string basePath, UserModel currentUser)
+        {
+            // Validate input
+            if (imageFile == null || imageFile.Length == 0)
+            {
+                throw new ArgumentException("Invalid image file");
+            }
+
+            // Generate unique file paths
+            string originalPath = Path.Combine(basePath, "originals", imageFile.FileName);
+            string viewPath = Path.Combine(basePath, "views", imageFile.FileName);
+            string thumbnailPath = Path.Combine(basePath, "thumbnails", imageFile.FileName);
+
+            // Ensure directories exist
+            Directory.CreateDirectory(Path.GetDirectoryName(originalPath));
+            Directory.CreateDirectory(Path.GetDirectoryName(viewPath));
+            Directory.CreateDirectory(Path.GetDirectoryName(thumbnailPath));
+
+            // Create a FileModel instance with required fields
+            var fileModel = new FileModel
+            {
+                Name = Path.GetFileNameWithoutExtension(imageFile.FileName),
+                Extension = Path.GetExtension(imageFile.FileName),
+                ThumbnailPath = thumbnailPath,
+                ViewPath = viewPath,
+                OriginalPath = originalPath,
+                PixelWidth = 0,  // Will be updated when image is loaded
+                PixelHeight = 0, // Will be updated when image is loaded
+                User = currentUser,
+                UserId = currentUser.Id
+            };
+
+            // Load the image using ImageSharp
+            using (var stream = imageFile.OpenReadStream())
+            using (var image = Image.Load(stream))
+            {
+                // Set image dimensions
+                fileModel.PixelWidth = image.Width;
+                fileModel.PixelHeight = image.Height;
+                fileModel.Palette = true;
+
+                // Check for EXIF metadata
+                var exifProfile = image.Metadata.ExifProfile;
+                if (exifProfile != null)
+                {
+                    // Extract common EXIF metadata
+                    ExtractExifMetadata(exifProfile, fileModel);
+                }
+            }
+
+            return fileModel;
+        }
+
+        private void ExtractExifMetadata(ImageSharpExif.ExifProfile exifProfile, FileModel fileModel)
+        {
+            object? latRef = null;
+            object? lonRef = null;
+            foreach (var tag in exifProfile.Values)
+            {
+                if (tag.Tag == ImageSharpExifTag.GPSLatitudeRef)
+                {
+                    latRef = tag.GetValue();
+                } else if (tag.Tag == ImageSharpExifTag.GPSLongitudeRef)
+                {
+                    lonRef = tag.GetValue();
+                }
+                else if (tag.Tag == ImageSharpExifTag.GPSLatitude)
+                {
+                    fileModel.GPSLat = ConvertDMSToDecimal(tag.GetValue(), latRef?.ToString());
+                }
+                else if (tag.Tag == ImageSharpExifTag.GPSLongitude)
+                {
+                    fileModel.GPSLon = ConvertDMSToDecimal(tag.GetValue(), lonRef?.ToString());
+                }
+                else if (tag.Tag == ImageSharpExifTag.GPSAltitude && tag.GetValue() is SixLabors.ImageSharp.Rational altitudeRational)
+                {
+                    fileModel.GPSAlt = (decimal) altitudeRational.ToDouble();
+                }
+                // else if (tag.Tag == ImageSharpExifTag.DateTimeOriginal && tag.GetValue() is string dateTimeStr && DateTime.TryParse(dateTimeStr, out DateTime parsedDate))
+                // {
+                //     fileModel.DateTimeOriginal = parsedDate;
+                // } // we did not take any date since it will be overwriten anyway
+                else if (tag.Tag == ImageSharpExifTag.Make)
+                {
+                    fileModel.Make = tag.GetValue()?.ToString();
+                }
+                else if (tag.Tag == ImageSharpExifTag.Model)
+                {
+                    fileModel.Model = tag.GetValue()?.ToString();
+                }
+                else if (tag.Tag == ImageSharpExifTag.Copyright)
+                {
+                    fileModel.Copyright = tag.GetValue()?.ToString();
+                }
+                else if (tag.Tag == ImageSharpExifTag.FocalLength)
+                {
+                    if (tag.GetValue() is SixLabors.ImageSharp.Rational rational)
+                    {
+                        fileModel.FocalLength = (int) rational.ToDouble();
+                    }
+                }
+                else if (tag.Tag == ImageSharpExifTag.FNumber)
+                {
+                    if (tag.GetValue() is SixLabors.ImageSharp.Rational rational)
+                    {
+                        fileModel.Aperture = (float) rational.ToDouble();
+                    }
+                }
+                else
+                {
+                    // do nothing to the tag that we do not need
+                }
+            }
+        }
+
+        private decimal? ConvertDMSToDecimal(object dmsValue, string? reference)
+        {
+            if (dmsValue is SixLabors.ImageSharp.Rational[] dmsArray && dmsArray.Length == 3)
+            {
+                decimal degrees = (decimal)dmsArray[0].ToDouble();
+                decimal minutes = (decimal)dmsArray[1].ToDouble();
+                decimal seconds = (decimal)dmsArray[2].ToDouble();
+
+                decimal decimalDegrees = degrees + (minutes / 60) + (seconds / 3600);
+
+                if (reference == "S" || reference == "W")
+                {
+                    decimalDegrees = -decimalDegrees;
+                }
+
+                return decimalDegrees;
+            }
+
+            return null;
+        }
+
+        public  void PrintImageMetadata(string imagePath)
+        {
+            // Load the image
+            using (Image image = Image.Load(imagePath))
+            {
+                Console.WriteLine($"Image loaded with dimensions: {image.Width}x{image.Height}");
+
+                // Check for EXIF metadata
+                if (image.Metadata.ExifProfile != null)
+                {
+                    Console.WriteLine("\nEXIF Metadata:");
+                    foreach (var tag in image.Metadata.ExifProfile.Values)
+                    {
+                        Console.WriteLine($"Tag: {tag.Tag}, Value: {tag.GetValue()}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("\nNo EXIF metadata found in the image.");
+                }
+            }
+        }
+
+        // Extract EXIF data from the file using ExifTool
+        public Dictionary<string, string> ExtractExifData(string file)
+        {
+            var metadata = new Dictionary<string, string>();
+
+            try
+            {
+                // TODO:  Run ExifTool on the file and capture output
+                // nedded fields can be seen on ER diagram
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error extracting EXIF data from {file}: {ex.Message}");
+            }
+
+            return metadata;
+        }
+
 //
 //        public void EditFile(string file, string action)
 //        {
