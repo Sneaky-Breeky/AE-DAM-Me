@@ -30,7 +30,7 @@ export async function fetchProjectsByDateRange({ StartDate, EndDate }) {
     }
 }
 
-// 1. get all the metadata for a project
+// 1. get all the metadata for a project - getProjectBasicTags(pid)
 // 2. get all basic tags for a project
 
 export async function getProjectBasicTags ({pid}){

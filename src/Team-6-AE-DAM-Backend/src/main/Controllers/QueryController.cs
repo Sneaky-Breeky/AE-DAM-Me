@@ -55,7 +55,7 @@
          }
 
          // GET: api/query/basicTags/{pid}
-                  // list of all basic tags associated with a project (easy)
+         // list of all basic tags associated with a project (easy)
                   // returns list of strings of basic tags
                   [HttpGet("basicTags/{pid}")]
                   public async Task<ActionResult<IEnumerable<string>>> ProjectBasicTagsQuery(int pid)
@@ -77,6 +77,7 @@
                       return Ok(bTags);
                   }
 
+
                   // GET: api/query/metadaTags/{pid}
                   // list of metadata tags associated with a project (easy)
                   // returns list of strings of the keys for metadata tags
@@ -97,6 +98,23 @@
 
                       return Ok(mTags);
                   }
+                  [HttpGet("metaDataTagsForImage/{pid}/{fid}")]
+                  public async Task<ActionResult<IEnumerable<string>>> ProjectMetadataTagsQuery(int pid, int fid)
+                  {
+                    var project = await _context.Projects.FindAsync(pid);
+                    if (project == null)
+                    {
+                       return NotFound("Project not found.");
+                    }
+                    var mTags = await _context.MetadataTags
+                                            .Where(mt => _context.Files.Any(f => f.ProjectId == pid && f.Id == fid))
+                                            .Select(mt => mt.Key)
+                                            .Distinct()
+                                            .ToListAsync();
+
+                                        return Ok(mTags);
+                    }
+
 
 
 
@@ -104,15 +122,15 @@
 //          [HttpPost("searchProject/{pid}")]
 //          public async Task<ActionResult<IEnumerable<FileModel>>> GetFilesProjectQuery([FromBody] ProjectFilesQuery request, int pid)
 //                   {
-
+//
 //                       var project = await _context.Projects.FindAsync(pid);
 //                       if (project == null)
 //                       {
 //                           return NotFound("Project not found.");
 //                       }
-
+//
 //                       // Query basictags first, then metadataTags
-
+//
 //                       var bTags = request.BasicTags?.bTags;
 //                       IQueryable<FileModel> files ;
 //                         files = await GetFilesBasicTagQuery(bTags, project);
@@ -262,7 +280,8 @@
                  };
 
          // Helper for finding files given a metadata query
-         private IQueryable<MetadataTagModel> GetFilesMetadataTagQuery(string Key, string Op, string Value, IQueryable<MetadataTagModel> query, value_type type)
+         private IQueryable<MetadataTagModel> GetFilesMetadataTagQuery(string Key, string Op, string Value,
+                                                                        IQueryable<MetadataTagModel> query, value_type type)
          {
 
              // Comparing string
@@ -388,32 +407,7 @@
 
 
 
-         // Query projects based on image tags
-         // get all images that contain the tag
-         // show all the projects associated wth those images
-//         [HttpGet("projectImageQuery")]
-//         public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjectQueryResult(string imageTag){
-//
-//
-//             var imageFileQuery = _context.Files
-////                                             .Where(fm => fm.bTags.Contains(imageTag.Value))
-//                 .Select(fm => fm.ProjectId);
-//
-//             var projectIds = await imageFileQuery.ToListAsync();
-//             if (projectIds == null || !projectIds.Any())
-//             {
-//                 return NotFound("No images found with this tag.");
-//             }
-//             var projectsQuery = _context.Projects.Where(p => projectIds.Contains(p.Id));
-//             var projects = await projectsQuery.ToListAsync();
-//             if (projects == null || !projects.Any())
-//             {
-//                 return NotFound("No projects found matching the image tag.");
-//             }
-//             return Ok(projects);
-//
-//         }
-//
+
 
      }
 
