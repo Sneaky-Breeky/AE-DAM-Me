@@ -29,7 +29,7 @@
                  .Where(upr => upr.UserId == userId)
                  .ToListAsync();
 
-             return Ok(new { data = logs });
+             return Ok(logs);
          }
 
          [HttpPost("addLog")]
