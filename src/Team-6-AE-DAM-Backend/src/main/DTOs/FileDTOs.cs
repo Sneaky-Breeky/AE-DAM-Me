@@ -16,7 +16,7 @@ namespace DAMBackend.Models
         public bool palette { get; set; }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public Resolution resolution { get; set; }
+        public ImageResolution resolution { get; set; }
     }
     
     public class MetadataTagDTO

@@ -1,6 +1,6 @@
 import { API_BASE_URL } from "./apiURL.js";
 
-const QUERY_URL = `${API_BASE_URL}/api/query/projectQuery`;
+const QUERY_URL = `${API_BASE_URL}/api/query`;
 
 export async function fetchProjectsByDateRange({ StartDate, EndDate }) {
     try {
@@ -16,6 +16,7 @@ export async function fetchProjectsByDateRange({ StartDate, EndDate }) {
                 'Accept': 'application/json',
             },
         });
+        console.log(response);
 
         if (!response.ok) {
             const errText = await response.text();
