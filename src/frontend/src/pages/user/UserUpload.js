@@ -68,7 +68,7 @@ export default function UserUpload() {
             await getUserPalette();
             if (user?.id) {
                 const result = await fetchProjectsForUser(user.id);
-                if (!result.error) {
+                if (!result.error) {    
                     setUserProjects(result);
                 } else {
                     console.error("Failed to load projects:", result.error);
@@ -112,7 +112,7 @@ export default function UserUpload() {
             const paletteFiles = data.map((file, index) => (
                 {
                     id: file.id,
-                    preview: file.viewPath,
+                    preview: file.thumbnailPath || file.viewPath,
                     metadata: file.bTags.length > 0 ? file.bTags.map(item => item.value) : [],
                     date: file.dateTimeOriginal.split("T")[0],
                     location: file.location || "",
