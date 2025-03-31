@@ -57,7 +57,7 @@ CREATE TABLE Palette (
 
 -- Scripts by Gary
 -- db connection string:
--- sqlcmd -S ae-server-319.database.windows.net -U aeadmin -P A772513a -d AE-DAM-AUTH
+-- sqlcmd -S ae-server-319.database.windows.net -U aeadmin -P A772513a -d AE-dam-dev-2025-3-24-19-3
 -- sqlcmd -S dam-dev.database.windows.net -U dkhanna -P Thisis@strongpaswd -d dam-dev
 CREATE TABLE Users (
     Id INT IDENTITY PRIMARY KEY,
