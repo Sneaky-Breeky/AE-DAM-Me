@@ -488,6 +488,7 @@ export default function UserUpload() {
     const handleUploadFilesToProject = async () => {
         // TODO: add "files" to current "project"'s "files" variable, and other associated info
         // TODO: update user's activity log that they added files to this certain project
+        console.log("Uploading files:", files);
 
         console.log("Uploading files:", files);
         setSpinning(true);
