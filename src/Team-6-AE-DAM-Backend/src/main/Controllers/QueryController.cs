@@ -273,8 +273,7 @@
           */
 
          [HttpGet("searchProject/{pid}")]
-         public async Task<ActionResult<IEnumerable<FileModel>>> GetFilesProjectQuery([FromBody] BasicTagList basicTags,
-             [FromBody] List<MetadataTagQueryDTO> metadataTags, int pid)
+         public async Task<ActionResult<IEnumerable<FileModel>>> GetFilesProjectQuery([FromBody] ProjectFilesQuery request, int pid)
          {
              
              var project = await _context.Projects.FindAsync(pid);
@@ -285,7 +284,7 @@
              
              // Query basictags first, then metadataTags
 
-             var bTags = basicTags.bTags;
+             var bTags = request.bTagList?.bTags;
              IQueryable<FileModel> files;
              
              if (bTags == null || !bTags.Any())
@@ -308,7 +307,7 @@
                  .Where(mt => files.Any(f => f.ProjectId == pid && f.Id == mt.FileId));
              
              
-             foreach (MetadataTagQueryDTO mTag in metadataTags)
+             foreach (MetadataTagQueryDTO mTag in request.MetadataTags ?? new List<MetadataTagQueryDTO>())
              {
                  try
                  {
@@ -369,6 +368,13 @@
 
          }
          
+     }
+
+     public class ProjectFilesQuery
+     {
+         public BasicTagList bTagList { get; set; }
+         
+         public List<MetadataTagQueryDTO> MetadataTags { get; set; }
      }
 
      public class BasicTagList
