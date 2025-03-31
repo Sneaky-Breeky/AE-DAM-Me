@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
-import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Tooltip } from 'antd';
+import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Tooltip, message } from 'antd';
 import {
     SearchOutlined,
     CalendarOutlined,
@@ -22,7 +22,6 @@ const { RangePicker } = DatePicker;
 
 export default function UserDashboard() {
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedDate, setSelectedDate] = useState(null);
     const [dateRange, setDateRange] = useState(null);
     const [projects, setProjects] = useState([]);
     const [filteredProjects, setFilteredProjects] = useState([]);
@@ -43,11 +42,11 @@ export default function UserDashboard() {
             }
 
             const favsResponse = await fetchFavoriteProjects(user.id);
-            if (!favsResponse.error) {
+            if (Array.isArray(favsResponse)) {
                 const favIds = favsResponse.map(p => p.id);
                 setFavProjects(new Set(favIds));
             } else {
-                console.error(favsResponse.error);
+                console.error("Failed to fetch favorites:", favsResponse?.error || favsResponse);
             }
         }
         if (user) {
@@ -58,67 +57,52 @@ export default function UserDashboard() {
     useEffect(() => {
         console.log('Current user from AuthContext:', user);
     }, [user]);
+    
+    
+    
+    const handleSearch = async () => {
+        const [start, end] = dateRange || [];
+
+        const query = {
+            StartDate: start ? dayjs(start).toISOString() : '0001-01-01T00:00:00Z',
+            EndDate: end ? dayjs(end).toISOString() : '0001-01-01T00:00:00Z'
+        };
 
 
-    const handleSearch = () => {
-        let filtered = [...projects];
+        try {
+            const response = await fetchProjectsByDateRange(query);
+            let filtered = response;
 
-        if (searchQuery.trim() !== '') {
-            const lowerQuery = searchQuery.toLowerCase();
+            console.log("THE RESPONSE: ", response);
 
-            filtered = filtered.filter(project =>
-                project.name.toLowerCase().includes(lowerQuery) ||
-                project.id.toString().includes(lowerQuery) ||
-                (project.location && project.location.toLowerCase().includes(lowerQuery))
-            );
+            if (searchQuery.trim() !== '') {
+                const lowerQuery = searchQuery.toLowerCase();
+
+                filtered = filtered.filter(project =>
+                    project.name.toLowerCase().includes(lowerQuery) ||
+                    project.id.toString().includes(lowerQuery) ||
+                    project.location.toLowerCase().includes(lowerQuery)
+                );
+            }
+
+            setProjects(response);
+            setFilteredProjects(filtered);
+        } catch (error) {
+            console.error("Error fetching projects:", error);
         }
-
-        setFilteredProjects(filtered);
     };
-
-    
-    
-    // const handleSearch = async () => {
-    //     const [start, end] = dateRange || [];
-    //
-    //     const query = {
-    //         StartDate: start ? dayjs(start).toISOString() : '0001-01-01T00:00:00Z',
-    //         EndDate: end ? dayjs(end).toISOString() : '0001-01-01T00:00:00Z'
-    //     };
-    //
-    //
-    //     try {
-    //         const response = await fetchProjectsByDateRange(query);
-    //         let filtered = response;
-    //        
-    //         console.log("THE RESPONSE: ", response);
-    //
-    //         if (searchQuery.trim() !== '') {
-    //             const lowerQuery = searchQuery.toLowerCase();
-    //
-    //             filtered = filtered.filter(project =>
-    //                 project.name.toLowerCase().includes(lowerQuery) ||
-    //                 project.id.toString().includes(lowerQuery) ||
-    //                 project.location.toLowerCase().includes(lowerQuery)
-    //             );
-    //         }
-    //
-    //         setProjects(response);
-    //         setFilteredProjects(filtered);
-    //     } catch (error) {
-    //         console.error("Error fetching projects:", error);
-    //     }
-    // };
 
     const handleClearFilters = () => {
         setSearchQuery('');
-        setSelectedDate(null);
+        setDateRange(null);
         setFilteredProjects(projects);
+        handleSearch();
     };
 
     const toggleFavorite = async (projectId) => {
         const updatedFavs = new Set(favProjects);
         let response;
+
         if (updatedFavs.has(projectId)) {
             updatedFavs.delete(projectId);
             response = await removeFavorite(user.id, projectId);
@@ -127,10 +111,16 @@ export default function UserDashboard() {
             response = await addFavorite(user.id, projectId);
         }
 
-        if (!response.error) {
-            setFavProjects(new Set(updatedFavs));
+        if (response.error) {
+            if (response.error.includes("User does not have access")) {
+                message.warning("You don't have access to this project and cannot favorite it.");
+            } else {
+                console.error("Error updating favorite:", response.error);
+                message.error("Something went wrong while updating favorites.");
+            }
+            setFavProjects(new Set(favProjects));
         } else {
-            console.error("Error updating favorite:", response.error);
+            setFavProjects(new Set(updatedFavs));
         }
     };
 
@@ -186,6 +176,7 @@ export default function UserDashboard() {
                         <RangePicker
                             placeholder={["Start date", "End date"]}
                             suffixIcon={<CalendarOutlined />}
+                            value={dateRange}
                             onChange={(dates) => setDateRange(dates)}
                         />
                     </Form.Item>
@@ -361,8 +352,14 @@ export default function UserDashboard() {
                                                     />
                                                 )}
                                             </Tooltip>
-                                            <Meta title={project.name} description={project.location}
-                                                style={{ textAlign: 'center' }} />
+                                            <Meta
+                                                title={
+                                                    <div style={{ textAlign: 'center' }}>
+                                                        {project.id} - {project.name}
+                                                    </div>
+                                                }
+                                                description={project.location}
+                                            />
                                         </Card>
                                     </Col>
                                 ))}
