@@ -54,6 +54,27 @@ export async function getProjectBasicTags ({pid}){
     }
 }
 
+export async function getProjectMetaDataTags ({pid}){
+    try {
+        const url = `${QUERY_URL}/metadataTags/${pid}`
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching basic tags:', error);
+        return null;
+    }
+}
+
 
 
 
