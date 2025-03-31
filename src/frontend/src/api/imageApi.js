@@ -1,6 +1,27 @@
 import { API_BASE_URL } from "./apiURL.js";
 const IMAGE_URL = `${API_BASE_URL}/api/imageQuery`;
+// shows all the basic tags of image
+export async function getProjectImageBasicTags ({pid,fid}){
+    try {
+        const url = `${IMAGE_URL}/basicTagsForImage/${pid}/${fid}`
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
 
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching basic tags:', error);
+        return null;
+    }
+}
+// shows all the metadata tags
 export async function getProjectImageMetaDataTags ({pid,fid}){
     try {
         const url = `${IMAGE_URL}/metaDataTagsForImage/${pid}/${fid}`
