@@ -54,6 +54,53 @@
          return Ok(projects);
          }
 
+         // GET: api/query/basicTags/{pid}
+                  // list of all basic tags associated with a project (easy)
+                  // returns list of strings of basic tags
+                  [HttpGet("basicTags/{pid}")]
+                  public async Task<ActionResult<IEnumerable<string>>> ProjectBasicTagsQuery(int pid)
+                  {
+                      var project = await _context.Projects.FindAsync(pid);
+                      if (project == null)
+                      {
+                          return NotFound("Project not found.");
+                      }
+
+                      var bTags = await _context.BasicTags
+                          .Where(bt => _context.ProjectBasicTag
+                             .Where(pbt => pbt.ProjectId == pid)
+                             .Select(pbt => pbt.BasicTagValue)
+                             .Contains(bt.Value))
+                          .Select(bt => bt.Value)
+                          .ToListAsync();
+
+                      return Ok(bTags);
+                  }
+
+                  // GET: api/query/metadaTags/{pid}
+                  // list of metadata tags associated with a project (easy)
+                  // returns list of strings of the keys for metadata tags
+                  [HttpGet("metadataTags/{pid}")]
+                  public async Task<ActionResult<IEnumerable<string>>> ProjectMetadataTagsQuery(int pid)
+                  {
+                      var project = await _context.Projects.FindAsync(pid);
+                      if (project == null)
+                      {
+                          return NotFound("Project not found.");
+                      }
+
+                      var mTags = await _context.MetadataTags
+                          .Where(mt => _context.Files.Any(f => f.ProjectId == pid && f.Id == mt.FileId))
+                          .Select(mt => mt.Key)
+                          .Distinct()
+                          .ToListAsync();
+
+                      return Ok(mTags);
+                  }
+
+
+
+
 //          [HttpPost("searchProject/{pid}")]
 //          public async Task<ActionResult<IEnumerable<FileModel>>> GetFilesProjectQuery([FromBody] ProjectFilesQuery request, int pid)
 //                   {
@@ -146,61 +193,6 @@
              }
 
              return Ok(bTags);
-         }
-
-
-         // GET: api/query/basictags/{pid}
-         // list of all basic tags associated with a project (easy)
-         // returns list of strings of basic tags
-         [HttpGet("basictags/{pid}")]
-         public async Task<ActionResult<IEnumerable<string>>> ProjectBasicTagsQuery(int pid)
-         {
-             var project = await _context.Projects.FindAsync(pid);
-             if (project == null)
-             {
-                 return NotFound("Project not found.");
-             }
-
-             var bTags = await _context.BasicTags
-                 .Where(bt => _context.ProjectBasicTag
-                    .Where(pbt => pbt.ProjectId == pid)
-                    .Select(pbt => pbt.BasicTagValue)
-                    .Contains(bt.Value))
-                 .Select(bt => bt.Value)
-                 .ToListAsync();
-
-             if (bTags == null || !bTags.Any())
-             {
-                 return NotFound("No tags associated with this project.");
-             }
-
-             return Ok(bTags);
-         }
-
-         // GET: api/query/metadatags/{pid}
-         // list of metadata tags associated with a project (easy)
-         // returns list of strings of the keys for metadata tags
-         [HttpGet("metadatatags/{pid}")]
-         public async Task<ActionResult<IEnumerable<string>>> ProjectMetadataTagsQuery(int pid)
-         {
-             var project = await _context.Projects.FindAsync(pid);
-             if (project == null)
-             {
-                 return NotFound("Project not found.");
-             }
-
-             var mTags = await _context.MetadataTags
-                 .Where(mt => _context.Files.Any(f => f.ProjectId == pid && f.Id == mt.FileId))
-                 .Select(mt => mt.Key)
-                 .Distinct()
-                 .ToListAsync();
-
-             if (!mTags.Any())
-             {
-                 return Ok("No metadata tags associated with this project.");
-             }
-
-             return Ok(mTags);
          }
 
 
