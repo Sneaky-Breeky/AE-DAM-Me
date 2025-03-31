@@ -45,14 +45,10 @@
                          query = query.Where(upr => upr.StartDate <= endDate);
                      }
          var projects = await query.ToListAsync();
-
-
-         if (projects == null || !projects.Any())
-                     {
-                         return NotFound("No projects found matching the given criteria.");
-                     }
          return Ok(projects);
          }
+
+
 
          
          /*
@@ -66,18 +62,18 @@
          
          // GET: api/query
          // list of all basic tags in db (easy)
-         [HttpGet("basictags")]
-         public async Task<ActionResult<IEnumerable<TagBasicModel>>> GetBasicTagsQuery()
-         {
-             var bTags = await _context.BasicTags.ToListAsync();
-             if (bTags == null || !bTags.Any())
-             {
-                 return Ok("No tags found matching the given criteria.");
-             }
-             
-             return Ok(bTags);
-         }
-         
+//         [HttpGet("basictags")]
+//         public async Task<ActionResult<IEnumerable<TagBasicModel>>> GetBasicTagsQuery()
+//         {
+//             var bTags = await _context.BasicTags.ToListAsync();
+//             if (bTags == null || !bTags.Any())
+//             {
+//                 return Ok("No tags found matching the given criteria.");
+//             }
+//
+//             return Ok(bTags);
+//         }
+//
          
          // GET: api/query/basictags/{pid}
          // list of all basic tags associated with a project (easy) 
@@ -328,30 +324,30 @@
          // Query projects based on image tags
          // get all images that contain the tag
          // show all the projects associated wth those images
-         [HttpGet("projectImageQuery")]
-         public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjectQueryResult(string imageTag){
-
-
-             var imageFileQuery = _context.Files
-//                                             .Where(fm => fm.bTags.Contains(imageTag.Value))
-                 .Select(fm => fm.ProjectId);
-
-             var projectIds = await imageFileQuery.ToListAsync();
-             if (projectIds == null || !projectIds.Any())
-             {
-                 return NotFound("No images found with this tag.");
-             }
-             var projectsQuery = _context.Projects.Where(p => projectIds.Contains(p.Id));
-             var projects = await projectsQuery.ToListAsync();
-             if (projects == null || !projects.Any())
-             {
-                 return NotFound("No projects found matching the image tag.");
-             }
-             return Ok(projects);
-
-         }
-         
-     }
+//         [HttpGet("projectImageQuery")]
+//         public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjectQueryResult(string imageTag){
+//
+//
+//             var imageFileQuery = _context.Files
+////                                             .Where(fm => fm.bTags.Contains(imageTag.Value))
+//                 .Select(fm => fm.ProjectId);
+//
+//             var projectIds = await imageFileQuery.ToListAsync();
+//             if (projectIds == null || !projectIds.Any())
+//             {
+//                 return NotFound("No images found with this tag.");
+//             }
+//             var projectsQuery = _context.Projects.Where(p => projectIds.Contains(p.Id));
+//             var projects = await projectsQuery.ToListAsync();
+//             if (projects == null || !projects.Any())
+//             {
+//                 return NotFound("No projects found matching the image tag.");
+//             }
+//             return Ok(projects);
+//
+//         }
+//
+//     }
 
      public class ProjectFilesQuery
      {
@@ -373,6 +369,7 @@
          public int v_type { get; set; }
      }
 
+ }
  }
 
      // public class ProjectQueryRequest
