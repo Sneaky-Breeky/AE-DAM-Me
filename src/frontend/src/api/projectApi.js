@@ -401,7 +401,7 @@ export async function deleteProjectTag(key, projectId) {
     }
 }
 
-export async function getFilesForProject({projectId }) {
+export async function getFilesForProject({projectId}) {
     try {
         const url = `${PROJECTS_URL}/files/${projectId}`;
 
