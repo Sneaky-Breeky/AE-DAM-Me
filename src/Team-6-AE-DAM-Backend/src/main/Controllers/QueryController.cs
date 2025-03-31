@@ -144,10 +144,6 @@
           *
           */
          
-         // api/query/project/{pid}
-         // Example input format
-         // given a list of basic tags and project, return files with those basic
-         
          
 
          // Helper for finding files with associated basictags
