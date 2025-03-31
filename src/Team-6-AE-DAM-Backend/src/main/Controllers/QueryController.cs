@@ -92,7 +92,7 @@
 
                       var mTags = await _context.MetadataTags
                           .Where(mt => _context.Files.Any(f => f.ProjectId == pid && f.Id == mt.FileId))
-                          .Select(mt => mt.Key)
+                          .Select(mt => new { mt.Key, mt.sValue, mt.iValue })
                           .Distinct()
                           .ToListAsync();
 
