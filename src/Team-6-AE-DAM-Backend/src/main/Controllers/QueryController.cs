@@ -335,7 +335,7 @@
              var imageFileQuery = _context.Files
 //                                             .Where(fm => fm.bTags.Contains(imageTag.Value))
                  .Select(fm => fm.ProjectId);
-
+    
              var projectIds = await imageFileQuery.ToListAsync();
              if (projectIds == null || !projectIds.Any())
              {
