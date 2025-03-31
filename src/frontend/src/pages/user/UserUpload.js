@@ -825,7 +825,7 @@ export default function UserUpload() {
                         </tbody>
                     </table>
                     <div style={{borderBottomWidth: 'thin', borderBottomStyle:'solid', borderColor: 'LightGray', paddingBottom:'5%'}}>
-                        <p style={{width: '100%', textAlign: 'left', fontWeight:'550',fontSize: '90%'}}>Create Metadata</p>
+                        <p style={{width: '100%', textAlign: 'left', fontWeight:'550',fontSize: '90%'}}>Add Tags from Project</p>
                         <div><span style={{fontSize: '90%'}}>Tag: </span>
                         <Select
                             showSearch
@@ -851,7 +851,7 @@ export default function UserUpload() {
                     </div>
 
                     <div style={{paddingBottom:'5%'}}>
-                        <p style={{width: '100%', textAlign: 'left', fontWeight:'550',fontSize: '90%'}}>Create Metadata</p>
+                        <p style={{width: '100%', textAlign: 'left', fontWeight:'550',fontSize: '90%'}}>Create Tags</p>
                         <div><span style={{fontSize: '90%'}}>Tag: </span>
                         <Input
                             onChange={e => setCurrentCreatedTag(e.target.value)}
