@@ -688,7 +688,7 @@ export default function UserUpload() {
                 {selectMode ? 
                 <Box sx={metadataBoxStyle}>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                        <Button type="primary" color="cyan" variant="solid" onClick={handleApplyFileMD} disabled={files.length === 0}>
+                        <Button type="primary" color="cyan" variant="solid" onClick={handleApplyFileMD} disabled={selectedFiles.size === 0}>
                             Submit File Metadata
                         </Button>
                     </Box>
@@ -705,7 +705,6 @@ export default function UserUpload() {
                         }))}
                         onChange={handleSelectProjectChange}
                         style={{ width: '100%', marginBottom:'5%'}}
-                        disabled={selectedFiles.size === 0}
                         value={selectProject !== null ? selectProject.id : undefined}
                     />
 
