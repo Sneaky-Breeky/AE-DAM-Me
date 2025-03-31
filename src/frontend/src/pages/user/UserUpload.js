@@ -693,10 +693,9 @@ export default function UserUpload() {
                     />
                 </Box>
 
-                {selectMode ? 
                 <Box sx={metadataBoxStyle}>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                        <Button type="primary" color="cyan" variant="solid" onClick={handleApplyFileMD} disabled={selectedFiles.size === 0}>
+                        <Button type="primary" color="cyan" variant="solid" onClick={handleApplyFileMD} disabled={selectedFiles.size === 0 || !selectMode}>
                             Submit File Metadata
                         </Button>
                     </Box>
@@ -867,7 +866,8 @@ export default function UserUpload() {
                         </Button>
                     </div>
                 </Box>
-                :
+
+                {/*
                 <Box sx={metadataBoxStyle}>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                         <Button type="primary" color="cyan" variant="solid" onClick={handleToggleTagging} disabled={files.length === 0}>
@@ -919,8 +919,8 @@ export default function UserUpload() {
                             </Box>
                         ))}
                     </Box>
-                </Box>
-                }
+                </Box> 
+                */}
 
                 <Box sx={metadataBoxStyle}>
                     <Title level={5}>Adjust Resolution:</Title>
