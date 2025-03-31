@@ -1,6 +1,8 @@
 import { API_BASE_URL } from "./apiURL.js";
 
 const QUERY_URL = `${API_BASE_URL}/api/query`;
+const IMAGE_URL = `${API_BASE_URL}/api/imageQuery`;
+
 
 export async function fetchProjectsByDateRange({ StartDate, EndDate }) {
     try {
@@ -95,10 +97,7 @@ export async function getProjectImageMetaDataTags ({pid,fid}){
     }
 }
 
-
-
-
-async function searchProject(pid, requestBody) {
+async function searchProject({pid, requestBody}) {
     try {
         const url = `${QUERY_URL}/searchProject/${pid}`;
         const response = await fetch(url, {
@@ -119,3 +118,26 @@ async function searchProject(pid, requestBody) {
         console.error("Error fetching project files:", error);
     }
 }
+async function getFilesByDate({StartDate, EndDate}) {
+    const sD = StartDate ? new Date(StartDate).toISOString() : '0001-01-01T00:00:00Z';
+    const eD = EndDate ? new Date(EndDate).toISOString() : '0001-01-01T00:00:00Z';
+    try {
+        const url = `${IMAGE_URL}/date/${sD}/${eD}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            },
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP errr! Status: ${response.status}`);
+        }
+        return await response.json();
+        ;
+    } catch (error) {
+        console.error("Error fetching project files:", error);
+    }
+
+
+    }
+
