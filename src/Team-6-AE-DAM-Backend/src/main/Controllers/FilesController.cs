@@ -141,17 +141,11 @@ namespace DAMBackend.Controllers
             {
                 return BadRequest("You can upload a maximum of 100 files at once.");
             }
-
-            //Delete any old file before inserting
-            var filesToDelete = await _context.Files
-                .Where(f => f.UserId == files[0].userId && f.ProjectId == files[0].projectId)
-                .ToListAsync();
-
-            if (filesToDelete.Any())
-            {
-                _context.Files.RemoveRange(filesToDelete);
-                await _context.SaveChangesAsync();
+            if(files.Count == 0){
+                return BadRequest("No file to save.");
             }
+
+            deleteFilesFromPalette(files);
 
             var savedFiles = new List<FileModel> { };
             var tagsExists = new List<String>{};
@@ -159,18 +153,25 @@ namespace DAMBackend.Controllers
             var existingTags = new List<TagBasicModel>{};
             foreach (var file in files)
             {
+                ProjectModel project = null;
+                if (!file.palette){
+                    if (!file.projectId.HasValue)
+                    {
+                        return BadRequest("Please specify project id for saving files in the project.");
+                    }
 
-                var project = _context.Projects.Find(file.projectId);
-                if (project == null)
-                {
-                    return BadRequest(string.Concat("Project with id = ", file.projectId, " not found"));
+                    project = _context.Projects.Find(file.projectId);
+                    if (project == null)
+                    {
+                        return BadRequest($"Project with id = {file.projectId} not found");
+                    }
                 }
+
                 var user = _context.Users.Find(file.userId);
                 if (user == null)
                 {
                     return BadRequest(string.Concat("User with id = ", file.userId, " not found"));
                 }
-
 
                 var updatedPath = file.filePath;
                 if (!file.palette)
@@ -216,6 +217,8 @@ namespace DAMBackend.Controllers
                     PixelHeight = dimensions.HasValue ? dimensions.Value.Height : 0,
                     PixelWidth = dimensions.HasValue ? dimensions.Value.Width : 0,
                     bTags = newTags,
+                    Resolution = file.resolution,
+                    Location = file.location
                 };
                 // TODO: 
                 //call exif function and update fileModel object before saving
@@ -251,6 +254,25 @@ namespace DAMBackend.Controllers
             return await _context.BasicTags.AnyAsync(t => t.Value == tagValue);
         }
 
+        private void deleteFilesFromPalette(List<FileDTO> files){
+            //Delete any old file before inserting when uploading files to Palette.
+            var filesToDelete = _context.Files
+                .Where(f => f.UserId == files[0].userId && f.Palette)
+                .ToList();
+            if (filesToDelete.Any()){
+                // Get all related FileTags
+                var fileIds = filesToDelete.Select(f => f.Id).ToList();
+                var fileTagsToDelete = _context.FileTags.Where(ft => fileIds.Contains(ft.FileId));
+
+                // Remove FileTags first
+                _context.FileTags.RemoveRange(fileTagsToDelete);
+                _context.SaveChanges();
+
+                // Now remove Files
+                _context.Files.RemoveRange(filesToDelete);
+                _context.SaveChanges();
+            }
+        }
 
 
         // DELETE: api/Files/5
