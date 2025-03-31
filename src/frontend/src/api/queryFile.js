@@ -42,7 +42,7 @@ async function searchProject(pid, requestBody) {
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
+            throw new Error(`HTTP errr! Status: ${response.status}`);
         }
 
         const filesResult = await response.json();
