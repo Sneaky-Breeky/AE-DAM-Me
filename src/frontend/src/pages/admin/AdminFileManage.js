@@ -5,7 +5,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import { Typography, Input, Space, Image, Button, Popconfirm, Form, Tooltip} from 'antd';
 import { SearchOutlined, DeleteOutlined, CloseOutlined, EditOutlined, QuestionCircleOutlined} from '@ant-design/icons';
-import { projects } from '../../utils/dummyData.js';
+import { fetchProjects, putProject} from '../../api/projectApi'
 
 const { Title } = Typography;
 
@@ -19,12 +19,29 @@ export default function AdminFileManage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedImages, setSelectedImages] = useState(new Set());
   const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [fetchedProjects, setFetchedProjects] = useState([]);
   const [formValues, setFormValues] = useState({});
 
   const [form] = Form.useForm();
 
 
-  const deleteSelectedImages = () => {
+    useEffect(() => {
+        const loadProjects = async () => {
+            const response = await fetchProjects();
+            if (response && !response.error) {
+                setFetchedProjects(response);
+            } else {
+                console.error("Error fetching projects:", response?.error || "Unknown error");
+            }
+        };
+
+        loadProjects();
+    }, []);
+
+    
+    
+
+    const deleteSelectedImages = () => {
     setImageList(imageList.filter((_, index) => !selectedImages.has(index)));
     setSelectedImages(new Set());
     setIsEditMode(false);
@@ -148,7 +165,7 @@ export default function AdminFileManage() {
         <tr>
             <th colspan="2" style={{height: '40px', textAlign: 'center', borderBottom:'1px solid black', padding: '0px'}} ><h3>Projects</h3></th>
         </tr>
-        {projects.filter(p =>
+        {fetchedProjects.filter(p =>
             p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             p.id.toString().includes(searchQuery)
         ).map((p) => (

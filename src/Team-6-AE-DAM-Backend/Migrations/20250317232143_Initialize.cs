@@ -151,26 +151,26 @@ namespace DAMBackend.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "MetadataTags",
-                columns: table => new
-                {
-                    FileId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Key = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    sValue = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    iValue = table.Column<int>(type: "int", nullable: false),
-                    type = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_MetadataTags", x => new { x.FileId, x.Key });
-                    table.ForeignKey(
-                        name: "FK_MetadataTags_Files_FileId",
-                        column: x => x.FileId,
-                        principalTable: "Files",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+            // migrationBuilder.CreateTable(
+            //     name: "MetadataTags",
+            //     columns: table => new
+            //     {
+            //         FileId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+            //         Key = table.Column<string>(type: "nvarchar(450)", nullable: false),
+            //         sValue = table.Column<string>(type: "nvarchar(max)", nullable: false),
+            //         iValue = table.Column<int>(type: "int", nullable: false),
+            //         type = table.Column<int>(type: "int", nullable: false)
+            //     },
+            //     constraints: table =>
+            //     {
+            //         table.PrimaryKey("PK_MetadataTags", x => new { x.FileId, x.Key });
+            //         table.ForeignKey(
+            //             name: "FK_MetadataTags_Files_FileId",
+            //             column: x => x.FileId,
+            //             principalTable: "Files",
+            //             principalColumn: "Id",
+            //             onDelete: ReferentialAction.Cascade);
+            //     });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Files_ProjectId",

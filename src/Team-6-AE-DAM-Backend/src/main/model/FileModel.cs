@@ -1,7 +1,10 @@
 // *** Not using Data Annotations currently as am not sure how the searching 
 // will work, fluent API is supposedly better, will ask team
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System.Text.Json.Serialization;
 
 namespace DAMBackend.Models
 
@@ -18,13 +21,22 @@ Project that it was added to with id
     // some of the data might not be found on exif, so i changed some collumn to be nullable
     public class FileModel 
     {
-        public Guid Id { get; set; }
+        // [Key]
+        // [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        //
+        // public int NewId { get; set; }
+        public int Id { get; set; }
         public required string Name { get; set; }
         public required string Extension { get; set; }
         public string? Description { get; set; }
         public required string ThumbnailPath { get; set; }
         public required string ViewPath { get; set; }
         public required string OriginalPath { get; set; }
+        public string? Location { get; set; }
+        
+
+        public ImageResolution Resolution { get; set; }
+
 
         public decimal? GPSLat { get; set; }
         public decimal? GPSLon { get; set; }
@@ -42,14 +54,21 @@ Project that it was added to with id
         public ICollection<MetadataTagModel> mTags { get; set; } = new HashSet<MetadataTagModel>();
         public ICollection<TagBasicModel> bTags { get; set;} = new HashSet<TagBasicModel>();
         
+        public ICollection<LogImage> Logs { get; set;} = new HashSet<LogImage>();
+
         public int? ProjectId { get; set; }
+        [JsonIgnore]
         public ProjectModel? Project { get; set; }
 
         public int UserId { get; set; }
-        // change to be required 
+        
+        // change to be required )
+        [JsonIgnore]
         public UserModel User { get; set; }
 
         public bool Palette {get; set;}
+        
+
       // public class FileModel 
 
     // EXIF QUALITIES
@@ -100,6 +119,14 @@ Project that it was added to with id
     //     public ProjectModel? Project { get; set; }
         
     // }
-}
+    }
+    public class FileTag
+    {
+        public int FileId { get; set; }
+        public string TagId { get; set; }
+
+        public FileModel File { get; set; }
+        public TagBasicModel Tag { get; set; }
+    }
 
 }

@@ -20,7 +20,6 @@ namespace DAMBackend.Controllers
         {
             _context = context;
         }
-
         // GET: api/Users
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserModel>>> GetUsers()
@@ -31,7 +30,7 @@ namespace DAMBackend.Controllers
 
         // GET: api/Users/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
+        public async Task<ActionResult<UserModel>> GetUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
 
@@ -46,7 +45,7 @@ namespace DAMBackend.Controllers
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(int id, User user)
+        public async Task<IActionResult> PutUser(int id, UserModel user)
         {
             if (id != user.Id)
             {
@@ -77,7 +76,7 @@ namespace DAMBackend.Controllers
         // POST: api/Users
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<User>> PostUser(UserModel usermodel)
+        public async Task<ActionResult<UserModel>> PostUser(UserModel usermodel)
         {
             _context.Users.Add(usermodel);
             await _context.SaveChangesAsync();
@@ -100,7 +99,6 @@ namespace DAMBackend.Controllers
 
             return NoContent();
         }
-
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.Id == id);

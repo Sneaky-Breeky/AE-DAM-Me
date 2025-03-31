@@ -1,6 +1,6 @@
-import React, {useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
-import {Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Tooltip} from 'antd';
+import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Tooltip } from 'antd';
 import {
     SearchOutlined,
     CalendarOutlined,
@@ -9,66 +9,129 @@ import {
     PlusOutlined,
     UnorderedListOutlined
 } from '@ant-design/icons';
-import {useNavigate} from 'react-router-dom';
-import {projects, users} from '../../utils/dummyData.js';
+import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
+import {addFavorite, removeFavorite, fetchProjects, fetchFavoriteProjects} from '../../api/projectApi';
+import {fetchProjectsByDateRange} from '../../api/queryFile';
+import { useAuth } from '../../contexts/AuthContext';
 
-const {Title} = Typography;
-const {Meta} = Card;
+const { Title } = Typography;
+const { Meta } = Card;
+const { RangePicker } = DatePicker;
 
 
 export default function UserDashboard() {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedDate, setSelectedDate] = useState(null);
+    const [dateRange, setDateRange] = useState(null);
+    const [projects, setProjects] = useState([]);
+    const [filteredProjects, setFilteredProjects] = useState([]);
+    const [favProjects, setFavProjects] = useState(new Set());
+
+    const { user } = useAuth();
     const navigate = useNavigate();
-    const currentUser = users.find((user) => user.name === "John Doe"); // assume John Doe is logged in
-    const [filteredProjects, setFilteredProjects] = useState(projects);
-    //TODO: check each project to see if the current user has access to it, then modify it accordingly
-    const [favProjects, setFavProjects] = useState(new Set(currentUser.favProjs));
+    
+    useEffect(() => {
+        async function loadProjects() {
+            if (!user?.id) return;
+            const response = await fetchProjects();
+            if (!response.error) {
+                setProjects(response);
+                setFilteredProjects(response);
+            } else {
+                console.error(response.error);
+            }
+
+            const favsResponse = await fetchFavoriteProjects(user.id);
+            if (!favsResponse.error) {
+                const favIds = favsResponse.map(p => p.id);
+                setFavProjects(new Set(favIds));
+            } else {
+                console.error(favsResponse.error);
+            }
+        }
+        if (user) {
+            loadProjects();
+        }
+    }, [user]);
+
+    useEffect(() => {
+        console.log('Current user from AuthContext:', user);
+    }, [user]);
+
 
     const handleSearch = () => {
         let filtered = [...projects];
 
         if (searchQuery.trim() !== '') {
-            const query = searchQuery.toLowerCase();
+            const lowerQuery = searchQuery.toLowerCase();
 
             filtered = filtered.filter(project =>
-                project.name.toLowerCase() === query ||
-                project.id.toString() === query ||
-                project.location.toLowerCase() === query ||
-                project.files.some(file =>
-                    file.Metadata.some(tag => tag.toLowerCase() === query)
-                )
+                project.name.toLowerCase().includes(lowerQuery) ||
+                project.id.toString().includes(lowerQuery) ||
+                (project.location && project.location.toLowerCase().includes(lowerQuery))
             );
         }
 
-        if (selectedDate) {
-            filtered = filtered.filter(project =>
-                dayjs(project.date).isSame(selectedDate, 'day')
-            );
-        }
-
-
-        setFilteredProjects([...filtered]);
-        console.log("Filtered projects:", filtered);
+        setFilteredProjects(filtered);
     };
+
+    
+    
+    // const handleSearch = async () => {
+    //     const [start, end] = dateRange || [];
+    //
+    //     const query = {
+    //         StartDate: start ? dayjs(start).toISOString() : '0001-01-01T00:00:00Z',
+    //         EndDate: end ? dayjs(end).toISOString() : '0001-01-01T00:00:00Z'
+    //     };
+    //
+    //
+    //     try {
+    //         const response = await fetchProjectsByDateRange(query);
+    //         let filtered = response;
+    //        
+    //         console.log("THE RESPONSE: ", response);
+    //
+    //         if (searchQuery.trim() !== '') {
+    //             const lowerQuery = searchQuery.toLowerCase();
+    //
+    //             filtered = filtered.filter(project =>
+    //                 project.name.toLowerCase().includes(lowerQuery) ||
+    //                 project.id.toString().includes(lowerQuery) ||
+    //                 project.location.toLowerCase().includes(lowerQuery)
+    //             );
+    //         }
+    //
+    //         setProjects(response);
+    //         setFilteredProjects(filtered);
+    //     } catch (error) {
+    //         console.error("Error fetching projects:", error);
+    //     }
+    // };
 
     const handleClearFilters = () => {
         setSearchQuery('');
         setSelectedDate(null);
         setFilteredProjects(projects);
     };
-    
-    const toggleFavorite = (projectId) => {
+
+    const toggleFavorite = async (projectId) => {
         const updatedFavs = new Set(favProjects);
+        let response;
         if (updatedFavs.has(projectId)) {
             updatedFavs.delete(projectId);
+            response = await removeFavorite(user.id, projectId);
         } else {
             updatedFavs.add(projectId);
+            response = await addFavorite(user.id, projectId);
         }
-        setFavProjects(updatedFavs);
-        currentUser.favProjs = Array.from(updatedFavs);
-        console.log("Updated Favorites:", currentUser.favProjs);
+
+        if (!response.error) {
+            setFavProjects(new Set(updatedFavs));
+        } else {
+            console.error("Error updating favorite:", response.error);
+        }
     };
 
     return (
@@ -112,19 +175,18 @@ export default function UserDashboard() {
                     <Form.Item>
                         <Input
                             placeholder="Search files..."
-                            prefix={<SearchOutlined/>}
+                            prefix={<SearchOutlined />}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            style={{width: '300px'}}
+                            style={{ width: '300px' }}
                         />
                     </Form.Item>
 
                     <Form.Item>
-                        <DatePicker
-                            placeholder="Select date"
-                            maxDate={dayjs()}
-                            onChange={(date, dateString) => setSelectedDate(dateString)}
-                            suffixIcon={<CalendarOutlined/>}
+                        <RangePicker
+                            placeholder={["Start date", "End date"]}
+                            suffixIcon={<CalendarOutlined />}
+                            onChange={(dates) => setDateRange(dates)}
                         />
                     </Form.Item>
 
@@ -177,10 +239,10 @@ export default function UserDashboard() {
                             border: 1,
                             borderColor: 'grey.500',
                             borderRadius: '16px',
-                            '&:hover': {boxShadow: 3},
+                            '&:hover': { boxShadow: 3 },
                         }}
                     >
-                        <PlusOutlined style={{marginTop: '30px', fontSize: '50px'}}/>
+                        <PlusOutlined style={{ marginTop: '30px', fontSize: '50px' }} />
                         <h4>Upload Images/Videos</h4>
                     </Box>
 
@@ -197,10 +259,10 @@ export default function UserDashboard() {
                             border: 1,
                             borderColor: 'grey.500',
                             borderRadius: '16px',
-                            '&:hover': {boxShadow: 3},
+                            '&:hover': { boxShadow: 3 },
                         }}
                     >
-                        <UnorderedListOutlined style={{marginTop: '30px', fontSize: '50px'}}/>
+                        <UnorderedListOutlined style={{ marginTop: '30px', fontSize: '50px' }} />
                         <h4>Activity Log</h4>
                     </Box>
                 </Box>
@@ -225,10 +287,10 @@ export default function UserDashboard() {
                         padding: '20px',
                         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                         overflow: 'hidden',
-                        '&:hover': {boxShadow: 3},
+                        '&:hover': { boxShadow: 3 },
                     }}
                 >
-                    <Title level={3} style={{textAlign: 'center', marginBottom: '30px', marginTop: '0px'}}>
+                    <Title level={3} style={{ textAlign: 'center', marginBottom: '30px', marginTop: '0px' }}>
                         Active Projects
                     </Title>
                     <Box
@@ -241,7 +303,7 @@ export default function UserDashboard() {
                     >
                         <Row gutter={[16, 16]} justify="center">
                             {filteredProjects
-                                .filter(project => project.status.toLowerCase() === "active") // ✅ Only show active projects
+                                .filter(project => project.status.toLowerCase() === "active")
                                 .sort((a, b) => (favProjects.has(a.id) ? -1 : 1) - (favProjects.has(b.id) ? -1 : 1))
                                 .map((project, index) => (
                                     <Col key={index} xs={24} sm={12} md={8} lg={6}>
@@ -250,17 +312,17 @@ export default function UserDashboard() {
                                             cover={
                                                 <img
                                                     alt={project.name}
-                                                    src={project.thumbnail}
-                                                    style={{height: '80px', objectFit: 'cover'}}
+                                                    src={project.ImagePath}
+                                                    style={{ height: '80px', objectFit: 'cover' }}
                                                 />
                                             }
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 sessionStorage.setItem('menu', 1);
-                                                navigate(`/projectDirectory/projectOverview/${project.id}`, {state: {project}});
+                                                navigate(`/projectDirectory/projectOverview/${project.id}`, { state: { project } });
                                                 window.location.reload();
                                             }}
-                                            style={{borderRadius: '10px', overflow: 'hidden'}}
+                                            style={{ borderRadius: '10px', overflow: 'hidden' }}
                                         >
                                             <Tooltip title="Favorite Project">
                                                 {favProjects.has(project.id) ? (
@@ -300,7 +362,7 @@ export default function UserDashboard() {
                                                 )}
                                             </Tooltip>
                                             <Meta title={project.name} description={project.location}
-                                                  style={{textAlign: 'center'}}/>
+                                                style={{ textAlign: 'center' }} />
                                         </Card>
                                     </Col>
                                 ))}

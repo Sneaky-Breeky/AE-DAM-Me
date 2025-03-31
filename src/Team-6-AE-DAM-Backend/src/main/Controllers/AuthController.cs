@@ -17,7 +17,6 @@ namespace backend.auth
             _authService = authService;
             _logger = logger;
         }
-
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] LoginRequest request)
         {
@@ -28,14 +27,24 @@ namespace backend.auth
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var result = await _authService.AuthenticateUserAsync(request.Email, request.Password);
-            
-            if (!result)
+            var user = await _authService.AuthenticateUserAsync(request.Email, request.Password);
+
+            if (user is null)
             {
                 return Unauthorized(new { error = "Invalid email or password" });
             }
 
-            return Ok(new { message = "Login successful", role = "user" });
+            // Return useful user details after successful login
+            return Ok(new 
+            { 
+                message = "Login successful", 
+                id = user.Id,
+                email = user.Email,
+                firstName = user.FirstName,
+                lastName = user.LastName,
+                role = user.Role.ToString().ToLower(),
+                status = user.Status
+            });
         }
 
         [HttpGet("fetchusers")]
@@ -94,6 +103,43 @@ namespace backend.auth
                 return BadRequest(new { error = "Invalid user data format" });
             }
         }
+        
+        [HttpPut("updateuser/{email}")]
+        public async Task<IActionResult> UpdateUser(string email, [FromBody] JsonElement jsonUser)
+        {
+            try
+            {
+                string? firstName = jsonUser.GetProperty("firstname").GetString();
+                string? lastName = jsonUser.GetProperty("lastname").GetString();
+                string? password = jsonUser.TryGetProperty("password", out var pwdProp) ? pwdProp.GetString() : null;
+                string? roleString = jsonUser.GetProperty("role").GetString();
+                string? statusString = jsonUser.GetProperty("status").GetString();
+
+                Role role = roleString?.ToLower() == "admin" ? Role.Admin : Role.User;
+                bool status = statusString?.ToLower() == "active";
+
+                var updatedUser = new UserModel
+                {
+                    FirstName = firstName ?? "",
+                    LastName = lastName ?? "",
+                    Email = email,
+                    PasswordHash = password, // <-- do NOT use ?? "" here, keep it null if not set
+                    Role = role,
+                    Status = status
+                };
+
+                var result = await _authService.UpdateUserAsync(email, updatedUser);
+                return result
+                    ? Ok(new { message = "User updated successfully" })
+                    : NotFound(new { error = "User not found" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error updating user: {ex.Message}");
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
     }
 
     public class LoginRequest

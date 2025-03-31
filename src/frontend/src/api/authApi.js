@@ -11,23 +11,21 @@ const AUTH_URL = `${API_BASE_URL}/api/auth`;
 export async function loginUser(email, password) {
     const response = await fetch(`${AUTH_URL}/login`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
     });
 
+    const data = await response.json().catch(() => ({ error: "Unknown error" }));
+
     if (!response.ok) {
-        // Handle errors and parse JSON safely
-        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
-        return errorData;
+        return { error: data.error || "Unknown error" };
     }
 
-    return response.json();
+    return data;
 }
 
 export async function fetchUsers() {
-    const response = await fetch(`${AUTH_URL}/fetchusers`, { 
+    const response = await fetch(`${AUTH_URL}/fetchusers`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json"
@@ -81,3 +79,27 @@ export async function deleteUser(email) {
         throw err;
     }
 }
+
+export async function updateUser(email, userData) {
+    try {
+        const response = await fetch(`${AUTH_URL}/updateuser/${email}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(userData)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || "Failed to update user");
+        }
+
+        return result;
+    } catch (error) {
+        console.error("Error updating user:", error);
+        return { error: error.message };
+    }
+}
+

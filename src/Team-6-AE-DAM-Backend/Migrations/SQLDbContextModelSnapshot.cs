@@ -24,9 +24,11 @@ namespace DAMBackend.Migrations
 
             modelBuilder.Entity("DAMBackend.Models.FileModel", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<float?>("Aperture")
                         .HasColumnType("real");
@@ -59,6 +61,9 @@ namespace DAMBackend.Migrations
                         .HasPrecision(10, 7)
                         .HasColumnType("decimal(10,7)");
 
+                    b.Property<string>("Location")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Make")
                         .HasColumnType("nvarchar(max)");
 
@@ -85,6 +90,9 @@ namespace DAMBackend.Migrations
                     b.Property<int?>("ProjectId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("Resolution")
+                        .HasColumnType("int");
+
                     b.Property<string>("ThumbnailPath")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -105,10 +113,60 @@ namespace DAMBackend.Migrations
                     b.ToTable("Files");
                 });
 
+            modelBuilder.Entity("DAMBackend.Models.FileTag", b =>
+                {
+                    b.Property<int>("FileId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TagId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("FileId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("FileTag", (string)null);
+                });
+
+            modelBuilder.Entity("DAMBackend.Models.LogImage", b =>
+                {
+                    b.Property<int>("LogId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LogId"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("FileId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TypeOfLog")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("LogId");
+
+                    b.HasIndex("FileId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("LogImage");
+                });
+
             modelBuilder.Entity("DAMBackend.Models.MetadataTagModel", b =>
                 {
-                    b.Property<Guid>("FileId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("FileId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Key")
                         .HasColumnType("nvarchar(450)");
@@ -126,6 +184,21 @@ namespace DAMBackend.Migrations
                     b.HasKey("FileId", "Key");
 
                     b.ToTable("MetadataTags");
+                });
+
+            modelBuilder.Entity("DAMBackend.Models.ProjectBasicTag", b =>
+                {
+                    b.Property<string>("BasicTagValue")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.HasKey("BasicTagValue", "ProjectId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("ProjectBasicTag");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.ProjectModel", b =>
@@ -159,6 +232,9 @@ namespace DAMBackend.Migrations
                     b.Property<string>("Phase")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -262,21 +338,6 @@ namespace DAMBackend.Migrations
                     b.ToTable("UserProjectRelations");
                 });
 
-            modelBuilder.Entity("FileTag", b =>
-                {
-                    b.Property<Guid>("FileId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("TagId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("FileId", "TagId");
-
-                    b.HasIndex("TagId");
-
-                    b.ToTable("FileTag");
-                });
-
             modelBuilder.Entity("DAMBackend.Models.FileModel", b =>
                 {
                     b.HasOne("DAMBackend.Models.ProjectModel", "Project")
@@ -294,6 +355,52 @@ namespace DAMBackend.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("DAMBackend.Models.FileTag", b =>
+                {
+                    b.HasOne("DAMBackend.Models.FileModel", "File")
+                        .WithMany()
+                        .HasForeignKey("FileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DAMBackend.Models.TagBasicModel", "Tag")
+                        .WithMany()
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("File");
+
+                    b.Navigation("Tag");
+                });
+
+            modelBuilder.Entity("DAMBackend.Models.LogImage", b =>
+                {
+                    b.HasOne("DAMBackend.Models.FileModel", "File")
+                        .WithMany("Logs")
+                        .HasForeignKey("FileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAMBackend.Models.ProjectModel", "Project")
+                        .WithMany("Logs")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAMBackend.Models.UserModel", "User")
+                        .WithMany("Logs")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("File");
+
+                    b.Navigation("Project");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("DAMBackend.Models.MetadataTagModel", b =>
                 {
                     b.HasOne("DAMBackend.Models.FileModel", "File")
@@ -303,6 +410,25 @@ namespace DAMBackend.Migrations
                         .IsRequired();
 
                     b.Navigation("File");
+                });
+
+            modelBuilder.Entity("DAMBackend.Models.ProjectBasicTag", b =>
+                {
+                    b.HasOne("DAMBackend.Models.TagBasicModel", "BasicTag")
+                        .WithMany()
+                        .HasForeignKey("BasicTagValue")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAMBackend.Models.ProjectModel", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BasicTag");
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.ProjectTagModel", b =>
@@ -342,29 +468,18 @@ namespace DAMBackend.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("FileTag", b =>
-                {
-                    b.HasOne("DAMBackend.Models.FileModel", null)
-                        .WithMany()
-                        .HasForeignKey("FileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DAMBackend.Models.TagBasicModel", null)
-                        .WithMany()
-                        .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("DAMBackend.Models.FileModel", b =>
                 {
+                    b.Navigation("Logs");
+
                     b.Navigation("mTags");
                 });
 
             modelBuilder.Entity("DAMBackend.Models.ProjectModel", b =>
                 {
                     b.Navigation("Files");
+
+                    b.Navigation("Logs");
 
                     b.Navigation("Tags");
 
@@ -376,6 +491,8 @@ namespace DAMBackend.Migrations
             modelBuilder.Entity("DAMBackend.Models.UserModel", b =>
                 {
                     b.Navigation("Files");
+
+                    b.Navigation("Logs");
 
                     b.Navigation("UserProjectRelations");
                 });

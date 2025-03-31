@@ -1,6 +1,6 @@
 import React, { useState, useEffect  } from 'react';
 import Box from '@mui/material/Box';
-import { Typography, Button, Input, Form, Space, DatePicker, Spin, message, Popconfirm } from 'antd';
+import { Typography, Button, Input, Form, Space, DatePicker, Spin, message, Popconfirm, Radio } from 'antd';
 import { SearchOutlined, CloseOutlined, MinusCircleOutlined, PlusOutlined, CalendarOutlined} from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { fetchProjects, putProject, addProjectTag, deleteProjectTag, fetchTagsForProject } from '../../api/projectApi';
@@ -48,7 +48,7 @@ getProjects();
                 field: tag.key,
                 fieldMD: tag.type === 0 ? tag.sValue : tag.iValue
             }));
-            form.setFieldsValue({ fields: convertedTags });
+            form.setFieldsValue({ fields: convertedTags, status: project.status === 'Active' ? 'active' : 'inactive',  });
         }
     }, [project, isEditOpen]);
 
@@ -57,16 +57,15 @@ getProjects();
 //TODO: only allow Status to be "Active" or "Inactive"
 const handleMDEdits = async (values) => {
 if (!project) return;
-
+console.log(values.status);
 try {
 const updatedFields = {};
 
 // compare original project info with current form info
 if (values.name && values.name !== project.name) updatedFields.name = values.name;
 if (values.location && values.location !== project.location) updatedFields.location = values.location;
-if (values.date && (!project.date || !dayjs(project.date).isSame(dayjs(values.date), 'day'))) {
-updatedFields.date = values.date.format('YYYY-MM-DD');
-}
+    if (values.startDate && (!project.startDate || !dayjs(project.startDate).isSame(dayjs(values.startDate), 'day'))
+    ) {updatedFields.startDate = values.startDate.format('YYYY-MM-DD');}
 if (values.status && values.status !== project.status) updatedFields.status = values.status;
 if (values.phase && values.phase !== project.phase) updatedFields.phase = values.phase;
 
@@ -117,6 +116,10 @@ message.success("Project updated successfully");
 setEditOpen(false);
 form.resetFields();
 await getProjects();
+const refreshedProjects = await fetchProjects();
+const updatedProject = refreshedProjects.find(p => p.id === project.id);
+const theUpdatedTags = await fetchTagsForProject(project.id);
+setProject({ ...updatedProject, tags: theUpdatedTags });
 } catch (err) {
 console.error("Error updating project:", err);
 message.error("Failed to update project");
@@ -311,7 +314,7 @@ editNameOpen, setEditNameOpen, editLocOpen, setEditLocOpen, editDateOpen, setEdi
             initialValues={{
                 name: project?.name || '',
                 location: project?.location || '',
-                date: project?.date ? dayjs(project.date) : null,
+                startDate: project?.startDate ? dayjs(project.startDate) : null,
                 status: project?.status || '',
                 phase: project?.phase || '',
                 fields: project?.tags?.map(tag => ({
@@ -336,23 +339,29 @@ editNameOpen, setEditNameOpen, editLocOpen, setEditLocOpen, editDateOpen, setEdi
             </Form.Item>
 
             <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
-                       name="date"
-                       label={<p style={{fontWeight:"bold"}}>Date</p>}
+                       name="startDate"
+                       label={<p style={{fontWeight:"bold"}}>Start Date</p>}
             >
                 {isEditOpen ? <DatePicker
                         maxDate={dayjs()}
-                        placeholder= {dayjs(project.date).format('MMM DD, YYYY')}
+                        placeholder={project?.startDate ? dayjs(project.startDate).format('MMM DD, YYYY') : ''}
                         suffixIcon={<CalendarOutlined />}
                         style={{ width: '100%' }}
                     />
-                    : dayjs(project.date).format('MMM DD, YYYY')}
+                    : dayjs(project.startDate).format('MMM DD, YYYY')}
             </Form.Item>
 
             <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}
-                       name="status"
-                       label={<p style={{fontWeight:"bold"}}>Status</p>}
-            >
-                {isEditOpen ? <Input defaultValue={project.status}/> : project.status}
+                        name="status"
+                        label={<p style={{fontWeight:"bold"}}>Status</p>}
+                        layout="horizontal"
+                        >
+                {isEditOpen ? 
+                        <Radio.Group>
+                            <Radio value="active">Active</Radio>
+                            <Radio value="inactive">Inactive</Radio>
+                        </Radio.Group> 
+                        : project.status}
             </Form.Item>
 
             <Form.Item style={{ marginBottom: "5px", marginRight: "10px" }}

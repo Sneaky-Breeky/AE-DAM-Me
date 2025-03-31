@@ -13,8 +13,8 @@ import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
-import {authenticateUser, isAdmin} from '../utils/auth';
 import { loginUser } from '../api/authApi';
+import { useAuth } from '../contexts/AuthContext';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -42,21 +42,21 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 
 
 
-export default function Login({setLoggedIn}) {
+export default function Login({ setLoggedIn }) {
   const [emailError, setEmailError] = useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = useState('');
   const [passwordError, setPasswordError] = useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
   const navigate = useNavigate();
+  const { login, isAdmin } = useAuth();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-  
+
     const userData = new FormData(event.currentTarget);
     const email = userData.get('email');
     const password = userData.get('password');
-  
-    const user = authenticateUser(email, password);
+
     setPasswordErrorMessage('');
     setEmailErrorMessage('');
     setPasswordError(false);
@@ -66,30 +66,38 @@ export default function Login({setLoggedIn}) {
       const response = await loginUser(email, password);
 
       if (response.error) {
-        if (response.error === "wrongpassword") {
+        if (response.error === "Invalid email or password") {
           setPasswordError(true);
-          setPasswordErrorMessage("Incorrect password.");
+          setPasswordErrorMessage("Incorrect email or password.");
         } else {
           setEmailError(true);
-          setEmailErrorMessage("Account does not exist.");
+          setEmailErrorMessage(response.error || "Something went wrong.");
         }
         return;
       }
 
-      localStorage.setItem("loggedIn", "true");
-      localStorage.setItem("userRole", response.role);
+      login({
+        id: response.id,
+        email: response.email,
+        firstName: response.firstName,
+        lastName: response.lastName,
+        role: response.role,
+        status: response.status,
+        favProjects: response.favProjects || []
+      });
 
       setLoggedIn(true);
-      navigate(isAdmin() ? "/admin/dashboard" : "/user/dashboard");
-      
+
+      const isAdmin = response.role === "admin"; // ✅ CHANGED: directly from response
+      navigate(isAdmin ? "/admin/dashboard" : "/user/dashboard");
+
     } catch (error) {
       console.error("Login error:", error);
       setEmailError(true);
       setEmailErrorMessage("Something went wrong. Please try again.");
     }
-    
   };
-  
+
 
   return (
     <SignInContainer direction="column" justifyContent="center">

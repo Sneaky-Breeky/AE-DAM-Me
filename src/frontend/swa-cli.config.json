@@ -1,0 +1,14 @@
+{
+  "$schema": "https://aka.ms/azure/static-web-apps-cli/schema",
+  "configurations": {
+    "frontend": {
+      "appLocation": ".",
+      "outputLocation": "build",
+      "appBuildCommand": "npm run build",
+      "run": "npm start",
+      "appName": "freelabour",
+      "resourceGroup": "freelabourproject",
+      "appDevserverUrl": "http://localhost:3000"
+    }
+  }
+}

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Tooltip } from 'antd';
 import { SearchOutlined, CalendarOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { projects, users } from '../../utils/dummyData.js';
+import { useAuth } from '../../contexts/AuthContext'
+import {addFavorite, removeFavorite, fetchProjectsForUser, fetchFavoriteProjects} from '../../api/projectApi';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
@@ -13,67 +14,97 @@ const { Meta } = Card;
 export default function UserProjectDir() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDate, setSelectedDate] = useState(null);
-  const navigate = useNavigate();
-  const currentUser = users.find((user) => user.name === "John Doe"); // assume John Doe is logged in
-  const [favProjects, setFavProjects] = useState(new Set(currentUser.favProjs));
-  const [filteredProjects, setFilteredProjects] = useState(projects);
-  //TODO: check each project to see if the current user has access to it, then modify it accordingly
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [projects, setProjects] = useState([]);
+  const [filteredProjects, setFilteredProjects] = useState([]);
+  const { user, login } = useAuth();
+  const navigate = useNavigate();
+
+  const [favProjects, setFavProjects] = useState(new Set(user?.favProjects || []));
+
+    useEffect(() => {
+        const loadProjects = async () => {
+            if (!user?.id) return;
+
+            const data = await fetchProjectsForUser(user.id);
+            if (data.error) {
+                console.error(data.error);
+            } else {
+                const activeProjects = data.filter(p => p.status.toLowerCase() === "active");
+                setProjects(activeProjects);
+                setFilteredProjects(activeProjects);
+            }
+
+            const favs = await fetchFavoriteProjects(user.id);
+            if (!favs.error) {
+                const favIds = favs.map(p => p.id);
+                setFavProjects(new Set(favIds));
+            } else {
+                console.error(favs.error);
+            }
+        };
+        loadProjects();
+    }, [user]);
 
 
-    const handleSearch = () => {
-        let filtered = [...projects];
+  const handleSearch = () => {
+    let filtered = [...projects];
 
-        if (searchQuery.trim() !== '') {
-            const query = searchQuery.toLowerCase();
+    if (searchQuery.trim() !== '') {
+      const query = searchQuery.toLowerCase();
 
-            filtered = filtered.filter(project =>
-                project.name.toLowerCase() === query ||
-                project.id.toString() === query || 
-                project.location.toLowerCase() === query ||
-                project.files.some(file =>
-                    file.Metadata.some(tag => tag.toLowerCase() === query)
-                )
-            );
-        }
-
-        if (selectedDate) {
-            filtered = filtered.filter(project =>
-                dayjs(project.date).isSame(selectedDate, 'day')
-            );
-        }
-
-        if (selectedStatus) {
-            filtered = filtered.filter(project =>
-                project.status.toLowerCase() === selectedStatus.toLowerCase()
-            );
-        }
-
-        setFilteredProjects([...filtered]);
-        console.log("Filtered projects:", filtered);
-    };
-
-
-    const handleClearFilters = () => {
-        setSearchQuery('');
-        setSelectedDate(null);
-        setSelectedStatus('');
-        setFilteredProjects(projects);
-    };
-
-
-    const toggleFavorite = (projectId) => {
-    const updatedFavs = new Set(favProjects);
-    if (updatedFavs.has(projectId)) {
-      updatedFavs.delete(projectId);
-    } else {
-      updatedFavs.add(projectId);
+      filtered = filtered.filter((project) =>
+        project.name.toLowerCase() === query ||
+        project.id.toString() === query ||
+        project.location.toLowerCase() === query ||
+        project.files.some(file =>
+          file.Metadata.some(tag => tag.toLowerCase() === query)
+        )
+      );
     }
-    setFavProjects(updatedFavs);
 
-    currentUser.favProjs = Array.from(updatedFavs);
-    console.log("Updated Favorites:", currentUser.favProjs);
+    if (selectedDate) {
+      filtered = filtered.filter(project =>
+        dayjs(project.startDate).isSame(selectedDate, 'day')
+      );
+    }
+
+    if (selectedStatus) {
+      filtered = filtered.filter(project =>
+        project.status.toLowerCase() === selectedStatus.toLowerCase()
+      );
+    }
+    setFilteredProjects(filtered);
   };
+
+
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setSelectedDate(null);
+    setSelectedStatus('');
+    setFilteredProjects([...projects]);
+  };
+
+
+    const toggleFavorite = async (projectId) => {
+        const updatedFavs = new Set(favProjects);
+        let response;
+
+        if (updatedFavs.has(projectId)) {
+            updatedFavs.delete(projectId);
+            response = await removeFavorite(user.id, projectId);
+        } else {
+            updatedFavs.add(projectId);
+            response = await addFavorite(user.id, projectId);
+        }
+
+        if (!response.error) {
+            setFavProjects(new Set(updatedFavs));
+        } else {
+            console.error("Error updating favorite:", response.error);
+        }
+    };
+
 
   return (
     <Box
@@ -123,15 +154,15 @@ export default function UserProjectDir() {
           </Form.Item>
 
           <Form.Item>
-              <Select
-                  style={{ width: 120 }}
-                  allowClear
-                  options={[
-                      { value: 'active', label: 'Active' },
-                      { value: 'inactive', label: 'Inactive' }]}
-                  onChange={(value) => setSelectedStatus(value)}
-                  placeholder="Select status"
-              />
+            <Select
+              style={{ width: 120 }}
+              allowClear
+              options={[
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' }]}
+              onChange={(value) => setSelectedStatus(value)}
+              placeholder="Select status"
+            />
           </Form.Item>
 
           <Form.Item>
@@ -149,11 +180,11 @@ export default function UserProjectDir() {
             </Button>
           </Form.Item>
 
-            <Form.Item>
-                <Button type="default" onClick={handleClearFilters} danger>
-                    Clear Filters
-                </Button>
-            </Form.Item>
+          <Form.Item>
+            <Button type="default" onClick={handleClearFilters} danger>
+              Clear Filters
+            </Button>
+          </Form.Item>
         </Form>
       </Box>
 
@@ -197,18 +228,17 @@ export default function UserProjectDir() {
             }}
           >
             <Row gutter={[16, 16]} justify="center">
-              {filteredProjects.sort((a, b) => {
-                const aFav = favProjects.has(a.id) ? -1 : 1;
-                const bFav = favProjects.has(b.id) ? -1 : 1;
-                return aFav - bFav;
-              }).map((project, index) => (
+                {filteredProjects
+                    .filter(project => project.status.toLowerCase() === "active")
+                    .sort((a, b) => (favProjects.has(a.id) ? -1 : 1) - (favProjects.has(b.id) ? -1 : 1))
+                    .map((project, index) => (
                 <Col key={index} xs={24} sm={12} md={8} lg={6}>
                   <Card
                     hoverable
                     cover={
                       <img
                         alt={project.name}
-                        src={project.thumbnail}
+                        src={project.ImagePath}
                         style={{ height: '80px', objectFit: 'cover' }}
                       />
                     }

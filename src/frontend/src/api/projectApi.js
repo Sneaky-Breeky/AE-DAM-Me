@@ -11,7 +11,7 @@ export async function fetchProjects() {
             }
         });
 
-        console.log(`Fetching projects from: ${PROJECTS_URL}/getprojs`);
+        console.log(`Fetching projects from: ${PROJECTS_URL}/getallprojs`);
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -23,12 +23,52 @@ export async function fetchProjects() {
             }
         }
 
-        return await response.json();
+        const projects = await response.json();
+
+        const processedProjects = projects.map(project => ({
+            ...project,
+            ImagePath: project.imagePath ? `${process.env.PUBLIC_URL}${project.imagePath}` : ''
+        }));
+
+        console.log("Processed Image Paths:", processedProjects.map(p => p.ImagePath));
+
+        return processedProjects;
     } catch (error) {
         console.error("Network or fetch error:", error);
         return { error: "Network error or server unreachable", message: error.message };
     }
 }
+
+export async function fetchProjectsForUser(userId) {
+    try {
+        const response = await fetch(`${PROJECTS_URL}/AccessList/${userId}`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" }
+        });
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || "Failed to fetch user's projects");
+        }
+
+        // 1. Get the actual project data (array)
+        const projects = result.data || [];
+
+        // 2. Remap the 'imagePath' to a valid URL
+        const processedProjects = projects.map(project => ({
+            ...project,
+            ImagePath: project.imagePath
+                ? `${process.env.PUBLIC_URL}${project.imagePath}`
+                : ''
+        }));
+
+        return processedProjects;
+    } catch (error) {
+        console.error("Error fetching user projects:", error);
+        return { error: error.message };
+    }
+}
+
 
 export async function fetchUsersForProject(projectId) {
     try {
@@ -58,6 +98,115 @@ export async function fetchUsersForProject(projectId) {
         return { error: "Network error or server unreachable", message: error.message };
     }
 }
+
+export async function addFavorite(userId, projectId) {
+    try {
+        const response = await fetch(`${PROJECTS_URL}/AccessList/favorite/${userId}/${projectId}`, {
+            method: 'PUT',
+        });
+
+        if (!response.ok) {
+            const error = await response.text();
+            throw new Error(error || "Failed to add favorite");
+        }
+
+        return await response.json();
+    } catch (err) {
+        console.error("Error adding favorite:", err);
+        return { error: err.message };
+    }
+}
+
+export async function removeFavorite(userId, projectId) {
+    try {
+        const response = await fetch(`${PROJECTS_URL}/AccessList/removefavorite/${userId}/${projectId}`, {
+            method: 'PUT',
+        });
+
+        if (!response.ok) {
+            const error = await response.text();
+            throw new Error(error || "Failed to remove favorite");
+        }
+
+        return await response.json();
+    } catch (err) {
+        console.error("Error removing favorite:", err);
+        return { error: err.message };
+    }
+}
+
+export async function fetchFavoriteProjects(userId) {
+    try {
+        const response = await fetch(`${PROJECTS_URL}/AccessList/FavProjects/${userId}`);
+
+        if (!response.ok) {
+            const error = await response.text();
+            return { error };
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (err) {
+        console.error("Error fetching favorite projects:", err);
+        return { error: err.message };
+    }
+}
+
+
+export async function addWorkingOn(userId, projectId) {
+    try {
+        const response = await fetch(`${PROJECTS_URL}/AccessList/workingon/${userId}/${projectId}`, {
+            method: 'PUT',
+        });
+
+        if (!response.ok) {
+            const error = await response.text();
+            throw new Error(error || "Failed to add working on");
+        }
+
+        return await response.json();
+    } catch (err) {
+        console.error("Error adding working on:", err);
+        return { error: err.message };
+    }
+}
+
+
+export async function removeWorkingOn(userId, projectId) {
+    try {
+        const response = await fetch(`${PROJECTS_URL}/AccessList/removeworkingon/${userId}/${projectId}`, {
+            method: 'PUT',
+        });
+
+        if (!response.ok) {
+            const error = await response.text();
+            throw new Error(error || "Failed to remove working on");
+        }
+
+        return await response.json();
+    } catch (err) {
+        console.error("Error removing working on:", err);
+        return { error: err.message };
+    }
+}
+
+export async function fetchWorkingProjects(userId) {
+    try {
+        const response = await fetch(`${PROJECTS_URL}/AccessList/WorkingProjects/${userId}`);
+
+        if (!response.ok) {
+            const error = await response.text();
+            return { error };
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (err) {
+        console.error("Error fetching working projects:", err);
+        return { error: err.message };
+    }
+}
+
 
 // create new project
 export async function postProject(projectData) {
@@ -176,7 +325,7 @@ export async function fetchTagsForProject(projectId) {
 
 export async function addProjectTag(ProjectId, Key, Value, type) {
     try {
-        const url = new URL(`${PROJECTS_URL}/addprojtag`);
+        const url = new URL(`${PROJECTS_URL}/tag/add`);
         url.searchParams.append("ProjectId", ProjectId);
         url.searchParams.append("Key", Key);
         url.searchParams.append("Value", Value);
@@ -189,7 +338,21 @@ export async function addProjectTag(ProjectId, Key, Value, type) {
             }
         });
 
-        if (!response.ok) {
+        // const response = await fetch(`${PROJECTS_URL}/tag/add`, {
+        //     method: "POST",
+        //     headers: {
+        //         "Content-Type": "application/json"
+        //     },
+        //     body: JSON.stringify({
+        //         ProjectId: ProjectId,
+        //         Key: Key,
+        //         Value: Value,
+        //         Type: type
+        //     })
+        // });
+        
+                
+                if (!response.ok) {
             const errorText = await response.text();
             try {
                 const errorData = JSON.parse(errorText);

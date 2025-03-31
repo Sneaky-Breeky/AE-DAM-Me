@@ -1,13 +1,19 @@
 import React, { useState, useRef, useCallback } from 'react';
 import Box from '@mui/material/Box';
-import { Input, Typography, DatePicker, Button, Form, Select, Tag, Flex, Image, Modal, Slider, message, Result } from "antd";
+import { Input, Typography, DatePicker, Button, Form, Select, Tag, Flex, Image, Modal, Slider, message, Result, Spin } from "antd";
 import { PlusOutlined, RotateLeftOutlined, RotateRightOutlined, ExclamationCircleOutlined, CalendarOutlined, DownOutlined, CloseOutlined } from '@ant-design/icons';
 import Cropper from 'react-easy-crop';
 import dayjs from 'dayjs';
-import { projects, users } from '../../utils/dummyData.js';
+import { addLog, addLogProject } from "../../api/logApi";
+import { API_BASE_URL } from '../../api/apiURL.js';
+import { Palette } from '@mui/icons-material';
+import { fetchProjectsForUser } from '../../api/projectApi';
+import { useEffect } from "react";
+import { useAuth } from '../../contexts/AuthContext';
 
 const { Title } = Typography;
 const { confirm } = Modal;
+const projectId = 6;
 
 const tagStyle = {
     backgroundColor: '#dbdbdb',
@@ -27,9 +33,11 @@ export default function UserUpload() {
     const [taggingMode, setTaggingMode] = useState(false);
     const [selectedFiles, setSelectedFiles] = useState(new Set());
     const [userFiles, setUserFiles] = useState([]);
+    const [spinning, setSpinning] = React.useState(false);
+    const [percent, setPercent] = React.useState(0);
 
 
-
+    const [userProjects, setUserProjects] = useState([]);
     const [project, setProject] = useState(null);
     const [metadataTagsInput, setMetadataTagsInput] = useState();
     const [metadataTags, setMetadataTags] = useState([]);
@@ -48,6 +56,103 @@ export default function UserUpload() {
         width: '100%'
     };
 
+    const { user } = useAuth();
+
+
+    useEffect(() => {
+        const fetchPaletteAndProjects = async () => {
+            await getUserPalette();
+            if (user?.id) {
+                const result = await fetchProjectsForUser(user.id);
+                if (!result.error) {
+                    setUserProjects(result);
+                } else {
+                    console.error("Failed to load projects:", result.error);
+                }
+            }
+        };
+
+        fetchPaletteAndProjects();
+    }, [user]);
+
+    
+    
+    useEffect(() => {
+        const fetchPalette = async () => {
+            await getUserPalette();
+        };
+
+        fetchPalette();
+    }, []);
+
+    async function getUserPalette() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/Files/${user.id}/palette`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'text/plain'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.length) {
+                handleProjectChange(data[0].projectId);
+                handleDateChange(data[0].dateTimeOriginal);
+                setLocation(data[0].location || "");
+                setSelectedDate(data[0].dateTimeOriginal.split("T")[0])
+            }
+            const paletteFiles = data.map((file, index) => (
+                {
+                    id: file.id,
+                    preview: file.viewPath,
+                    metadata: file.bTags.length > 0 ? file.bTags.map(item => item.value) : [],
+                    date: file.dateTimeOriginal.split("T")[0],
+                    location: file.location || "",
+                    projectId: file.projectId,
+                    userId: file.userId,
+                    file: { name: file.name },
+                }));
+            paletteFiles.forEach(file => {
+                if (file.metadata.length) {
+                    setTagApplications(prev => [
+                        { tags: [...file.metadata], files: [file] }
+                    ]);
+                }
+            });
+            console.log("User Palette Details : ", paletteFiles);
+            setFiles((prevFiles) => [...paletteFiles]);
+            setUserFiles((prevUserFiles) => [...paletteFiles]);
+
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+    async function deleteFile(fileId) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/Files/${fileId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'text/plain'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            console.log("File Deleted : ");
+
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
     const handleMetadataTagClose = (removedTag) => {
         const newTags = metadataTags.filter((tag) => tag !== removedTag);
         setMetadataTags(newTags);
@@ -65,46 +170,54 @@ export default function UserUpload() {
         message.warning(`Duplicate files ignored: ${duplicates.join(", ")}`);
     };
 
-    const handleFileChange = (event) => {
-        const selectedFiles = Array.from(event.target.files).map(file => ({
-            file,
-            preview: URL.createObjectURL(file),
-            metadata: [],
-            date: selectedDate || null,
-            location: location || "",
-            projectId: project !== null ? project.id : null
-        }));
+    const handleFileChange = async (event) => {
+        const selectedFiles = Array.from(event.target.files);
+        // Check if any files are selected
+        const totalFiles = files.length + selectedFiles.length;
 
-        setFiles((prevFiles) => {
-            const totalFiles = prevFiles.length + selectedFiles.length;
+        if (totalFiles > MAX_FILES) {
+            message.error(`You can only upload up to ${MAX_FILES} images. You tried adding ${totalFiles}.`);
+            return;
+        }
 
-            if (totalFiles > MAX_FILES) {
-                message.error(`You can only upload up to ${MAX_FILES} images. You tried adding ${totalFiles}.`);
-                return prevFiles;
-            }
-
-            const existingFileNames = new Set(prevFiles.map(file => file.file.name));
-
-            const newFiles = [];
-            const duplicateFiles = [];
-
-            selectedFiles.forEach(file => {
-                if (existingFileNames.has(file.file.name)) {
-                    duplicateFiles.push(file.file.name);
-                } else {
-                    newFiles.push(file);
-                }
-            });
-
-            if (duplicateFiles.length > 0) {
-                showDuplicateAlert(duplicateFiles);
-            }
-
-            setUserFiles((prevUserFiles) => [...prevUserFiles, ...newFiles]);
-            return [...prevFiles, ...newFiles];
+        const formData = new FormData();
+        selectedFiles.forEach(file => {
+            formData.append('files', file);
         });
-    };
+        try {
+            setSpinning(true);
+            // Upload the files to the server
+            const response = await fetch(`${API_BASE_URL}/api/files/upload`, {
+                method: 'POST',
+                body: formData,
+            });
+            setSpinning(false);
+            if (!response.ok) {
+                throw new Error('Failed to upload files.');
+            }
 
+            const uploadedFileUrls = await response.json();
+
+            const newFiles = selectedFiles.map((file, index) => ({
+                file: { name: getFileName(uploadedFileUrls[index]) },
+                preview: uploadedFileUrls[index] || URL.createObjectURL(file),
+                metadata: [],
+                date: selectedDate || null,
+                location: location || "",
+                projectId: project ? project.id : null,
+                userId: user.id
+            }));
+
+            setFiles((prevFiles) => [...prevFiles, ...newFiles]);
+            setUserFiles((prevUserFiles) => [...prevUserFiles, ...newFiles]);
+        } catch (error) {
+            console.error(error);
+            message.error('An error occurred while uploading files.');
+        }
+    };
+    const getFileName = (url) => {
+        return url.split('/').pop().split('?')[0].split('#')[0];
+    };
     const handleEditImage = (file) => {
         setCurrentFile(file);
         setEditing(true);
@@ -120,12 +233,11 @@ export default function UserUpload() {
         setCurrentFile(null);
     };
 
-    const confirmRemoveFile = (fileName) => {
-        if (!fileName || !fileName.file) {
-            console.error("Invalid file object:", fileName);
+    const confirmRemoveFile = (file) => {
+        if (!file || !file.file) {
+            console.error("Invalid file object:", file);
             return;
         }
-
         confirm({
             title: 'Are you sure you want to remove this image?',
             icon: <ExclamationCircleOutlined />,
@@ -134,23 +246,40 @@ export default function UserUpload() {
             okType: 'danger',
             cancelText: 'No',
             onOk() {
-                removeFile(fileName.file.name);
+                removeFile(file);
             }
         });
+
     };
 
-    const removeFile = (fileName) => {
+    const removeFile = async (file) => {
+        if (file.id) {
+            setSpinning(true);
+            await deleteFile(file.id);
+            setSpinning(false);
+        }
         setFiles(prevFiles => {
-            const updatedFiles = prevFiles.filter(file => file.file.name !== fileName);
+            const updatedFiles = prevFiles.filter(f => f.file.name !== file.file.name);
             return [...updatedFiles];
         });
-        setUserFiles(prevFiles => prevFiles.filter(file => file.file.name !== fileName));
+        setUserFiles(prevFiles => prevFiles.filter(f => f.file.name !== file.file.name));
+
     };
 
     const handleProjectChange = (value) => {
-        const selectedProject = projects.find(proj => proj.id === value);
+        if(!value) return;
+
+        const selectedProject = userProjects.find(proj => proj.id === value);
+        if (!selectedProject) {
+            console.warn("Selected project not found");
+            return;
+        }
+
         setProject(selectedProject);
-        setFiles(prevFiles => prevFiles.map(file => ({ ...file, projectId: selectedProject.id })));
+        setFiles(prevFiles => prevFiles.map(file => ({
+            ...file,
+            projectId: selectedProject.id
+        })));
     };
 
 
@@ -224,6 +353,7 @@ export default function UserUpload() {
     };
 
     const handleDateChange = (date, dateString) => {
+        if(!dateString) return;
         setSelectedDate(dateString);
         setFiles(prevFiles => prevFiles.map(file => ({ ...file, date: dateString })));
     };
@@ -233,11 +363,58 @@ export default function UserUpload() {
         setLocation(newLocation);
         setFiles(prevFiles => prevFiles.map(file => ({ ...file, location: newLocation })));
     };
+    const handleUploadFilesToPalette = async () => {
+        console.log("Uploading files to palette:", files);
+        setSpinning(true);
+        const filesToSave = files.map(({ file, ...rest }) => ({
+            ...rest,
+            filePath: rest.preview,
+            palette: true
+        }));
+        await saveFiles(filesToSave);
+        await getUserPalette();
+        setSpinning(false);
+    }
+    const saveFiles = async (filesToSave) => {
+        try {
+            // Upload the files to the server
+            const response = await fetch(`${API_BASE_URL}/api/files`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(filesToSave),
+            });
 
-    const handleUploadFilesToProject = () => {
+            if (!response.ok) {
+                throw new Error('Failed to upload files.');
+            }
+
+            // Assuming the API returns an array of URLs corresponding to the uploaded files
+            const uploadedFileUrls = await response.json();
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+    const handleUploadFilesToProject = async () => {
         // TODO: add "files" to current "project"'s "files" variable, and other associated info
         // TODO: update user's activity log that they added files to this certain project
+
         console.log("Uploading files:", files);
+        setSpinning(true);
+        const filesToSave = files.map(({ file, ...rest }) => ({
+            ...rest,
+            filePath: rest.preview,
+            palette: false
+        }));
+        await saveFiles(filesToSave);
+        setSpinning(false);
+        userFiles.forEach(file => {
+            addLog(user.id, file.id, projectId, 'upload');
+        });
+
+
         setFiles([]);
         setUserFiles([]);
         setTagApplications([]);
@@ -246,14 +423,13 @@ export default function UserUpload() {
         setSelectedDate(dayjs().format('YYYY-MM-DD'));
         setLocation(null);
         setUploadSuccess(true);
+        addLogProject(user.id, 3, 'upload');
+
     };
 
     const resetUploadState = () => {
         setUploadSuccess(false);
     };
-
-
-
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'row', minHeight: '100vh', padding: '20px', gap: '20px', paddingBottom: '40px' }}>
@@ -367,9 +543,14 @@ export default function UserUpload() {
                             ]}
                         />
                     ) : (
-                        <Button type="primary" color="cyan" variant="solid" onClick={handleUploadFilesToProject} disabled={files.length === 0 || project === null}>
-                            Upload Files to Project
-                        </Button>
+                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                            <Button style={{ margin: '10px' }} type="primary" color="cyan" variant="solid" onClick={handleUploadFilesToProject} disabled={files.length === 0 || project === null}>
+                                Upload Files to Project
+                            </Button>
+                            <Button style={{ margin: '10px' }} type="secondary" color="green" variant="solid" disabled={files.length == 0} onClick={handleUploadFilesToPalette}>
+                                Save To Palette
+                            </Button>
+                        </div>
                     )}
                 </Box>
 
@@ -385,13 +566,13 @@ export default function UserUpload() {
                         filterOption={(input, option) =>
                             (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                         }
-                        options={projects.map(proj => ({
+                        options={userProjects.map(proj => ({
                             value: proj.id,
                             label: `${proj.id}: ${proj.name}`
                         }))}
                         onChange={handleProjectChange}
                         style={{ width: '100%' }}
-                        value={project !== null ? project.id : undefined}
+                        value={project ? project.id : undefined}
                     />
                 </Box>
 
@@ -483,7 +664,8 @@ export default function UserUpload() {
                     />
                 </Box>
             </Box>
-
+            <Spin spinning={spinning} fullscreen tip="Please Wait..." size="large" />
         </Box>
+
     );
 }

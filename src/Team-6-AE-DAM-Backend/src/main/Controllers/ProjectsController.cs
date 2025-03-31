@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using DAMBackend.Data;
 using DAMBackend.Models;
 using DAMBackend.services;
+using System.Globalization;
+using CsvHelper;
+using CsvHelper.Configuration;
 
 namespace DAMBackend.Controllers
 {
@@ -16,10 +19,12 @@ namespace DAMBackend.Controllers
     public class ProjectsController : ControllerBase
     {
         private readonly SQLDbContext _context;
+        private readonly CsvEngine _csvService;
 
-        public ProjectsController(SQLDbContext context)
+        public ProjectsController(SQLDbContext context,CsvEngine csvService)
         {
             _context = context;
+            _csvService = csvService;
         }
 
 
@@ -43,7 +48,8 @@ namespace DAMBackend.Controllers
                 projectData.Phase,
                 projectData.AccessLevel,
                 projectData.LastUpdate,
-                projectData.Description
+                projectData.Description,
+                projectData.StartDate
             );
 
             // Store the new project to the list or your database
@@ -68,20 +74,20 @@ namespace DAMBackend.Controllers
 
         //     return NoContent();
         // }
-        
+
 
         // GET: api/damprojects/AccessList/{userId}
         [HttpGet("AccessList/{userId}")]
-        public async Task<ActionResult<IEnumerable<Project>>> GetProjects(int userId)
+        public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjects(int userId)
         {
             var projects = await _context.UserProjectRelations
                 .Where(upr => upr.UserId == userId)
                 .Select(upr => upr.Project)
                 .ToListAsync();
-            
+
             return Ok(new { data = projects });
         }
-        
+
         //POST
         [HttpPost("AccessList/{userId}/{pId}")]
         public async Task<ActionResult<UserProjectRelation>> GiveAccess(int userId, int pId)
@@ -101,11 +107,11 @@ namespace DAMBackend.Controllers
             };
             _context.UserProjectRelations.Add(access);
             await _context.SaveChangesAsync();
-            
+
             return Ok(access);
         }
-        
-        
+
+
         [HttpDelete("AccessList/{projectId}")]
         public async Task<IActionResult> RemoveAllAccessForProject(int projectId)
         {
@@ -118,7 +124,7 @@ namespace DAMBackend.Controllers
             return NoContent();
         }
 
-        
+
         [HttpGet("{projectId}/users")]
         public async Task<ActionResult<IEnumerable<UserModel>>> GetUsersForProject(int projectId)
         {
@@ -135,59 +141,122 @@ namespace DAMBackend.Controllers
             return Ok(users);
         }
 
-        
-        [HttpGet("FavProjects/{userId}")]
+
+        [HttpPut("AccessList/favorite/{userId}/{projectId}")]
+        public async Task<IActionResult> AddFavorite(int userId, int projectId)
+        {
+            var relation = await _context.UserProjectRelations
+                .FirstOrDefaultAsync(r => r.UserId == userId && r.ProjectId == projectId);
+
+            if (relation == null)
+                return NotFound("User does not have access to this project.");
+
+            relation.IsFavourite = true;
+            await _context.SaveChangesAsync();
+            return Ok(new { projectId, isFavourite = true });
+        }
+
+
+        [HttpPut("AccessList/removefavorite/{userId}/{projectId}")]
+        public async Task<IActionResult> RemoveFavorite(int userId, int projectId)
+        {
+            var relation = await _context.UserProjectRelations
+                .FirstOrDefaultAsync(r => r.UserId == userId && r.ProjectId == projectId);
+
+            if (relation == null)
+            {
+                return NotFound("User does not have access to this project.");
+            }
+
+            relation.IsFavourite = false;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { projectId, isFavourite = false });
+        }
+
+
+        [HttpGet("AccessList/FavProjects/{userId}")]
         public async Task<ActionResult<List<ProjectModel>>> GetFavProjects(int userId)
         {
             var projects = await _context.UserProjectRelations
                 .Where(upr => upr.UserId == userId && upr.IsFavourite)
                 .Select(upr => upr.Project)
                 .ToListAsync();
-            
-            
+
+
             if (projects.Count == 0)
             {
                 return NotFound("No fav projects found.");
             }
-            
+
             return Ok(projects);
         }
-        
-        [HttpGet("WorkingProjects/{userId}")]
+
+
+        [HttpPut("AccessList/workingon/{userId}/{projectId}")]
+        public async Task<IActionResult> AddWorkingOn(int userId, int projectId)
+        {
+            var relation = await _context.UserProjectRelations
+                .FirstOrDefaultAsync(r => r.UserId == userId && r.ProjectId == projectId);
+
+            if (relation == null)
+                return NotFound("User does not have access to this project.");
+
+            relation.WorkingOn = true;
+            await _context.SaveChangesAsync();
+            return Ok(new { projectId, workingOn = true });
+        }
+
+
+
+        [HttpPut("AccessList/removeworkingon/{userId}/{projectId}")]
+        public async Task<IActionResult> RemoveWorkingOn(int userId, int projectId)
+        {
+            var relation = await _context.UserProjectRelations
+                .FirstOrDefaultAsync(r => r.UserId == userId && r.ProjectId == projectId);
+
+            if (relation == null)
+            {
+                return NotFound("User does not have access to this project.");
+            }
+
+            relation.WorkingOn = false;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { projectId, workingOn = false });
+        }
+
+
+
+        [HttpGet("AccessList/WorkingProjects/{userId}")]
         public async Task<ActionResult<List<ProjectModel>>> GetWorkingProjects(int userId)
         {
             var projects = await _context.UserProjectRelations
                 .Where(upr => upr.UserId == userId && upr.WorkingOn)
                 .Select(upr => upr.Project)
                 .ToListAsync();
-            
-            
+
+
             if (projects.Count == 0)
             {
                 return NotFound("No working projects found.");
             }
-            
+
             return Ok(projects);
         }
 
         // GET: api/damprojects/getallprojs
         [HttpGet("getallprojs")]
-        public async Task<ActionResult<List<Project>>> GetAllProjects()
+        public async Task<ActionResult<List<ProjectModel>>> GetAllProjects()
         {
             var projects = await _context.Projects.ToListAsync();
-
-            if (projects == null)
-            {
-                return NotFound();
-            }
-
             return Ok(projects);
         }
-        
-        
+
+
         // GET: api/damprojects/id
         [HttpGet("{id}")]
-        public async Task<ActionResult<Project>> GetProject(int id)
+        public async Task<ActionResult<ProjectModel>> GetProject(int id)
         {
             var project = await _context.Projects.FindAsync(id);
 
@@ -199,19 +268,19 @@ namespace DAMBackend.Controllers
             return Ok(project);
         }
 
-        // PUT: api/damprojects/{id}
+// PUT: api/damprojects/{id}
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProject(int id, [FromBody] ProjectModel projectData)
         {
-            
+
             if (id != projectData.Id)
             {
                 return BadRequest("Project ID in URL does not match project ID in body.");
             }
-            
-            var currentProject = await _context.Projects.FindAsync(id);
-            
+
+            var currentProject = await _context.Projects.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == projectData.Id);
+
             if (currentProject == null)
             {
                 return NotFound();
@@ -219,6 +288,22 @@ namespace DAMBackend.Controllers
 
             _context.Entry(currentProject).CurrentValues.SetValues(projectData);
             currentProject.LastUpdate = DateTime.UtcNow;
+            
+
+            // Track tags to be updated
+            var tagsToUpdate = projectData.Tags.Where(updatedTag => currentProject.Tags
+                    .Any(existingTag => existingTag.Key == updatedTag.Key 
+                                        && (existingTag.iValue != updatedTag.iValue || existingTag.sValue != updatedTag.sValue)))
+                .ToList();
+
+            // Update existing tags
+            foreach (var tagToUpdate in tagsToUpdate)
+            {
+                var existingTag = currentProject.Tags.First(t => t.Key == tagToUpdate.Key);
+                // mukund be better
+                existingTag.sValue = tagToUpdate.sValue;
+                existingTag.iValue = tagToUpdate.iValue;
+            }
 
             try
             {
@@ -232,9 +317,10 @@ namespace DAMBackend.Controllers
             return NoContent();
         }
 
-    
+
 
         // DELETE: api/damprojects/{id}
+        // manually delete files
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProject(int id)
         {
@@ -243,13 +329,17 @@ namespace DAMBackend.Controllers
             {
                 return NotFound();
             }
-
-            _context.Projects.Remove(project);
+            var files = await _context.Files.Where(f => f.ProjectId == id).ToListAsync();
+            if (files.Any())
+            {
+                
+                _context.Files.RemoveRange(files);
+            }
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
-        
+
         [HttpGet("{projectId}/tags")]
         public async Task<IActionResult> GetTagsForProject(int projectId)
         {
@@ -267,9 +357,9 @@ namespace DAMBackend.Controllers
             return Ok(tags);
         }
 
-        
-        
-        // POST: api/Projects/Tag
+
+
+        // POST: api/Projects/tag
         /* Input format should be:
             {
               "ProjectId": 1,
@@ -279,18 +369,15 @@ namespace DAMBackend.Controllers
             }
          
          */
-        [HttpPost("addprojtag")]
+        [HttpPost("tag/add")]
         public async Task<IActionResult> AddProjectTag(
-            [FromQuery] int ProjectId, 
-            [FromQuery] string Key, 
-            [FromQuery] string Value, 
-            [FromQuery] value_type type)
+            [FromBody] ProjectTagDTO projectTagDTO)
         {
-            
+
             var engine = new SQLEntryEngine(_context);
-            
-            var project = await _context.Projects.FindAsync(ProjectId);
-            
+
+            var project = await _context.Projects.FindAsync(projectTagDTO.ProjectId);
+
             if (project == null)
             {
                 return NotFound();
@@ -300,9 +387,9 @@ namespace DAMBackend.Controllers
             {
                 var tag = await engine.addProjectTag(
                     project,
-                    Key,
-                    Value,
-                    type
+                    projectTagDTO.Key,
+                    projectTagDTO.Value,
+                    projectTagDTO.Type
                 );
                 return Ok(tag);
             }
@@ -317,24 +404,96 @@ namespace DAMBackend.Controllers
             }
         }
 
+
+        // // DELETE: api/damprojects/{key}/{pId}
+        // [HttpDelete("{key}/{pId}")]
+        // public async Task<IActionResult> DeleteProject(string key, int pId)
+        // {
+        //     var tag = await _context.ProjectTags
+        //         .Where(pt => pt.Key == key && pt.ProjectId == pId)
+        //         .FirstOrDefaultAsync();
+        //
+        //     if (tag == null)
+        //     {
+        //         return NotFound();
+        //     }
+        //
+        //     _context.ProjectTags.Remove(tag);
+        //     await _context.SaveChangesAsync();
+        //
+        //     return NoContent();
+        // }
         
-        // DELETE: api/damprojects/{key}/{pId}
-        [HttpDelete("{key}/{pId}")]
-        public async Task<IActionResult> DeleteProject(string key, int pId)
+        
+
+        [HttpPost("postproj/bulk")]
+        public async Task<ActionResult<List<ProjectModel>>> bulkUploadProjects(IFormFile file)
         {
-            var tag = await _context.ProjectTags
-                .Where(pt => pt.Key == key && pt.ProjectId == pId)
-                .FirstOrDefaultAsync();
-            
-            if (tag == null)
+            if (file == null || file.Length == 0)
             {
-                return NotFound(); 
+                return BadRequest("No file uploaded.");
             }
-        
-            _context.ProjectTags.Remove(tag);
-            await _context.SaveChangesAsync();
-        
-            return NoContent();
+
+            var records = new List<ProjectModel>();
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HeaderValidated = null, // Disables missing header validation,
+                MissingFieldFound = null // Ignores missing fields instead of throwing an error
+            };
+            using (var reader = new StreamReader(file.OpenReadStream()))
+            using (var csv = new CsvReader(reader, config))
+            {
+                Console.WriteLine("Going To Read File");
+                csv.Context.TypeConverterCache.AddConverter<List<string>>(new JsonListConverter());
+
+                records = csv.GetRecords<ProjectModel>().ToList();
+                Console.WriteLine("File Read");
+            }
+
+            if (records.Count == 0)
+            {
+                return BadRequest("No projects found");
+            }
+
+            List<ProjectModel> projects = new List<ProjectModel>();
+            foreach (ProjectModel projectData in records)
+            {
+                var engine = new SQLEntryEngine(_context);
+
+                // You can now pass the incoming data to the addProject method
+                var newProject = await engine.addProject(
+                        projectData.Name,
+                        projectData.Status,
+                        projectData.Location,
+                        projectData.ImagePath,
+                        projectData.Phase,
+                        projectData.AccessLevel,
+                        projectData.LastUpdate,
+                        projectData.Description,
+                        projectData.StartDate
+                );
+                projects.Add(newProject);
+            }
+
+            return Ok(projects);
+        }
+
+        [HttpGet("{id}/export")]
+        public async Task<ActionResult<ProjectModel>> ExportProject(int id)
+        {
+            var project = _context.Projects
+                            .FirstOrDefault(p => p.Id == id);
+            ;
+
+            if (project == null)
+            {
+                return NotFound();
+            }
+            var files = _context.Files
+            .Where(f => f.ProjectId == id).ToList();
+            var filePaths = files.Select(f => f.ViewPath).ToList();
+            var url = await _csvService.GenerateCsvAndUploadAsync(project, files);
+            return Ok(url);
         }
     }
 }

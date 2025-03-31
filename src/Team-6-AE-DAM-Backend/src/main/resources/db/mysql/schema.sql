@@ -37,10 +37,15 @@ CREATE TABLE User (
                       role VARCHAR(5)
 );
 
-CREATE TABLE Logger (
-                        log_id INT PRIMARY KEY,
-                        timestamp TIMESTAMP,
-                        action VARCHAR(8)
+CREATE TABLE LogImage (
+                          LogId     int identity primary key,
+                          UserId    int,
+                          ProjectId int,
+                          FileId    int,
+                          TypeOfLog varchar(50),
+                          LogDate   datetime
+                        FOREIGN KEY (UserId) REFERENCES Users(id),
+                        FOREIGN KEY (ImageId) REFERENCES Image(ImageId)
 );
 
 CREATE TABLE Palette (
@@ -62,6 +67,16 @@ CREATE TABLE Users (
     PasswordHash NVARCHAR(255) NOT NULL, -- Now storing Base64 hash
     Role INT NOT NULL CHECK (Role IN (0, 1)), -- 0: User, 1: Admin
     Status BIT DEFAULT 1 -- 1: Active, 0: Inactive
+);
+
+CREATE TABLE LogImage (
+                          LogId INT PRIMARY KEY,
+                          FileId UNIQUEIDENTIFIER NOT NULL,
+                          UserId INT NOT NULL,
+                          TypeOfLog NVARCHAR(MAX) NOT NULL,
+                          Date DATETIME NOT NULL,
+                          FOREIGN KEY (UserId) REFERENCES Users(id),
+                          FOREIGN KEY (FileId) REFERENCES Files(id)
 );
 
 -- Declare variables for hashed passwords

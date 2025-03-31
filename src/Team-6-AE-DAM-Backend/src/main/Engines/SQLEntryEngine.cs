@@ -76,105 +76,21 @@ ON DELETE CASCADE where appropriate s
             return file;
         }
 
-        public MetadataTagModel addTags(FileModel file, string key, object value, value_type v_type)
+        public async Task<MetadataTagModel> addMetadataFileTag(FileModel File, string Key, string Value, value_type v_type)
         {
-            // if (!IsValidValue(value, v_type))
-            // {
-            //     throw new ArgumentException(
-            //         $"Invalid value type for key {key}. Expected {v_type}, but got {value.GetType().Name}.");
-            // }
-
             var tag = new MetadataTagModel
             {
-                Key = key,
-                type = v_type,
-                FileId = file.Id,
-                File = file
-            };
-
-            if (v_type == value_type.String)
-            {
-                tag.sValue = value as string;
-            }
-            else
-            {
-                tag.iValue = Convert.ToInt32(value);
-            }
-
-            if (file != null)
-            {
-                tag.FileId = file.Id;
-                file.mTags.Add(tag);
-            }
-            else
-            {
-                throw new Exception("File was not added to tag, please attach a File");
-            }
-
-            // database.Tags.Add(tag);
-            // await database.SaveChanges();
-            return tag;
-        }
-
-        public TagBasicModel addTags(FileModel file, string value)
-        {
-
-            var tag = new TagBasicModel
-            {
-                Value = value
-            };
-
-            if (file != null)
-            {
-                tag.Files.Add(file);
-                file.bTags.Add(tag);
-            }
-            else
-            {
-                throw new Exception("File was not added to tag, please attach a File");
-            }
-
-            // database.Tags.Add(tag);
-            // await database.SaveChanges();
-            return tag;
-        }
-
-        public async Task<ProjectModel> addProject(string name, string status, string location, string imagePath,
-            string phase, AccessLevel al, DateTime lastUp, string desription)
-        {
-            var project = new ProjectModel
-            {
-                Name = name,
-                Status = status,
-                Location = location,
-                ImagePath = imagePath,
-                AccessLevel = al,
-                LastUpdate = lastUp,
-                Phase = phase,
-                Description = desription
-            };
-            _context.Projects.Add(project);
-            await _context.SaveChangesAsync();
-            return project;
-        }
-
-        // Prereq: ProjectId references a valid Project
-        public async Task<ProjectTagModel> addProjectTag(ProjectModel Project, string Key, string Value, value_type v_type)
-        {
-            
-            
-            var tag = new ProjectTagModel 
-            {   
-                Project = Project,
+                File = File,
                 Key = Key,
                 type = v_type,
-                ProjectId = Project.Id
+                FileId = File.Id
             };
 
             if (v_type == value_type.String)
             {
                 tag.sValue = Value;
-            } else
+            }
+            else
             {
                 try
                 {
@@ -185,7 +101,90 @@ ON DELETE CASCADE where appropriate s
                     Console.WriteLine($"Unable to parse '{Value}'");
                 }
             }
-            
+
+            File.mTags.Add(tag);
+            _context.MetadataTags.Add(tag);
+
+            await _context.SaveChangesAsync();
+
+            return tag;
+
+        }
+
+        // public TagBasicModel addTags(FileModel file, string value)
+        // {
+        //
+        //     var tag = new TagBasicModel
+        //     {
+        //         Value = value
+        //     };
+        //
+        //     if (file != null)
+        //     {
+        //         tag.Files.Add(file);
+        //         file.bTags.Add(tag);
+        //     }
+        //     else
+        //     {
+        //         throw new Exception("File was not added to tag, please attach a File");
+        //     }
+        //
+        //     // database.Tags.Add(tag);
+        //     // await database.SaveChanges();
+        //     return tag;
+        // }
+
+        public async Task<ProjectModel> addProject(string name, string status, string location, string imagePath,
+            string phase, AccessLevel al, DateTime lastUp, string desription, DateTime startDate)
+        {
+            var project = new ProjectModel
+            {
+                Name = name,
+                Status = status,
+                Location = location,
+                ImagePath = imagePath,
+                AccessLevel = al,
+                LastUpdate = lastUp,
+                Phase = phase,
+                Description = desription,
+                StartDate = startDate
+            };
+            _context.Projects.Add(project);
+            await _context.SaveChangesAsync();
+            return project;
+        }
+
+        // Prereq: ProjectId references a valid Project
+        public async Task<ProjectTagModel> addProjectTag(ProjectModel Project, string Key, string Value,
+            int type)
+        {
+            value_type v_type = (value_type) type;
+            var tag = new ProjectTagModel
+            {
+                Project = Project,
+                Key = Key,
+                type = v_type,
+                ProjectId = Project.Id
+            };
+
+            if (v_type == value_type.String)
+            {
+                tag.sValue = Value;
+                tag.iValue = 0;
+            }
+            else
+            {
+                try
+                {
+                    tag.iValue = Int32.Parse(Value);
+                    tag.sValue = "";
+                }
+                catch (FormatException)
+                {
+                    Console.WriteLine($"Unable to parse '{Value}'");
+                }
+            }
+
             Project.Tags.Add(tag);
             _context.ProjectTags.Add(tag);
 
@@ -194,5 +193,34 @@ ON DELETE CASCADE where appropriate s
             return tag;
 
         }
+        
+        public async Task<MetadataTagModel> editMetadata(FileModel file, MetadataTagModel tag, string newValue)
+        {
+            var v_type = tag.type;
+            if (v_type == value_type.String)
+            {
+                tag.sValue = newValue;
+            }
+            else
+            {
+                try
+                {
+                    tag.iValue = Int32.Parse(newValue);
+                }
+                catch (FormatException e)
+                {
+                    throw new FormatException($"Unable to parse '{newValue}'");
+                }
+            }
+            
+            await _context.SaveChangesAsync();
+            
+            return tag;
+            
+            
+        }
+
+
+
     }
 }

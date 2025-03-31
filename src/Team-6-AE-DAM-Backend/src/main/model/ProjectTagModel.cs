@@ -18,9 +18,7 @@ Project and Projectid assigned to know which file is referenced
 */
 {
     public class ProjectTagModel
-
         // Metadata
-
     {
         [Required]
         public int ProjectId { get; set; }
@@ -38,6 +36,5 @@ Project and Projectid assigned to know which file is referenced
 
         [Required]
         public value_type type {get; set;}
-
     }
 }
