@@ -238,7 +238,7 @@
           * Function to take a project, a list of strings (BasicTagList), and a list of <MetadataTagDTO
           * Return files filtered by the 2 lists
           *
-          * GET: api/query/searchProject/{pid}
+          * POST: api/query/searchProject/{pid}
           *
           * Example Input
           * {
@@ -255,7 +255,7 @@
           * 
           */
 
-         [HttpGet("searchProject/{pid}")]
+         [HttpPost("searchProject/{pid}")]
          public async Task<ActionResult<IEnumerable<FileModel>>> GetFilesProjectQuery([FromBody] ProjectFilesQuery request, int pid)
          {
              
