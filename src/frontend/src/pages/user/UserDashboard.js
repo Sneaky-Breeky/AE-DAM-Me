@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import Box from '@mui/material/Box';
-import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Tooltip } from 'antd';
+import {Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Tooltip, message} from 'antd';
 import {
     SearchOutlined,
     CalendarOutlined,
@@ -9,28 +9,27 @@ import {
     PlusOutlined,
     UnorderedListOutlined
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import {useNavigate} from 'react-router-dom';
 import dayjs from 'dayjs';
 import {addFavorite, removeFavorite, fetchProjects, fetchFavoriteProjects} from '../../api/projectApi';
 import {fetchProjectsByDateRange} from '../../api/queryFile';
-import { useAuth } from '../../contexts/AuthContext';
+import {useAuth} from '../../contexts/AuthContext';
 
-const { Title } = Typography;
-const { Meta } = Card;
-const { RangePicker } = DatePicker;
+const {Title} = Typography;
+const {Meta} = Card;
+const {RangePicker} = DatePicker;
 
 
 export default function UserDashboard() {
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedDate, setSelectedDate] = useState(null);
     const [dateRange, setDateRange] = useState(null);
     const [projects, setProjects] = useState([]);
     const [filteredProjects, setFilteredProjects] = useState([]);
     const [favProjects, setFavProjects] = useState(new Set());
 
-    const { user } = useAuth();
+    const {user} = useAuth();
     const navigate = useNavigate();
-    
+
     useEffect(() => {
         async function loadProjects() {
             if (!user?.id) return;
@@ -43,13 +42,14 @@ export default function UserDashboard() {
             }
 
             const favsResponse = await fetchFavoriteProjects(user.id);
-            if (!favsResponse.error) {
+            if (Array.isArray(favsResponse)) {
                 const favIds = favsResponse.map(p => p.id);
                 setFavProjects(new Set(favIds));
             } else {
-                console.error(favsResponse.error);
+                console.error("Failed to fetch favorites:", favsResponse?.error || favsResponse);
             }
         }
+
         if (user) {
             loadProjects();
         }
@@ -60,65 +60,49 @@ export default function UserDashboard() {
     }, [user]);
 
 
-    const handleSearch = () => {
-        let filtered = [...projects];
+    const handleSearch = async () => {
+        const [start, end] = dateRange || [];
 
-        if (searchQuery.trim() !== '') {
-            const lowerQuery = searchQuery.toLowerCase();
+        const query = {
+            StartDate: start ? dayjs(start).toISOString() : '0001-01-01T00:00:00Z',
+            EndDate: end ? dayjs(end).toISOString() : '0001-01-01T00:00:00Z'
+        };
 
-            filtered = filtered.filter(project =>
-                project.name.toLowerCase().includes(lowerQuery) ||
-                project.id.toString().includes(lowerQuery) ||
-                (project.location && project.location.toLowerCase().includes(lowerQuery))
-            );
+
+        try {
+            const response = await fetchProjectsByDateRange(query);
+            let filtered = response;
+
+            console.log("THE RESPONSE: ", response);
+
+            if (searchQuery.trim() !== '') {
+                const lowerQuery = searchQuery.toLowerCase();
+
+                filtered = filtered.filter(project =>
+                    project.name.toLowerCase().includes(lowerQuery) ||
+                    project.id.toString().includes(lowerQuery) ||
+                    project.location.toLowerCase().includes(lowerQuery)
+                );
+            }
+
+            setProjects(response);
+            setFilteredProjects(filtered);
+        } catch (error) {
+            console.error("Error fetching projects:", error);
         }
-
-        setFilteredProjects(filtered);
     };
-
-    
-    
-    // const handleSearch = async () => {
-    //     const [start, end] = dateRange || [];
-    //
-    //     const query = {
-    //         StartDate: start ? dayjs(start).toISOString() : '0001-01-01T00:00:00Z',
-    //         EndDate: end ? dayjs(end).toISOString() : '0001-01-01T00:00:00Z'
-    //     };
-    //
-    //
-    //     try {
-    //         const response = await fetchProjectsByDateRange(query);
-    //         let filtered = response;
-    //        
-    //         console.log("THE RESPONSE: ", response);
-    //
-    //         if (searchQuery.trim() !== '') {
-    //             const lowerQuery = searchQuery.toLowerCase();
-    //
-    //             filtered = filtered.filter(project =>
-    //                 project.name.toLowerCase().includes(lowerQuery) ||
-    //                 project.id.toString().includes(lowerQuery) ||
-    //                 project.location.toLowerCase().includes(lowerQuery)
-    //             );
-    //         }
-    //
-    //         setProjects(response);
-    //         setFilteredProjects(filtered);
-    //     } catch (error) {
-    //         console.error("Error fetching projects:", error);
-    //     }
-    // };
 
     const handleClearFilters = () => {
         setSearchQuery('');
-        setSelectedDate(null);
+        setDateRange(null);
         setFilteredProjects(projects);
+        handleSearch();
     };
 
     const toggleFavorite = async (projectId) => {
         const updatedFavs = new Set(favProjects);
         let response;
+
         if (updatedFavs.has(projectId)) {
             updatedFavs.delete(projectId);
             response = await removeFavorite(user.id, projectId);
@@ -127,10 +111,16 @@ export default function UserDashboard() {
             response = await addFavorite(user.id, projectId);
         }
 
-        if (!response.error) {
-            setFavProjects(new Set(updatedFavs));
+        if (response.error) {
+            if (response.error.includes("User does not have access")) {
+                message.warning("You don't have access to this project and cannot favorite it.");
+            } else {
+                console.error("Error updating favorite:", response.error);
+                message.error("Something went wrong while updating favorites.");
+            }
+            setFavProjects(new Set(favProjects));
         } else {
-            console.error("Error updating favorite:", response.error);
+            setFavProjects(new Set(updatedFavs));
         }
     };
 
@@ -175,17 +165,18 @@ export default function UserDashboard() {
                     <Form.Item>
                         <Input
                             placeholder="Search files..."
-                            prefix={<SearchOutlined />}
+                            prefix={<SearchOutlined/>}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            style={{ width: '300px' }}
+                            style={{width: '300px'}}
                         />
                     </Form.Item>
 
                     <Form.Item>
                         <RangePicker
                             placeholder={["Start date", "End date"]}
-                            suffixIcon={<CalendarOutlined />}
+                            suffixIcon={<CalendarOutlined/>}
+                            value={dateRange}
                             onChange={(dates) => setDateRange(dates)}
                         />
                     </Form.Item>
@@ -239,10 +230,10 @@ export default function UserDashboard() {
                             border: 1,
                             borderColor: 'grey.500',
                             borderRadius: '16px',
-                            '&:hover': { boxShadow: 3 },
+                            '&:hover': {boxShadow: 3},
                         }}
                     >
-                        <PlusOutlined style={{ marginTop: '30px', fontSize: '50px' }} />
+                        <PlusOutlined style={{marginTop: '30px', fontSize: '50px'}}/>
                         <h4>Upload Images/Videos</h4>
                     </Box>
 
@@ -259,10 +250,10 @@ export default function UserDashboard() {
                             border: 1,
                             borderColor: 'grey.500',
                             borderRadius: '16px',
-                            '&:hover': { boxShadow: 3 },
+                            '&:hover': {boxShadow: 3},
                         }}
                     >
-                        <UnorderedListOutlined style={{ marginTop: '30px', fontSize: '50px' }} />
+                        <UnorderedListOutlined style={{marginTop: '30px', fontSize: '50px'}}/>
                         <h4>Activity Log</h4>
                     </Box>
                 </Box>
@@ -287,10 +278,10 @@ export default function UserDashboard() {
                         padding: '20px',
                         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                         overflow: 'hidden',
-                        '&:hover': { boxShadow: 3 },
+                        '&:hover': {boxShadow: 3},
                     }}
                 >
-                    <Title level={3} style={{ textAlign: 'center', marginBottom: '30px', marginTop: '0px' }}>
+                    <Title level={3} style={{textAlign: 'center', marginBottom: '30px', marginTop: '0px'}}>
                         Active Projects
                     </Title>
                     <Box
@@ -313,16 +304,16 @@ export default function UserDashboard() {
                                                 <img
                                                     alt={project.name}
                                                     src={project.ImagePath}
-                                                    style={{ height: '80px', objectFit: 'cover' }}
+                                                    style={{height: '80px', objectFit: 'cover'}}
                                                 />
                                             }
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 sessionStorage.setItem('menu', 1);
-                                                navigate(`/projectDirectory/projectOverview/${project.id}`, { state: { project } });
+                                                navigate(`/projectDirectory/projectOverview/${project.id}`, {state: {project}});
                                                 window.location.reload();
                                             }}
-                                            style={{ borderRadius: '10px', overflow: 'hidden' }}
+                                            style={{borderRadius: '10px', overflow: 'hidden'}}
                                         >
                                             <Tooltip title="Favorite Project">
                                                 {favProjects.has(project.id) ? (
@@ -361,8 +352,14 @@ export default function UserDashboard() {
                                                     />
                                                 )}
                                             </Tooltip>
-                                            <Meta title={project.name} description={project.location}
-                                                style={{ textAlign: 'center' }} />
+                                            <Meta
+                                                title={
+                                                    <div style={{textAlign: 'center'}}>
+                                                        {project.id} - {project.name}
+                                                    </div>
+                                                }
+                                                description={project.location}
+                                            />
                                         </Card>
                                     </Col>
                                 ))}
