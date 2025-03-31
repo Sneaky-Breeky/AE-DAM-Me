@@ -29,7 +29,8 @@ namespace DAMBackend.Models
         public DateTime StartDate { get; set; }
 
         public DateTime LastUpdate { get; set; }
-        // change in ER diagram
+        
+        public bool isArchived { get; set; }
 
         public ICollection<FileModel> Files { get; set;} = new HashSet<FileModel>();
 
