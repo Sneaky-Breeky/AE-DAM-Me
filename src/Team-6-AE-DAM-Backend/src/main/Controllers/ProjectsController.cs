@@ -500,13 +500,11 @@ namespace DAMBackend.Controllers
         [HttpGet("files/{pid}")]
         public async Task<ActionResult<IEnumerable<FileModel>>> GetProjectFiles(int pid)
         {
-        var files = await _context.Files.Where(f => f.ProjectId == pid).ToListAsync();
-        if (files == null || !files.Any())
-        {
-        return NotFound("No files found with this project");
+            var files = await _context.Files.Where(f => f.ProjectId == pid).ToListAsync();
+
+            return Ok(files);
         }
-        return Ok(files);
-        }
+
 
         
     }

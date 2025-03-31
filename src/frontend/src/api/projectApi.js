@@ -2,6 +2,21 @@ import { API_BASE_URL } from "./apiURL.js";
 
 const PROJECTS_URL = `${API_BASE_URL}/api/damprojects`;
 
+
+export async function fetchProject(projectId) {
+    try {
+        const response = await fetch(`${PROJECTS_URL}/${projectId}`);
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(errText || "Failed to fetch project");
+        }
+        return await response.json();
+    } catch (err) {
+        console.error("Error fetching project by ID:", err);
+        return { error: err.message };
+    }
+}
+
 export async function fetchProjects() {
     try {
         const response = await fetch(`${PROJECTS_URL}/getallprojs`, {
