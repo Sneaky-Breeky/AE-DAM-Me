@@ -242,30 +242,13 @@
           *
           * Example Input
           * {
-              "basicTags": {
-                "bTags": ["tag1", "tag2", "tag3"]
-              },
-              "metadataTags": [
-                {
-                  "Key": "workers",
-                  "Op": ">",
-                  "Value": "10",
-                  "v_type": 1
-                },
-                {
-                  "Key": "temperature",
-                  "Op": "<=",
-                  "Value": "30",
-                  "v_type": 1
-                },
-                {
-                  "Key": "status",
-                  "Op": "==",
-                  "Value": "active,
-                  "v_type": 0
-                }
+              "BasicTags": { "bTags": ["tag1", "tag2"] },
+              "MetadataTags": [
+                { "Key": "workers", "Op": ">", "Value": "10", "v_type": 1 },
+                { "Key": "temperature", "Op": "<=", "Value": "30", "v_type": 1 }
               ]
             }
+
           *
           * Return: List of Files that match criteria
           *
@@ -284,7 +267,7 @@
              
              // Query basictags first, then metadataTags
 
-             var bTags = request.bTagList?.bTags;
+             var bTags = request.BasicTags?.bTags;
              IQueryable<FileModel> files;
              
              if (bTags == null || !bTags.Any())
@@ -372,7 +355,7 @@
 
      public class ProjectFilesQuery
      {
-         public BasicTagList bTagList { get; set; }
+         public BasicTagList BasicTags { get; set; }
          
          public List<MetadataTagQueryDTO> MetadataTags { get; set; }
      }
