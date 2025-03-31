@@ -31,28 +31,33 @@ async function findIdElement(id) {
     return await driver.findElement(By.id(id));
 }
 
-function loadBeforeAndAfter(isAdmin = false) {
+async function login(email, password) {
+    const emailInput = await findIdElement("email");
+    const passwordInput = await await findIdElement("password");
+    const submitButton = await driver.findElement(By.css("button[type='submit']"));
+    await emailInput.sendKeys(email);
+    await passwordInput.sendKeys(password);
+    await submitButton.click();
+    await driver.wait(until.stalenessOf(emailInput), 30000);
+}
+
+async function logout() {
+    const logoutButton = await findXPathElement("//span[text()='Logout']");
+    await logoutButton.click();
+    const logoutConfirmButton = await findXPathElement("//button[text()='Logout']");
+    logoutConfirmButton.click();
+    await driver.wait(until.stalenessOf(logoutConfirmButton), API_TIMEOUT);
+}
+
+async function loadBeforeAndAfter(isAdmin = false) {
     before(async function () {
         // Login before each suite
-        const emailInput = await findIdElement("email");
-        const passwordInput = await await findIdElement("password");
-        const submitButton = await driver.findElement(By.css("button[type='submit']"));
-        await emailInput.sendKeys(isAdmin ? ADMIN_EMAIL : USER_EMAIL);
-        await passwordInput.sendKeys(PASSWORD);
-        await submitButton.click();
-
-        // Login may require time for database to boot up
-        this.timeout(60000);
-        await driver.wait(until.stalenessOf(emailInput), 30000);
+        await login(isAdmin ? ADMIN_EMAIL : USER_EMAIL, PASSWORD);
     })
 
     after(async function () {
         // Logout after each suite
-        const logoutButton = await findXPathElement("//span[text()='Logout']");
-        await logoutButton.click();
-        const logoutConfirmButton = await findXPathElement("//button[text()='Logout']");
-        logoutConfirmButton.click();
-        await driver.wait(until.stalenessOf(logoutConfirmButton), API_TIMEOUT);
+        await logout();
     });
 }
 
@@ -69,11 +74,13 @@ async function getDisplayedMetadata(field) {
     return foundName;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                              Tests Start Here                              */
-/* -------------------------------------------------------------------------- */
 
-/* ----------------------------------- UI ----------------------------------- */
+
+/* ------------------------------- BEGIN TESTS ------------------------------ */
+
+/* -------------------------------------------------------------------------- */
+/*                                     UI                                     */
+/* -------------------------------------------------------------------------- */
 describe("UI - Sanity tests", function () {
     loadBeforeAndAfter();
 
@@ -83,7 +90,67 @@ describe("UI - Sanity tests", function () {
     });
 });
 
-/* -------------------------------- PROJ-ORG -------------------------------- */
+
+
+/* -------------------------------------------------------------------------- */
+/*                                 USER-MANAGE                                */
+/* -------------------------------------------------------------------------- */
+describe("USER-MANAGE - User management", function () {
+    loadBeforeAndAfter(true);
+    const testAdminUser = {
+        firstName: "Admin",
+        lastName: "Test",
+        email: "admin@test.ca",
+        password: "password",
+        role: "Admin",
+        status: "Inactive"
+    }
+
+    const testNormalUser = {
+        firstName: "User",
+        lastName: "Test",
+        email: "user@test.ca",
+        password: "password",
+        role: "User",
+        status: "Inactive"
+    }
+
+    it("USER-MANAGE-001 - Create normal user", async function () {
+        navigateToPage(PAGES.USER_MANAGEMENT);
+
+        // Add a user
+        const addUserButton = await findXPathElement("//h5[text()='Add User']");
+        await addUserButton.click();
+        const firstNameField = await findIdElement("addUserForm_firstname");
+        const lastNameField = await findIdElement("addUserForm_lastname");
+        const userEmailField = await findIdElement("addUserForm_email");
+        const userPasswordField = await findIdElement("addUserForm_password");
+        await firstNameField.sendKeys(testNormalUser.firstName);
+        await lastNameField.sendKeys(testNormalUser.lastName);
+        await userEmailField.sendKeys(testNormalUser.email);
+        await userPasswordField.sendKeys(testNormalUser.password);
+        const adminRoleButton = await findXPathElement("//input[@value='user']");
+        const activeButton = await findXPathElement("//input[@value='active']");
+        await adminRoleButton.click();
+        await activeButton.click();
+
+        // Submit
+        const submitButton = await findXPathElement("//span[text()='Submit']");
+        await submitButton.click();
+        await findXPathElement("//span[text()='User added successfully!']");
+
+        // Logout and test login
+        await logout();
+        await login(testNormalUser.email, testNormalUser.password);
+        await findXPathElement("//h3[text()='Active Projects']");
+        await logout();
+    });
+});
+
+
+/* -------------------------------------------------------------------------- */
+/*                                  PROJ-ORG                                  */
+/* -------------------------------------------------------------------------- */
 describe("PROJ-ORG - Project organization", function () {
     loadBeforeAndAfter(true);
 
@@ -181,7 +248,7 @@ describe("PROJ-ORG - Project organization", function () {
         await statusField.sendKeys(testProjectEdit.status);
         await phaseField.clear();
         await phaseField.sendKeys(testProjectEdit.phase);
-        
+
         // Add new field
         const addFieldButton = await findXPathElement("//span[text()='Add field']");
         await addFieldButton.click();
@@ -236,6 +303,7 @@ describe("PROJ-ORG - Project organization", function () {
         assert.fail("Test not implemented");
     });
 });
+
 
 after(async () => await driver.quit());
 
