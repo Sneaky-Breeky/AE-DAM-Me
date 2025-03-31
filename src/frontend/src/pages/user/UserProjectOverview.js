@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Space, Image, Popconfirm, Tooltip } from 'antd';
 import {
@@ -16,45 +16,68 @@ import {
     EditOutlined,
     QuestionCircleOutlined
 } from '@ant-design/icons';
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { projects, users } from '../../utils/dummyData.js';
+import { useParams } from 'react-router-dom';
+import {fetchProject, getFilesForProject} from '../../api/projectApi';
 import dayjs from 'dayjs';
 
 const { RangePicker } = DatePicker;
 const { Title } = Typography;
 const { Meta } = Card;
 
-// instead of passing project via state, try access the url id and using params
 export default function UserProjectOverview() {
-    const { projectId } = useParams();
-    const project = projects.find(proj => proj.id === projectId);
+    const { id } = useParams();
+    const [project, setProject] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedDate, setSelectedDate] = useState(null);
-    const navigate = useNavigate();
     const [current, setCurrent] = React.useState(0);
-    const { state } = useLocation();
-    const [imageList, setImageList] = useState(state.project.files);
+    const [imageList, setImageList] = useState([]);
     const [isEditMode, setIsEditMode] = useState(false);
 
     const [selectedImages, setSelectedImages] = useState(new Set());
     const [selectedStatus, setSelectedStatus] = useState("");
 
 
+    useEffect(() => {
+        async function fetchProjectAndFiles() {
+            try {
+                console.log("current project id: ", id);
+                const projectData = await fetchProject(id);
 
-    if (!state?.project) {
-        return <p>Project not found.</p>;
+                if (!projectData) {
+                    console.warn("No project found");
+                    setProject({});
+                    return;
+                }
+
+                const files = await getFilesForProject({ projectId: id });
+                console.log("FILESSSS: ", files);
+
+                setProject(projectData);
+                setImageList(files);
+            } catch (err) {
+                console.error("Failed to load project or files:", err);
+                setProject({});
+                setImageList([]);
+            }
+        }
+
+        if (id) {
+            fetchProjectAndFiles();
+        }
+    }, [id]);
+
+
+
+    if (project === null) {
+        return <p>Loading project...</p>;
     }
 
-    // if (!project) {
-    //     return <p>Project not found.</p>;
-    // }
+    
 
-
-    // when backend is done connect this part with backend
     const handleSearch = () => {
-        let filteredImages = state.project.files;
+        let filteredImages = imageList;
 
-        console.log(state.project.status);
+        console.log(project.status);
         if (searchQuery.trim() !== '') {
             const query = searchQuery.toLowerCase();
             filteredImages = filteredImages.filter(file =>
@@ -83,7 +106,9 @@ export default function UserProjectOverview() {
         setSearchQuery('');
         setSelectedDate(null);
         setSelectedStatus('');
-        setImageList(state.project.files);
+        getFilesForProject({ id }).then(files => {
+            setImageList(files);
+        });
     };
 
 
@@ -167,8 +192,8 @@ export default function UserProjectOverview() {
                         }}
                     >
                         <Meta
-                            title={<span style={{ color: 'white', fontWeight: 'bold' }}>{state.project.name}</span>}
-                            description={<span style={{ color: 'white' }}>{state.project.location}</span>}
+                            title={<span style={{ color: 'white', fontWeight: 'bold' }}>{project?.name}</span>}
+                            description={<span style={{ color: 'white' }}>{project.location}</span>}
                             style={{ textAlign: 'center' }}
                         />
                     </Card>
@@ -262,15 +287,15 @@ export default function UserProjectOverview() {
                     padding: '20px',
                     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
                         <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width:'100%'}}>
-                        <div><strong>Location: </strong><span>{state.project.location}</span></div>
-                        <div><strong>Start Date: </strong><span>{dayjs(state.project.startDate).format('MMM DD, YYYY')}</span></div>
-                        <div><strong>State: </strong><span>{state.project.status}</span></div>
-                        <div><strong>Phase: </strong><span>{state.project.phase}</span></div>
+                        <div><strong>Location: </strong><span>{project.location}</span></div>
+                        <div><strong>Start Date: </strong><span>{dayjs(project.startDate).format('MMM DD, YYYY')}</span></div>
+                        <div><strong>State: </strong><span>{project.status}</span></div>
+                        <div><strong>Phase: </strong><span>{project.phase}</span></div>
                         </div>
                     <div style={{margin: '20px auto', marginBottom: '0', width:'100%'}}>
                         <strong>Metadata: </strong>
-                        {Array.isArray(state.project?.fields) && state.project.fields.length > 0 ? (
-                            state.project.fields.map((f, idx) => (
+                        {Array.isArray(project?.fields) && project.fields.length > 0 ? (
+                            project.fields.map((f, idx) => (
                                 <span key={idx}>
         {f.field}: <span style={{ color: 'grey', fontStyle: 'italic' }}>{f.fieldMD}</span>{' '}
       </span>
@@ -319,13 +344,14 @@ export default function UserProjectOverview() {
                                     onClick={() => toggleSelectImage(file.Id)}
                                 >
                                     <Image
-                                        src={file.FilePath}
+                                        key={file.id}
+                                        src={file.thumbnailPath || file.viewPath || file.originalPath}t
                                         width={200}
                                         preview={false}
                                         style={{
-                                            border: selectedImages.has(file.Id) ? '4px solid blue' : 'none',
                                             borderRadius: '8px',
                                             transition: '0.2s ease-in-out',
+                                            objectFit: 'cover',
                                         }}
                                     />
                                     {selectedImages.has(file.Id) && (
@@ -367,25 +393,38 @@ export default function UserProjectOverview() {
                                 onChange: (index) => setCurrent(index),
                             }}
                         >
-                            <Space wrap size={16} style={{ justifyContent: 'center' }}>
+                            {imageList.length === 0 ? (
+                                <Typography.Text type="secondary">No files found for this project.</Typography.Text>
+                            ) : (
+                                <Space wrap size={16} style={{ justifyContent: 'center' }}>
+                                    {imageList.map((file) => (
+                                        <Tooltip
+                                            key={file.Id}
+                                            title={
+                                                <>
+                                                    <div><strong>Basic Tags:</strong> {file.bTags?.map(t => t.value).join(', ') || 'None'}</div>
+                                                    <div><strong>Metadata Tags:</strong> {file.mTags?.map(t => t.value).join(', ') || 'None'}</div>
+                                                </>
+                                            }
+                                        >
+                                           
+                                            <Image
+                                                src={file.thumbnailPath || file.originalPath  || file.viewPath}
+                                                width={200}
+                                                preview={false}
+                                                style={{
+                                                    borderRadius: '8px',
+                                                    transition: '0.2s ease-in-out',
+                                                    objectFit: 'cover',
+                                                }}
+                                            />
+                                            
+                                        </Tooltip>
+                                        
+                                    ))}
+                                </Space>
+                            )}
 
-                                {imageList.map((file) => (
-                                    <Tooltip title={
-                                        <>{file.Metadata.map((md, index) => 
-                                            index < file.Metadata.length - 1 ? (
-                                                <span key={index}>{md}, </span>
-                                            ) : (
-                                                <span key={index}>{md}</span>
-                                            )
-                                        )}</>}>
-                                        <Image
-                                        key={file.Id}
-                                        src={file.FilePath}
-                                        width={200}
-                                    />
-                                    </Tooltip>
-                                ))}
-                            </Space>
                         </Image.PreviewGroup>
                     )}
                 </Box>
