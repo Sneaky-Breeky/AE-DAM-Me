@@ -37,7 +37,9 @@ export default function UserUpload() {
     const [percent, setPercent] = React.useState(0);
 
     const [selectMode, setSelectMode] = useState(false);
-
+    const [selectProject, setSelectProject] = useState(null);
+    const [selectProjectMD, setSelectProjectMD] = useState({});
+    const [selectProjectTags, setSelectProjectTags] = useState([]);
 
     const [userProjects, setUserProjects] = useState([]);
     const [project, setProject] = useState(null);
@@ -276,6 +278,60 @@ export default function UserUpload() {
         setFiles(prevFiles => prevFiles.map(file => ({ ...file, projectId: selectedProject.id })));
     };
 
+    // TO BE DELETED, assume these are values from selectedProject.metadata and selectedProject.tags
+    //const existingSelectProjectMD = [{key:'key1', value:'value1'}, {key:'key2', value:'value2'}, {key:'key3', value:'value3'}];
+    const existingSelectProjectMD = {key1:'value1', key2:'value2', key3:'value3'};
+    const existingSelectProjectTags = ['tag1', 'tag2', 'tag3'];
+
+    const [currentSelectedExistingMDkey, setCurrentSelectedExistingMDkey] = useState(null);
+    const [currentSelectedExistingMDvalue, setCurrentSelectedExistingMDvalue] = useState(null);
+
+    const [currentCreatedMDkey, setCurrentCreatedMDkey] = useState(null);
+    const [currentCreatedMDvalue, setCurrentCreatedMDvalue] = useState(null);
+
+    const handleApplyFileMD = () => {
+        console.log(selectedFiles);
+        console.log(selectProjectMD);
+        console.log(selectProjectTags);
+    }
+
+    // WHEN PROJECT IS SELECTED AND SELECTED FILE MD NEEDS TO BE SET
+    const handleSelectProjectChange = (value) => {
+        if(!value) return;
+
+        const selectedProject = userProjects.find(proj => proj.id === value);
+        setSelectProject(selectedProject);
+        //setSelectProjectMD(selectedProject.metadata);
+        //setSelectProjectTags(selectedProject.tags);
+    };
+
+    const handleSelectExistingMD = () => {
+        setSelectProjectMD(prevState => ({
+            ...prevState,
+            [currentSelectedExistingMDkey]: currentSelectedExistingMDvalue,
+        }));
+        console.log(selectProjectMD);
+        setCurrentSelectedExistingMDkey(null);
+        setCurrentSelectedExistingMDvalue(null);
+        console.log(currentSelectedExistingMDkey);
+        console.log(currentSelectedExistingMDvalue);
+    };
+
+    const handleCreateMD = () => {
+        setSelectProjectMD(prevState => ({
+            ...prevState,
+            [currentCreatedMDkey]: currentCreatedMDvalue,
+        }));
+        setCurrentCreatedMDkey(null);
+        setCurrentCreatedMDvalue(null);
+    };
+
+    const handleRemoveSelectMD = (md) => {
+        console.log(md)
+        const updateProjectMD = {...selectProjectMD};
+        delete updateProjectMD[md];
+        setSelectProjectMD(updateProjectMD);
+    };
 
     const handleToggleTagging = () => {
         setTaggingMode((prev) => !prev);
@@ -579,7 +635,7 @@ export default function UserUpload() {
                         />
                     ) : (
                         <div style={{ display: 'flex', justifyContent: 'center' }}>
-                            <Button style={{ margin: '10px' }} type="primary" color="cyan" variant="solid" onClick={handleUploadFilesToProject} disabled={files.length === 0 || project === null}>
+                            <Button style={{ margin: '10px' }} type="primary" color="cyan" variant="solid" onClick={handleUploadFilesToProject} disabled={selectedFiles.size === 0 || project === null}>
                                 Upload Files to Project
                             </Button>
                             <Button style={{ margin: '10px' }} type="secondary" color="green" variant="solid" disabled={files.length == 0} onClick={handleUploadFilesToPalette}>
@@ -613,8 +669,166 @@ export default function UserUpload() {
 
                 {selectMode ? 
                 <Box sx={metadataBoxStyle}>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                        <Button type="primary" color="cyan" variant="solid" onClick={handleApplyFileMD} disabled={files.length === 0}>
+                            Submit File Metadata
+                        </Button>
+                    </Box>
+                    <Title level={5}>Project File Metadata: </Title>
+                    <Select
+                        showSearch
+                        placeholder={selectedFiles.size === 0 ? "Select Files First" : "Enter project number"}
+                        filterOption={(input, option) =>
+                            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                        }
+                        options={userProjects.map(proj => ({
+                            value: proj.id,
+                            label: `${proj.id}: ${proj.name}`
+                        }))}
+                        onChange={handleSelectProjectChange}
+                        style={{ width: '100%', marginBottom:'5%'}}
+                        disabled={selectedFiles.size === 0}
+                        value={selectProject !== null ? selectProject.id : undefined}
+                    />
 
-                    <Title level={5}>Metatdat to project</Title>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', borderBottomWidth: 'thin', borderBottomStyle:'solid', paddingBottom:'5%'}}>
+                        <thead>
+                        <tr style={{ height: '10%' }}>
+                            <th colSpan={2} style={{ width: '100%', textAlign: 'center', fontWeight:'600'}}>
+                                <span style={{fontSize: '100%'}}>Metadata</span>
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody style={{borderBottomWidth: 'thin', borderBottomStyle:'solid', borderColor: 'LightGray', padding:'20%'}}>
+                            {Object.entries(selectProjectMD).map((metadata, index) => (
+                                <tr key={index}>
+                                    <td style={{ width: '15%', textAlign: 'left' }}>
+                                        <Button type='text' size='small' icon={<CloseOutlined />} 
+                                        onClick={() => handleRemoveSelectMD(metadata[0])}/>
+                                    </td>
+                                    <td style={{ width: '85%', textAlign: 'left' }}>
+                                        <span style={{fontSize: '90%'}}>{metadata[0]}</span> : <span style={{fontSize: '90%', color: 'grey', fontStyle: 'italic' }}>{metadata[1]}</span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    
+                    <div style={{borderBottomWidth: 'thin', borderBottomStyle:'solid', borderColor: 'LightGray', paddingBottom:'5%'}}>
+                        <p style={{width: '100%', textAlign: 'left', fontWeight:'550', fontSize: '90%'}}>Add Metadata from Project</p>
+                        <div><span style={{fontSize: '90%'}}>Key: </span>
+                        <Select
+                            showSearch
+                            placeholder="pick existing metadata key"
+                            filterOption={(input, option) =>
+                                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                            }
+                            options={Object.keys(existingSelectProjectMD).map(md => ({
+                                value: md,
+                                disabled: Object.keys(selectProjectMD).includes(md),
+                                label: `${md}`
+                            }))}
+                            onChange={setCurrentSelectedExistingMDkey}
+                            style={{ width:'80%', marginBottom:'5%', overflow:'atuo'}}
+                            disabled={selectProject === null}
+                            value={currentSelectedExistingMDkey !== null ? currentSelectedExistingMDkey : undefined}
+                        />
+                        </div>
+                        <div><span style={{fontSize: '90%'}}>Value: </span>
+                        <Input
+                        onChange={e => setCurrentSelectedExistingMDvalue(e.target.value)}
+                        style={{ width:'80%' ,marginBottom:'5%', overflow:'atuo'}}
+                        placeholder="apply metadata value"
+                        disabled={selectProject === null}
+                        value={currentSelectedExistingMDvalue !== null ? currentSelectedExistingMDvalue : undefined}/>
+                        </div>
+                        <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleSelectExistingMD} 
+                        disabled={selectProject === null || currentSelectedExistingMDkey === null || currentSelectedExistingMDvalue === null} >
+                            Add Metadata
+                        </Button>
+                    </div>
+
+                    <div style={{borderBottomWidth: 'thin', borderBottomStyle:'solid', borderColor: 'LightGray', paddingBottom:'5%'}}>
+                        <p style={{width: '100%', textAlign: 'left', fontWeight:'550',fontSize: '90%'}}>Create Metadata</p>
+                        <div><span style={{fontSize: '90%'}}>Key: </span>
+                        <Input
+                        onChange={e => setCurrentCreatedMDkey(e.target.value)}
+                        style={{ width:'80%' ,marginBottom:'5%', overflow:'atuo'}}
+                        placeholder="set metadata key"
+                        disabled={selectProject === null}
+                        value={currentCreatedMDkey !== null ? currentCreatedMDkey : undefined}/>
+                        </div>
+                        <div><span style={{fontSize: '90%'}}>Value: </span>
+                        <Input
+                        onChange={e => setCurrentCreatedMDvalue(e.target.value)}
+                        style={{ width:'80%' ,marginBottom:'5%', overflow:'atuo'}}
+                        placeholder="set metadata value"
+                        disabled={selectProject === null}
+                        value={currentCreatedMDvalue !== null ? currentCreatedMDvalue : undefined}/>
+                        </div>
+                        <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleCreateMD} 
+                        disabled={selectProject === null || currentCreatedMDkey === null || currentCreatedMDvalue === null || 
+                                Object.keys(selectProjectMD).includes(currentCreatedMDkey) || Object.keys(existingSelectProjectMD).includes(currentCreatedMDkey)} >
+                            Create Metadata
+                        </Button>
+                    </div>
+
+                    <table style={{ width: '100%', borderCollapse: 'collapse'}}>
+                        <thead>
+                        <tr style={{ height: '10%' }}>
+                            <th style={{ width: '100%', textAlign: 'center', fontWeight:'600'}}>
+                                <span style={{fontSize: '100%'}}>Tags</span>
+                            </th>
+                        </tr>
+                        </thead>
+
+                        <tbody style={{borderBottomWidth: 'thin', borderBottomStyle:'solid', borderColor: 'LightGray', padding:'20%'}}>
+                            {/*selectProject.metadata.map((metadata, index) => (
+                                <tr key={index}>
+                                    <td style={{ width: '20%', textAlign: 'left' }}>
+                                        <span style={{fontSize: '90%'}}>{metadata.key}</span> : <span style={{fontSize: '90%', color: 'grey', fontStyle: 'italic' }}>{metadata.value}</span>
+                                    </td>
+                                </tr>
+                            ))*/}
+                            <tr key={0} style={{ marginBottom: '5%', display: 'block' }}>
+                                <td style={{ width: '20%', textAlign: 'left' }}>
+                                    <span style={{fontSize: '90%'}}>tag</span>
+                                </td>
+                            </tr>
+                        </tbody>
+
+                        <thead>
+                            <tr style={{ height: '10%' }}>
+                                <th style={{ width: '100%', textAlign: 'left', fontWeight:'550'}}>
+                                    <span style={{fontSize: '90%'}}>Add Tags from Project</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody style={{borderBottomWidth: 'thin', borderBottomStyle:'solid', borderColor: 'LightGray'}}>
+                            <tr key={0} style={{ marginBottom: '5%', display: 'block' }}>
+                                <td style={{ width: '20%', textAlign: 'left' }}>
+                                    <span style={{fontSize: '90%'}}>tag</span>
+                                </td>
+                            </tr>
+                        </tbody>
+
+                        <thead>
+                            <tr style={{ height: '10%' }}>
+                                <th style={{ width: '100%', textAlign: 'left', fontWeight:'550'}}>
+                                    <span style={{fontSize: '90%'}}>Create Tags</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr key={0} style={{ marginBottom: '5%', display: 'block' }}>
+                                <td style={{ width: '20%', textAlign: 'left' }}>
+                                    <span style={{fontSize: '90%'}}>tag</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+
                     
                 </Box>
                 :
