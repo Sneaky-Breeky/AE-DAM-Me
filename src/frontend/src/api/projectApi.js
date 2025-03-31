@@ -401,5 +401,28 @@ export async function deleteProjectTag(key, projectId) {
     }
 }
 
+export async function getFilesForProject({projectId }) {
+    try {
+        const url = `${PROJECTS_URL}/files/${projectId}`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Failed to fetch images: ${errText}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error("getFilesForImages error:", error);
+        return [];
+    }
+    }
+
 
 
