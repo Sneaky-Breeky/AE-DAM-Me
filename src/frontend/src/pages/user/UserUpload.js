@@ -40,6 +40,8 @@ export default function UserUpload() {
     const [selectProject, setSelectProject] = useState(null);
     const [selectProjectMD, setSelectProjectMD] = useState({});
     const [selectProjectTags, setSelectProjectTags] = useState([]);
+    const [selectFile, setSelectFile] = useState(null);
+    const [selectFileMode, setSelectFileMode] = useState(false);
 
     const [userProjects, setUserProjects] = useState([]);
     const [project, setProject] = useState(null);
@@ -302,12 +304,15 @@ export default function UserUpload() {
     const [currentCreatedTag, setCurrentCreatedTag] = useState(null);
 
     const handleApplyFileMD = () => {
-        console.log(selectedFiles);
+        console.log(selectFile);
         console.log(selectProjectMD);
         console.log(selectProjectTags);
 
+        // NOTE: md and tags ONLY applied to selected files, SELECTED PROJECT IS NOT EDITED EVER
+        // project is selected ONLY for user to access md and tags of existing files, NOT edit them
         setSelectProjectMD({});
         setSelectProjectTags([]);
+        setSelectFile(null);
     }
 
     // WHEN PROJECT IS SELECTED AND SELECTED FILE MD NEEDS TO BE SET
@@ -316,8 +321,6 @@ export default function UserUpload() {
 
         const selectedProject = userProjects.find(proj => proj.id === value);
         setSelectProject(selectedProject);
-        //setSelectProjectMD(selectedProject.metadata);
-        //setSelectProjectTags(selectedProject.tags);
     };
 
     const handleSelectExistingMD = () => {
@@ -367,6 +370,16 @@ export default function UserUpload() {
     const handleToggleSelect = () => {
         setSelectMode((prev) => !prev);
         setTaggingMode(false);
+        setSelectFileMode(false);
+        setSelectFile(null);
+        setSelectedFiles(new Set());
+    };
+
+    const handleToggleSelectFile = () => {
+        setSelectFileMode((prev) => !prev);
+        setSelectMode(false);
+        setTaggingMode(false);
+        setSelectFile(null);
         setSelectedFiles(new Set());
     };
 
@@ -383,6 +396,19 @@ export default function UserUpload() {
         }
 
         setSelectedFiles(updatedSelection);
+    };
+
+    const toggleSelectFile = (fileObj) => {
+
+        const fileName = fileObj.file.name;
+
+        if (selectFile === null) {
+            setSelectFile(fileName);
+        } else {
+            setSelectFile(null);
+        }
+        //setSelectProjectMD(fileName.metadata);
+        //setSelectProjectTags(fileName.tags);
     };
 
     const handleTagAllFiles = () => {
@@ -578,6 +604,24 @@ export default function UserUpload() {
                                 }}
                             />
                             </div>
+
+                            :selectFileMode ? 
+                            <div
+                            key={file.Id}
+                            style={{ position: 'relative', cursor: 'pointer' }}
+                            onClick={() => toggleSelectFile(files[index])}
+                        >
+                            <Image
+                                src={preview}
+                                width={150}
+                                preview={false}
+                                style={{
+                                    border: selectFile === (files[index].file.name) ? '4px solid cyan' : 'none',
+                                    borderRadius: '8px',
+                                    transition: '0.2s ease-in-out',
+                                }}
+                            />
+                            </div>
                             : <Image src={preview} width={150} preview={false} />
                             }
                             
@@ -695,14 +739,17 @@ export default function UserUpload() {
 
                 <Box sx={metadataBoxStyle}>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                        <Button type="primary" color="cyan" variant="solid" onClick={handleApplyFileMD} disabled={selectedFiles.size === 0 || !selectMode}>
+                        <Button type="primary" color="cyan" variant={selectFileMode ? "solid" : "filled"} onClick={handleToggleSelectFile} disabled={files.length === 0}>
+                            Select File
+                        </Button>
+                        <Button type="primary" color="cyan" variant="solid" onClick={handleApplyFileMD} disabled={selectFile === null}>
                             Submit File Metadata
                         </Button>
                     </Box>
                     <Title level={5}>Project File Metadata: </Title>
                     <Select
                         showSearch
-                        placeholder={selectedFiles.size === 0 ? "Select Files First" : "Enter project number"}
+                        placeholder={selectFile === null ? "Select File First" : "Select Project"}
                         filterOption={(input, option) =>
                             (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                         }
@@ -712,6 +759,7 @@ export default function UserUpload() {
                         }))}
                         onChange={handleSelectProjectChange}
                         style={{ width: '100%', marginBottom:'5%'}}
+                        disabled={selectFile === null}
                         value={selectProject !== null ? selectProject.id : undefined}
                     />
 
