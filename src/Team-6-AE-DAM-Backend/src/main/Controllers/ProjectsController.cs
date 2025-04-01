@@ -11,6 +11,7 @@ using DAMBackend.services;
 using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
+using DAMBackend.blob;
 
 namespace DAMBackend.Controllers
 {
@@ -20,6 +21,7 @@ namespace DAMBackend.Controllers
     {
         private readonly SQLDbContext _context;
         private readonly CsvEngine _csvService;
+        private readonly AzureBlobService _azureBlobService;
 
         public ProjectsController(SQLDbContext context,CsvEngine csvService)
         {
@@ -505,7 +507,54 @@ namespace DAMBackend.Controllers
             return Ok(files);
         }
 
+        [HttpPost("{projectId}/archive")]        
+        public async Task<IActionResult> ArchiveProject(int projectId)
+        {
+            var project = await _context.Projects.FindAsync(projectId);
 
-        
+            if (project == null)
+            {
+                return NotFound("Project is not found");
+            }
+
+            var success = await _azureBlobService.SetProjectToArchiveAsync(projectId, _context);
+            
+            if (success)
+            {
+                project.isArchived = true;
+                await _context.SaveChangesAsync();
+
+                return Ok("Archived successfully.");
+            }
+            else
+            {
+                return StatusCode(500, $"Failed to archive project {projectId}.");
+            }
+        }
+
+        [HttpPost("{projectId}/unarchive")]        
+        public async Task<IActionResult> UnarchiveProject(int projectId)
+        {
+            var project = await _context.Projects.FindAsync(projectId);
+
+            if (project == null)
+            {
+                return NotFound("Project is not found");
+            }
+
+            var success = await _azureBlobService.UnarchiveProjectAsync(projectId, _context);
+            
+            if (success)
+            {
+                project.isArchived = false;
+                await _context.SaveChangesAsync();
+
+                return Ok("Archived successfully.");
+            }
+            else
+            {
+                return StatusCode(500, $"Failed to archive project {projectId}.");
+            }
+        }
     }
 }
