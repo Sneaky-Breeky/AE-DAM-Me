@@ -740,7 +740,7 @@ export default function UserUpload() {
                 <Box sx={metadataBoxStyle}>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                         <Button type="primary" color="cyan" variant={selectFileMode ? "solid" : "filled"} onClick={handleToggleSelectFile} disabled={files.length === 0}>
-                            Select File
+                            {selectFileMode ? "Selecting" : "Select File"}
                         </Button>
                         <Button type="primary" color="cyan" variant="solid" onClick={handleApplyFileMD} disabled={selectFile === null}>
                             Submit File Metadata
