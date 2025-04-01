@@ -21,7 +21,7 @@ export async function getProjectImageBasicTags ({pid,fid}){
         return null;
     }
 }
-// shows all the metadata tags
+// shows all the metadata tsghsfgfb
 export async function getProjectImageMetaDataTags ({pid,fid}){
     try {
         const url = `${IMAGE_URL}/metaDataTagsForImage/${pid}/${fid}`
@@ -42,7 +42,6 @@ export async function getProjectImageMetaDataTags ({pid,fid}){
         return null;
     }
 }
-
 async function getFilesByDate({StartDate, EndDate}) {
     const sD = StartDate ? new Date(StartDate).toISOString() : '0001-01-01T00:00:00Z';
     const eD = EndDate ? new Date(EndDate).toISOString() : '0001-01-01T00:00:00Z';
@@ -65,4 +64,6 @@ async function getFilesByDate({StartDate, EndDate}) {
 
 
 }
+
+
 

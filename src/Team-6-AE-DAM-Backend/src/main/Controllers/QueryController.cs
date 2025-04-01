@@ -53,6 +53,22 @@
                      }
          return Ok(projects);
          }
+         [HttpGet("metadataKeyUpload/{pid}")]
+         public async Task<ActionResult<IEnumerable<string>>> ProjectMetadataKeysQuery(int pid)
+         {
+          var project = await _context.Projects.FindAsync(pid);
+          if (project == null)
+          {
+              return NotFound("Project not found.");
+          }
+
+          var mTags = await _context.MetadataTags
+                                             .Where(mt => _context.Files.Any(f => f.ProjectId == pid && f.Id == mt.FileId))
+                                             .Select(mt => mt.Key)
+                                            .Distinct()
+                                            .ToListAsync();
+          return Ok(mTags);
+        }
 
          // GET: api/query/basicTags/{pid}
          // list of all basic tags associated with a project (easy)
@@ -92,7 +108,7 @@
 
                       var mTags = await _context.MetadataTags
                           .Where(mt => _context.Files.Any(f => f.ProjectId == pid && f.Id == mt.FileId))
-                          .Select(mt => mt.Key)
+                          .Select(mt => new { mt.Key, mt.sValue, mt.iValue })
                           .Distinct()
                           .ToListAsync();
 
