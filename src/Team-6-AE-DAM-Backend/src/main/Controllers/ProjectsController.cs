@@ -258,8 +258,9 @@ namespace DAMBackend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ProjectModel>> GetProject(int id)
         {
-            var project = await _context.Projects.FindAsync(id);
-
+            var project = await _context.Projects
+                .Include(p => p.Tags)
+                .FirstOrDefaultAsync(p => p.Id == id);
             if (project == null)
             {
                 return NotFound();
@@ -500,8 +501,12 @@ namespace DAMBackend.Controllers
         [HttpGet("files/{pid}")]
         public async Task<ActionResult<IEnumerable<FileModel>>> GetProjectFiles(int pid)
         {
-            var files = await _context.Files.Where(f => f.ProjectId == pid).ToListAsync();
-
+            var files = await _context.Files
+                .Where(f => f.ProjectId == pid)
+                .Include(f => f.bTags)  // Include basic tags
+                .Include(f => f.mTags)  // Include metadata tags
+                .ToListAsync();
+            
             return Ok(files);
         }
 
