@@ -8,7 +8,8 @@ import { addLog, addLogProject } from "../../api/logApi";
 import { API_BASE_URL } from '../../api/apiURL.js';
 import { Palette } from '@mui/icons-material';
 import { fetchProjectsForUser } from '../../api/projectApi';
-import { getProjectMetaDataKeysUpload } from '../../api/queryFile';
+import { addMetaAdvanceTag } from '../../api/fileApi';
+import { getProjectMetaDataKeysUpload, getProjectBasicTags } from '../../api/queryFile';
 import { useEffect } from "react";
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -43,7 +44,7 @@ export default function UserUpload() {
     const [selectProjectTags, setSelectProjectTags] = useState([]);
     const [selectFile, setSelectFile] = useState(null);
     const [selectFileMode, setSelectFileMode] = useState(false);
-    const [existingSelectProjectMD, setExistingSelectProjectMD] = useState({});
+    const [existingSelectProjectMD, setExistingSelectProjectMD] = useState([]);
     const [existingSelectProjectTags, setExistingSelectProjectTags] = useState([]);
 
     const [userProjects, setUserProjects] = useState([]);
@@ -301,11 +302,19 @@ export default function UserUpload() {
 
     const [currentCreatedTag, setCurrentCreatedTag] = useState(null);
 
-    const handleApplyFileMD = () => {
+    const handleApplyFileMD = async () => {
         // TODO: using endpoints, apply md and tags to selected file
-        console.log(selectFile);
+        console.log(selectFile.id);
         console.log(selectProjectMD);
         console.log(selectProjectTags);
+        console.log("on click submit");
+        const body = {Key:"department",Value:"eng",Type:0};
+        console.log(body);
+
+        const result = await addMetaAdvanceTag(108,body);
+        console.log(result);
+
+        //selectProjectMD.map((md) => {})
 
         // NOTE: md and tags ONLY applied to selected files, SELECTED PROJECT IS NOT EDITED EVER
         // project is selected ONLY for user to access md and tags of existing files, NOT edit them
@@ -318,21 +327,19 @@ export default function UserUpload() {
     const handleSelectProjectChange = async (value) => {
         if(!value) return;
 
-        const selectedProject = userProjects.find(proj => proj.id === value);
-        setSelectProject(selectedProject);
+        const proj = userProjects.find(proj => proj.id === value);
+        setSelectProject(proj);
         // TODO: using endpoints, set vars of existing md and tags of files in selected project
         // existingSelectProjectMD = {key1:'value1', key2:'value2', key3:'value3'};
         // existingSelectProjectTags = ['tag1', 'tag2', 'tag3'];
         console.log("here i am");
-        console.log(value);
-        // const stringList = await getProjectMetaDataKeysUpload(value);
 
-        const result = await getProjectMetaDataKeysUpload(value);
-        console.log(result);
-
-        console.log("after call");
+        const resultMD = await getProjectMetaDataKeysUpload(value);
+        const resultTags = await getProjectBasicTags(value);
+        console.log(resultTags);
+  
         //console.log(stringList);
-        setExistingSelectProjectMD({key1:'value1', key2:'value2', key3:'value3'});
+        resultMD && setExistingSelectProjectMD(resultMD);
         setExistingSelectProjectTags(['tag1', 'tag2', 'tag3']);
     };
 
@@ -413,15 +420,16 @@ export default function UserUpload() {
 
     const toggleSelectFile = (fileObj) => {
 
-        const fileName = fileObj.file.name;
+        const fileName = fileObj;
+        // const fileName = fileObj.id;
 
-        if (selectFile === null) {
-            setSelectFile(fileName);
-        } else {
-            setSelectFile(null);
+         if (selectFile === null) {
+             setSelectFile(fileName);
+         } else {
+             setSelectFile(null);
         }
-        console.log(fileObj);
-        console.log(fileObj.metadata);
+        // console.log(fileName);
+        // console.log(fileObj.file.id);
         // TODO: set this shit up
         //setSelectProjectMD(fileName.metadata);
         //setSelectProjectTags(fileName.tags);
@@ -634,7 +642,7 @@ export default function UserUpload() {
                                 width={150}
                                 preview={false}
                                 style={{
-                                    border: selectFile === (files[index].file.name) ? '4px solid cyan' : 'none',
+                                    border: selectFile && selectFile.file.name === (files[index].file.name) ? '4px solid cyan' : 'none',
                                     borderRadius: '8px',
                                     transition: '0.2s ease-in-out',
                                 }}
@@ -813,7 +821,7 @@ export default function UserUpload() {
                             filterOption={(input, option) =>
                                 (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                             }
-                            options={Object.keys(existingSelectProjectMD).map(md => ({
+                            options={existingSelectProjectMD.map(md => ({
                                 value: md,
                                 disabled: Object.keys(selectProjectMD).includes(md),
                                 label: `${md}`
@@ -858,7 +866,7 @@ export default function UserUpload() {
                         </div>
                         <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleCreateMD} 
                         disabled={selectProject === null || currentCreatedMDkey === null || currentCreatedMDvalue === null || 
-                                Object.keys(selectProjectMD).includes(currentCreatedMDkey) || Object.keys(existingSelectProjectMD).includes(currentCreatedMDkey)} >
+                                Object.keys(selectProjectMD).includes(currentCreatedMDkey) || existingSelectProjectMD.includes(currentCreatedMDkey)} >
                             Create Metadata
                         </Button>
                     </div>
