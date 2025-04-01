@@ -8,6 +8,7 @@ import { addLog, addLogProject } from "../../api/logApi";
 import { API_BASE_URL } from '../../api/apiURL.js';
 import { Palette } from '@mui/icons-material';
 import { fetchProjectsForUser } from '../../api/projectApi';
+import { getProjectMetaDataKeysUpload } from '../../api/queryFile';
 import { useEffect } from "react";
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -314,7 +315,7 @@ export default function UserUpload() {
     }
 
     // WHEN PROJECT IS SELECTED AND SELECTED FILE MD NEEDS TO BE SET
-    const handleSelectProjectChange = (value) => {
+    const handleSelectProjectChange = async (value) => {
         if(!value) return;
 
         const selectedProject = userProjects.find(proj => proj.id === value);
@@ -322,6 +323,15 @@ export default function UserUpload() {
         // TODO: using endpoints, set vars of existing md and tags of files in selected project
         // existingSelectProjectMD = {key1:'value1', key2:'value2', key3:'value3'};
         // existingSelectProjectTags = ['tag1', 'tag2', 'tag3'];
+        console.log("here i am");
+        console.log(value);
+        // const stringList = await getProjectMetaDataKeysUpload(value);
+
+        const result = await getProjectMetaDataKeysUpload(value);
+        console.log(result);
+
+        console.log("after call");
+        //console.log(stringList);
         setExistingSelectProjectMD({key1:'value1', key2:'value2', key3:'value3'});
         setExistingSelectProjectTags(['tag1', 'tag2', 'tag3']);
     };
@@ -411,7 +421,7 @@ export default function UserUpload() {
             setSelectFile(null);
         }
         console.log(fileObj);
-        console.log(fileObj.file);
+        console.log(fileObj.metadata);
         // TODO: set this shit up
         //setSelectProjectMD(fileName.metadata);
         //setSelectProjectTags(fileName.tags);

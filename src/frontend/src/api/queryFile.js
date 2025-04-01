@@ -49,9 +49,10 @@ export async function getProjectBasicTags ({pid}){
         return null;
     }
 }
-export async function getProjectMetaDataKeysUpload ({pid}){
+export async function getProjectMetaDataKeysUpload (pid){
+    console.log("insider query api");
     try {
-        const url = `${QUERY_URL}/metadataKeyUpload/${pid}`
+        const url = `${QUERY_URL}/metadatatags/${pid}`
         const response = await fetch(url, {
             method: "GET",
             headers: {
@@ -69,26 +70,26 @@ export async function getProjectMetaDataKeysUpload ({pid}){
         return null;
     }
 }
-export async function getProjectMetaDataTags ({pid}){
-    try {
-        const url = `${QUERY_URL}/metadataTags/${pid}`
-        const response = await fetch(url, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json"
-            }
-        });
+// export async function getProjectMetaDataTags ({pid}){
+//     try {
+//         const url = `${QUERY_URL}/metadataTags/${pid}`
+//         const response = await fetch(url, {
+//             method: "GET",
+//             headers: {
+//                 "Content-Type": "application/json"
+//             }
+//         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
+//         if (!response.ok) {
+//             throw new Error(`HTTP error! Status: ${response.status}`);
+//         }
 
-        return await response.json();
-    } catch (error) {
-        console.error('Error fetching basic tags:', error);
-        return null;
-    }
-}
+//         return await response.json();
+//     } catch (error) {
+//         console.error('Error fetching basic tags:', error);
+//         return null;
+//     }
+// }
 async function searchProject({pid, requestBody}) {
     try {
         const url = `${QUERY_URL}/searchProject/${pid}`;
