@@ -40,6 +40,10 @@ export default function UserUpload() {
     const [selectProject, setSelectProject] = useState(null);
     const [selectProjectMD, setSelectProjectMD] = useState({});
     const [selectProjectTags, setSelectProjectTags] = useState([]);
+    const [selectFile, setSelectFile] = useState(null);
+    const [selectFileMode, setSelectFileMode] = useState(false);
+    const [existingSelectProjectMD, setExistingSelectProjectMD] = useState({});
+    const [existingSelectProjectTags, setExistingSelectProjectTags] = useState([]);
 
     const [userProjects, setUserProjects] = useState([]);
     const [project, setProject] = useState(null);
@@ -68,7 +72,7 @@ export default function UserUpload() {
             await getUserPalette();
             if (user?.id) {
                 const result = await fetchProjectsForUser(user.id);
-                if (!result.error) {
+                if (!result.error) {    
                     setUserProjects(result);
                 } else {
                     console.error("Failed to load projects:", result.error);
@@ -112,7 +116,7 @@ export default function UserUpload() {
             const paletteFiles = data.map((file, index) => (
                 {
                     id: file.id,
-                    preview: file.viewPath,
+                    preview: file.thumbnailPath || file.viewPath,
                     metadata: file.bTags.length > 0 ? file.bTags.map(item => item.value) : [],
                     date: file.dateTimeOriginal.split("T")[0],
                     location: file.location || "",
@@ -286,11 +290,6 @@ export default function UserUpload() {
         })));
     };
 
-    // TO BE DELETED, assume these are values from selectedProject.metadata and selectedProject.tags
-    //const existingSelectProjectMD = [{key:'key1', value:'value1'}, {key:'key2', value:'value2'}, {key:'key3', value:'value3'}];
-    const existingSelectProjectMD = {key1:'value1', key2:'value2', key3:'value3'};
-    const existingSelectProjectTags = ['tag1', 'tag2', 'tag3'];
-
     const [currentSelectedExistingMDkey, setCurrentSelectedExistingMDkey] = useState(null);
     const [currentSelectedExistingMDvalue, setCurrentSelectedExistingMDvalue] = useState(null);
 
@@ -302,12 +301,16 @@ export default function UserUpload() {
     const [currentCreatedTag, setCurrentCreatedTag] = useState(null);
 
     const handleApplyFileMD = () => {
-        console.log(selectedFiles);
+        // TODO: using endpoints, apply md and tags to selected file
+        console.log(selectFile);
         console.log(selectProjectMD);
         console.log(selectProjectTags);
 
+        // NOTE: md and tags ONLY applied to selected files, SELECTED PROJECT IS NOT EDITED EVER
+        // project is selected ONLY for user to access md and tags of existing files, NOT edit them
         setSelectProjectMD({});
         setSelectProjectTags([]);
+        setSelectFile(null);
     }
 
     // WHEN PROJECT IS SELECTED AND SELECTED FILE MD NEEDS TO BE SET
@@ -316,8 +319,11 @@ export default function UserUpload() {
 
         const selectedProject = userProjects.find(proj => proj.id === value);
         setSelectProject(selectedProject);
-        //setSelectProjectMD(selectedProject.metadata);
-        //setSelectProjectTags(selectedProject.tags);
+        // TODO: using endpoints, set vars of existing md and tags of files in selected project
+        // existingSelectProjectMD = {key1:'value1', key2:'value2', key3:'value3'};
+        // existingSelectProjectTags = ['tag1', 'tag2', 'tag3'];
+        setExistingSelectProjectMD({key1:'value1', key2:'value2', key3:'value3'});
+        setExistingSelectProjectTags(['tag1', 'tag2', 'tag3']);
     };
 
     const handleSelectExistingMD = () => {
@@ -367,6 +373,16 @@ export default function UserUpload() {
     const handleToggleSelect = () => {
         setSelectMode((prev) => !prev);
         setTaggingMode(false);
+        setSelectFileMode(false);
+        setSelectFile(null);
+        setSelectedFiles(new Set());
+    };
+
+    const handleToggleSelectFile = () => {
+        setSelectFileMode((prev) => !prev);
+        setSelectMode(false);
+        setTaggingMode(false);
+        setSelectFile(null);
         setSelectedFiles(new Set());
     };
 
@@ -383,6 +399,22 @@ export default function UserUpload() {
         }
 
         setSelectedFiles(updatedSelection);
+    };
+
+    const toggleSelectFile = (fileObj) => {
+
+        const fileName = fileObj.file.name;
+
+        if (selectFile === null) {
+            setSelectFile(fileName);
+        } else {
+            setSelectFile(null);
+        }
+        console.log(fileObj);
+        console.log(fileObj.file);
+        // TODO: set this shit up
+        //setSelectProjectMD(fileName.metadata);
+        //setSelectProjectTags(fileName.tags);
     };
 
     const handleTagAllFiles = () => {
@@ -488,6 +520,7 @@ export default function UserUpload() {
     const handleUploadFilesToProject = async () => {
         // TODO: add "files" to current "project"'s "files" variable, and other associated info
         // TODO: update user's activity log that they added files to this certain project
+        console.log("Uploading files:", files);
 
         console.log("Uploading files:", files);
         setSpinning(true);
@@ -545,6 +578,7 @@ export default function UserUpload() {
                     <Button icon={<PlusOutlined />} type="primary" color="cyan" variant="solid" onClick={() => fileInputRef.current.click()} disabled={files.length >= MAX_FILES}>
                         Add Files
                     </Button>
+                    <p style={{ color: 'grey', marginBottom: '0', fontSize:'80%' }}>Accepting PNG, JPG, JPEG, RAW, MP4, ARW</p>
                 </Box>
 
                 {/* Image preview & edit options */}
@@ -573,6 +607,24 @@ export default function UserUpload() {
                                 preview={false}
                                 style={{
                                     border: selectedFiles.has(files[index].file.name) ? '4px solid blue' : 'none',
+                                    borderRadius: '8px',
+                                    transition: '0.2s ease-in-out',
+                                }}
+                            />
+                            </div>
+
+                            :selectFileMode ? 
+                            <div
+                            key={file.Id}
+                            style={{ position: 'relative', cursor: 'pointer' }}
+                            onClick={() => toggleSelectFile(files[index])}
+                        >
+                            <Image
+                                src={preview}
+                                width={150}
+                                preview={false}
+                                style={{
+                                    border: selectFile === (files[index].file.name) ? '4px solid cyan' : 'none',
                                     borderRadius: '8px',
                                     transition: '0.2s ease-in-out',
                                 }}
@@ -693,17 +745,19 @@ export default function UserUpload() {
                     />
                 </Box>
 
-                {selectMode ? 
                 <Box sx={metadataBoxStyle}>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                        <Button type="primary" color="cyan" variant="solid" onClick={handleApplyFileMD} disabled={selectedFiles.size === 0}>
+                        <Button type="primary" color="cyan" variant={selectFileMode ? "solid" : "filled"} onClick={handleToggleSelectFile} disabled={files.length === 0}>
+                            {selectFileMode ? "Selecting" : "Select File"}
+                        </Button>
+                        <Button type="primary" color="cyan" variant="solid" onClick={handleApplyFileMD} disabled={selectFile === null}>
                             Submit File Metadata
                         </Button>
                     </Box>
                     <Title level={5}>Project File Metadata: </Title>
                     <Select
                         showSearch
-                        placeholder={selectedFiles.size === 0 ? "Select Files First" : "Enter project number"}
+                        placeholder={selectFile === null ? "Select File First" : "Select Project"}
                         filterOption={(input, option) =>
                             (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                         }
@@ -713,6 +767,7 @@ export default function UserUpload() {
                         }))}
                         onChange={handleSelectProjectChange}
                         style={{ width: '100%', marginBottom:'5%'}}
+                        disabled={selectFile === null}
                         value={selectProject !== null ? selectProject.id : undefined}
                     />
 
@@ -867,7 +922,8 @@ export default function UserUpload() {
                         </Button>
                     </div>
                 </Box>
-                :
+
+                {/*
                 <Box sx={metadataBoxStyle}>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                         <Button type="primary" color="cyan" variant="solid" onClick={handleToggleTagging} disabled={files.length === 0}>
@@ -919,8 +975,8 @@ export default function UserUpload() {
                             </Box>
                         ))}
                     </Box>
-                </Box>
-                }
+                </Box> 
+                */}
 
                 <Box sx={metadataBoxStyle}>
                     <Title level={5}>Adjust Resolution:</Title>

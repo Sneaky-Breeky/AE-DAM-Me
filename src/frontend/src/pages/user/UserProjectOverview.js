@@ -407,8 +407,9 @@ export default function UserProjectOverview() {
                                                 </>
                                             }
                                         >
+                                           
                                             <Image
-                                                src={file.ThumbnailPath || file.ViewPath || file.OriginalPath}
+                                                src={file.thumbnailPath || file.originalPath  || file.viewPath}
                                                 width={200}
                                                 preview={false}
                                                 style={{
@@ -417,7 +418,9 @@ export default function UserProjectOverview() {
                                                     objectFit: 'cover',
                                                 }}
                                             />
+                                            
                                         </Tooltip>
+                                        
                                     ))}
                                 </Space>
                             )}

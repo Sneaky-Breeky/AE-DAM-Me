@@ -21,6 +21,7 @@
          {
              _context = context;
          }
+
          [HttpGet("date/{startDate}/{endDate}")]
          public async Task<ActionResult<IEnumerable<FileModel>>> GetImagesByDate(DateTime startDate, DateTime endDate)
                   {
