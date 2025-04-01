@@ -19,6 +19,8 @@ import {
 import { useParams } from 'react-router-dom';
 import {fetchProject, getFilesForProject} from '../../api/projectApi';
 import dayjs from 'dayjs';
+import {getProjectBasicTags, getProjectMetaDataTags} from "../../api/queryFile";
+import {getProjectImageBasicTags, getProjectImageMetaDataTags} from "../../api/imageApi";
 
 const { RangePicker } = DatePicker;
 const { Title } = Typography;
@@ -27,6 +29,7 @@ const { Meta } = Card;
 export default function UserProjectOverview() {
     const { id } = useParams();
     const [project, setProject] = useState(null);
+    const [projectMetaTags, setProjectMetaTags] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedDate, setSelectedDate] = useState(null);
     const [current, setCurrent] = React.useState(0);
@@ -42,6 +45,11 @@ export default function UserProjectOverview() {
             try {
                 console.log("current project id: ", id);
                 const projectData = await fetchProject(id);
+                // THIS FNX IS NOT METADATA FOR A PROJVVV
+                const metaTags = await getProjectMetaDataTags({ pid: id });
+                const tags = await getProjectBasicTags({ pid: id });
+                //console.log("JUST THE TAGS: ", tags);
+                 //console.log("MD TAGS: ", metaTags);
 
                 if (!projectData) {
                     console.warn("No project found");
@@ -52,8 +60,21 @@ export default function UserProjectOverview() {
                 const files = await getFilesForProject({ projectId: id });
                 console.log("FILESSSS: ", files);
 
+                const filesWithTags = await Promise.all(files.map(async (file) => {
+                    const basicTags = await getProjectImageBasicTags({ pid: id, fid: file.id });
+                    const metadataTags = await getProjectImageMetaDataTags({ pid: id, fid: file.id });
+                    console.log("MD: ", metadataTags);
+
+                    return {
+                        ...file,
+                        basicTags: basicTags || [],
+                        metadataTags: metadataTags || [],
+                    };
+                }));
+
+                //setProjectMetaTags(metaTags || []);
                 setProject(projectData);
-                setImageList(files);
+                setImageList(filesWithTags);
             } catch (err) {
                 console.error("Failed to load project or files:", err);
                 setProject({});
@@ -292,19 +313,18 @@ export default function UserProjectOverview() {
                         <div><strong>State: </strong><span>{project.status}</span></div>
                         <div><strong>Phase: </strong><span>{project.phase}</span></div>
                         </div>
-                    <div style={{margin: '20px auto', marginBottom: '0', width:'100%'}}>
+                    <div style={{ margin: '20px auto', marginBottom: '0', width: '100%' }}>
                         <strong>Metadata: </strong>
-                        {Array.isArray(project?.fields) && project.fields.length > 0 ? (
-                            project.fields.map((f, idx) => (
-                                <span key={idx}>
-        {f.field}: <span style={{ color: 'grey', fontStyle: 'italic' }}>{f.fieldMD}</span>{' '}
-      </span>
+                        {projectMetaTags.length > 0 ? (
+                            projectMetaTags.map((tag, idx) => (
+                                <span key={idx} style={{ marginRight: '8px', color: 'grey', fontStyle: 'italic' }}>
+                {tag}
+            </span>
                             ))
                         ) : (
                             <span style={{ color: 'grey', fontStyle: 'italic' }}>No metadata</span>
                         )}
                     </div>
-
                 </Box>
                 {/* Download Images */}
                 <Box sx={{ display: 'flex', alignItems: 'start', justifyContent: 'left', margin: '20px auto', gap: '10px', width:'70%', }}>
@@ -402,7 +422,7 @@ export default function UserProjectOverview() {
                                             key={file.Id}
                                             title={
                                                 <>
-                                                    <div><strong>Basic Tags:</strong> {file.bTags?.map(t => t.value).join(', ') || 'None'}</div>
+                                                    <div><strong>Basic Tags:</strong> {file.basicTags?.join(', ') || 'None'}</div>
                                                     <div><strong>Metadata Tags:</strong> {file.mTags?.map(t => t.value).join(', ') || 'None'}</div>
                                                 </>
                                             }

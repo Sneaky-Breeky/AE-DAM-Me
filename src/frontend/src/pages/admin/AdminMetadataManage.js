@@ -71,7 +71,16 @@ if (values.phase && values.phase !== project.phase) updatedFields.phase = values
 
 // if any fields change then update project
 if (Object.keys(updatedFields).length > 0) {
-const updatedProject = { ...project, ...updatedFields };
+    const formattedTags = (project.tags || []).map(tag => ({
+        ProjectId: project.id,
+        key: tag.key,
+        type: tag.type,
+        sValue: tag.sValue,
+        iValue: tag.iValue,
+    }));
+
+    const updatedProject = { ...project, ...updatedFields, tags: formattedTags };
+
 const putRes = await putProject(project.id, updatedProject);
 if (putRes.error) throw new Error(putRes.error);
 }

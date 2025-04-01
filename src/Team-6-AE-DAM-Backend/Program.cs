@@ -47,14 +47,21 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddSingleton(x => 
-    new BlobServiceClient(builder.Configuration.GetConnectionString("StorageAccount")));
+// builder.Services.AddSingleton(x => 
+//     new BlobServiceClient(builder.Configuration.GetConnectionString("StorageAccount")));
+
+builder.Services.AddSingleton<AzureBlobService>(provider =>
+{
+    var config = provider.GetRequiredService<IConfiguration>();
+    var storageClient = new BlobServiceClient(config.GetConnectionString("StorageAccount"));
+    return new AzureBlobService(storageClient);
+});
 
 builder.Services.AddDbContext<SQLDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AzureSQL")));
 
 builder.Services.AddScoped<AuthService>();
-builder.Services.AddSingleton<AzureBlobService>();
+// builder.Services.AddSingleton<AzureBlobService>();
 
 var app = builder.Build();
 

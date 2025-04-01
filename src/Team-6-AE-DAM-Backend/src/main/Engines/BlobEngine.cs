@@ -2,6 +2,8 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using DAMBackend.Models;
 using Google.Protobuf.Reflection;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace DAMBackend.blob
 {
@@ -125,7 +127,99 @@ namespace DAMBackend.blob
                 return null;
             }
         }
+
+        // set a project to be archived, return a boolean
+        public async Task<bool> SetProjectToArchiveAsync(int projectId, SQLDbContext _context)
+        {
+            try
+            {
+                var files = await _context.Files
+                    .Where(f => f.ProjectId == projectId)
+                    .ToListAsync();
+
+                if (!files.Any())
+                {
+                    Console.WriteLine($"No files found for project {projectId}.");
+                    return false;
+                }
+
+                foreach (var file in files)
+                {
+                    try
+                    {
+                        var uris = new[] { file.OriginalPath, file.ViewPath, file.ThumbnailPath };
+                        foreach (var uri in uris)
+                        {
+                            if (!string.IsNullOrEmpty(uri))
+                            {
+                                var blobClient = new BlobClient(new Uri(uri));
+                                await blobClient.SetAccessTierAsync(AccessTier.Archive);
+                                Console.WriteLine($"Archived: {uri}");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to archive file {file.Id}: {ex.Message}");
+                    }
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to archive project {projectId}: {ex.Message}");
+                return false;
+            }
+        }
+    
+
+        // set a project back to active, 
+        public async Task<bool> UnarchiveProjectAsync(int projectId, SQLDbContext _context)
+        {
+            try
+            {
+                var files = await _context.Files
+                    .Where(f => f.ProjectId == projectId)
+                    .ToListAsync();
+
+                if (!files.Any())
+                {
+                    Console.WriteLine($"No files found for project {projectId}.");
+                    return false;
+                }
+
+                foreach (var file in files)
+                {
+                    try
+                    {
+                        var uris = new[] { file.OriginalPath, file.ViewPath, file.ThumbnailPath };
+                        foreach (var uri in uris)
+                        {
+                            if (!string.IsNullOrEmpty(uri))
+                            {
+                                var blobClient = new BlobClient(new Uri(uri));
+                                await blobClient.SetAccessTierAsync(AccessTier.Hot);
+                                Console.WriteLine($"Unarchived: {uri}");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to unarchive file {file.Id}: {ex.Message}");
+                    }
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to archive project {projectId}: {ex.Message}");
+                return false;
+            }
+        }
     }
+
     public enum ContainerType
     {
         Palette,

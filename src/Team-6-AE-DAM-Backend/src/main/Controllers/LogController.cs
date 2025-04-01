@@ -25,11 +25,27 @@
          [HttpGet("fetch/{userId}")]
          public async Task<ActionResult<IEnumerable<LogImage>>> GetLogForUser(int userId)
          {
-             var logs = await _context.LogImage
-                 .Where(upr => upr.UserId == userId)
-                 .ToListAsync();
+             try
+             {
+                 var logs = await _context.LogImage
+                     .Where(l => l.UserId == userId)
+                     .ToListAsync();
 
-             return Ok(logs);
+                 foreach (var log in logs)
+                 {
+                     Console.WriteLine($"LogId: {log.LogId}, LogDate: {log.LogDate}, UserId: {log.UserId}");
+                 }
+                 return Ok(logs);
+
+             }
+             catch (Exception ex)
+             {
+                 Console.WriteLine($"An error occurred while retrieving logs: {ex.Message}");
+                 Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                 return BadRequest(ex.Message);
+             }
+
+             
          }
 
          [HttpPost("addLog")]

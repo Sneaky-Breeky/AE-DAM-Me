@@ -95,7 +95,7 @@
              {
                  return NotFound("Project not found.");
              }
-
+             
              var bTags = await _context.FileTags
                  .Where(ft => _context.Files.Any(f => f.ProjectId == pid && f.Id == ft.FileId))
                  .Select(ft => ft.TagId)
@@ -106,7 +106,7 @@
              //     .Where(bt => _context.ProjectBasicTag
              //         .Where(pbt => pbt.ProjectId == pid)
              //         .Select(pbt => pbt.BasicTagValue)
-             //         .Contains(bt.Value))
+             //         .Contains(bt.Value))    
              //     .Select(bt => bt.Value)
              //     .ToListAsync();
 
@@ -143,7 +143,7 @@
 
              return Ok(mTags);
          }
-
+         
          [HttpGet("metadataKeyUpload/{pid}")]
          public async Task<ActionResult<IEnumerable<string>>> ProjectMetadataKeysQuery(int pid)
          {
@@ -347,7 +347,7 @@
 
          }
 
-
+         
 
      }
 
