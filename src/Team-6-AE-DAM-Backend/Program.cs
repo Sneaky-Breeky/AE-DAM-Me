@@ -57,13 +57,6 @@ builder.Services.AddSingleton<AzureBlobService>(provider =>
     return new AzureBlobService(storageClient);
 });
 
-builder.Services.AddSingleton<AzureBlobArchiveService>(provider =>
-{
-    var config = provider.GetRequiredService<IConfiguration>();
-    var archiveClient = new BlobServiceClient(config.GetConnectionString("BlobArchive"));
-    return new AzureBlobArchiveService(archiveClient);
-});
-
 builder.Services.AddDbContext<SQLDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AzureSQL")));
 
@@ -101,27 +94,6 @@ using (var scope = app.Services.CreateScope())
         catch (Exception ex)
         {
             Console.WriteLine($"Failed to initialize Azure Blob Storage: {ex.Message}");
-        }
-
-        try
-        {
-            var archiveService = scope.ServiceProvider.GetRequiredService<AzureBlobArchiveService>();
-
-            // Try listing containers or just ensure one operation works
-            var test = await archiveService.ArchiveContainer.ExistsAsync();
-
-            if (test)
-            {
-                Console.WriteLine("Successfully connected to Azure Archive Blob Storage!");
-            }
-            else
-            {
-                Console.WriteLine("Azure Archive Blob container does not exist or cannot be accessed.");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Failed to initialize Azure Archive Blob Storage: {ex.Message}");
         }
     }
     catch (Exception ex)
