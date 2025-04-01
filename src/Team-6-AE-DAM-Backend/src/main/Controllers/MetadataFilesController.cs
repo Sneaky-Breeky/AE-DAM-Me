@@ -15,7 +15,7 @@ using CsvHelper.Configuration;
 namespace DAMBackend.Controllers
 {
     // api/MetadataFiles
-    [Route("api/[controller]")]
+    [Route("api/metaData")]
     [ApiController]
     public class MetadataFilesController : ControllerBase
     {
