@@ -2,8 +2,6 @@ import { API_BASE_URL } from "./apiURL.js";
 
 const QUERY_URL = `${API_BASE_URL}/api/query`;
 
-
-
 export async function fetchProjectsByDateRange({ StartDate, EndDate }) {
     try {
 
@@ -31,10 +29,29 @@ export async function fetchProjectsByDateRange({ StartDate, EndDate }) {
         return [];
     }
 }
-
 export async function getProjectBasicTags ({pid}){
     try {
         const url = `${QUERY_URL}/basicTags/${pid}`
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching basic tags:', error);
+        return null;
+    }
+}
+export async function getProjectMetaDataKeysUpload ({pid}){
+    try {
+        const url = `${QUERY_URL}/metadataKeyUpload/${pid}`
         const response = await fetch(url, {
             method: "GET",
             headers: {
@@ -72,8 +89,6 @@ export async function getProjectMetaDataTags ({pid}){
         return null;
     }
 }
-
-
 async function searchProject({pid, requestBody}) {
     try {
         const url = `${QUERY_URL}/searchProject/${pid}`;

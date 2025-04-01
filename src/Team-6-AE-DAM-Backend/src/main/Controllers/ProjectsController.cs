@@ -270,7 +270,7 @@ namespace DAMBackend.Controllers
             return Ok(project);
         }
 
-// PUT: api/damprojects/{id}
+        // PUT: api/damprojects/{id}
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProject(int id, [FromBody] ProjectModel projectData)
