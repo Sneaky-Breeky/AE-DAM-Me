@@ -2,6 +2,8 @@ using Microsoft.Identity.Client;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
+
 
 namespace DAMBackend.Models
 
@@ -30,6 +32,7 @@ File and Fileid assigned to know which file is referenced
         
         public required string Key { get; set; }
 
+        [JsonIgnore]
         public FileModel File { get; set; }
 
         public string sValue { get; set; }
