@@ -95,14 +95,20 @@
              {
                  return NotFound("Project not found.");
              }
-
-             var bTags = await _context.BasicTags
-                 .Where(bt => _context.ProjectBasicTag
-                     .Where(pbt => pbt.ProjectId == pid)
-                     .Select(pbt => pbt.BasicTagValue)
-                     .Contains(bt.Value))
-                 .Select(bt => bt.Value)
+             
+             var bTags = await _context.FileTags
+                 .Where(ft => _context.Files.Any(f => f.ProjectId == pid && f.Id == ft.FileId))
+                 .Select(ft => ft.TagId)
+                 .Distinct()
                  .ToListAsync();
+
+             // var bTags = await _context.BasicTags
+             //     .Where(bt => _context.ProjectBasicTag
+             //         .Where(pbt => pbt.ProjectId == pid)
+             //         .Select(pbt => pbt.BasicTagValue)
+             //         .Contains(bt.Value))    
+             //     .Select(bt => bt.Value)
+             //     .ToListAsync();
 
              if (bTags == null || !bTags.Any())
              {
@@ -160,19 +166,11 @@
 
              foreach (var tag in searchTags)
              {
-                 var filesToAdd = await _context.Files
-                     .Where(f => _context.Set<Dictionary<string, object>>()
-                         .Where(ft => ft["TagId"] == tag)
-                         .Select(ft => ft["FileId"])
-                         .Contains(f.Id))
-                     .ToListAsync();
-
-                 // Ensures no duplicates
-                 files = files.Concat(filesToAdd.AsQueryable());
+                 files = files.Where(f => _context.FileTags
+                     .Any(ft => ft.TagId == tag && ft.FileId == f.Id));
              }
 
-             files = files.DistinctBy(f => f.Id);
-
+             // files = files.DistinctBy(f => f.Id);
              return files;
          }
 
