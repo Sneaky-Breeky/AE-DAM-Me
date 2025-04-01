@@ -175,7 +175,7 @@ namespace DAMBackend.blob
     
 
         // set a project back to active, 
-        public async Task<bool> SetProjectToArchiveAsync(int projectId, SQLDbContext _context)
+        public async Task<bool> UnarchiveProjectAsync(int projectId, SQLDbContext _context)
         {
             try
             {
