@@ -107,7 +107,7 @@
                        return NotFound("Project not found.");
                     }
                     var mTags = await _context.MetadataTags
-                                            .Where(mt => _context.Files.Any(f => f.ProjectId == pid && f.Id == fid))
+                                            .Where(mt => _context.Files.Any(f => f.ProjectId == pid && f.Id == fid && mt.FileId == fid))
                                             .Select(mt => mt.Key)
                                             .Distinct()
                                             .ToListAsync();

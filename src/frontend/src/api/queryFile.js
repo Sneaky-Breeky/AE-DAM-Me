@@ -1,7 +1,7 @@
 import { API_BASE_URL } from "./apiURL.js";
 
 const QUERY_URL = `${API_BASE_URL}/api/query`;
-const IMAGE_URL = `${API_BASE_URL}/api/imageQuery`;
+
 
 
 export async function fetchProjectsByDateRange({ StartDate, EndDate }) {
@@ -32,9 +32,6 @@ export async function fetchProjectsByDateRange({ StartDate, EndDate }) {
     }
 }
 
-// 1. get all the metadata for a project - getProjectBasicTags(pid)
-// 2. get all basic tags for a project
-
 export async function getProjectBasicTags ({pid}){
     try {
         const url = `${QUERY_URL}/basicTags/${pid}`
@@ -55,7 +52,6 @@ export async function getProjectBasicTags ({pid}){
         return null;
     }
 }
-
 export async function getProjectMetaDataTags ({pid}){
     try {
         const url = `${QUERY_URL}/metadataTags/${pid}`
@@ -76,26 +72,7 @@ export async function getProjectMetaDataTags ({pid}){
         return null;
     }
 }
-export async function getProjectImageMetaDataTags ({pid,fid}){
-    try {
-        const url = `${QUERY_URL}/metaDataTagsForImage/${pid}/${fid}`
-        const response = await fetch(url, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json"
-            }
-        });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        return await response.json();
-    } catch (error) {
-        console.error('Error fetching basic tags:', error);
-        return null;
-    }
-}
 
 async function searchProject({pid, requestBody}) {
     try {
@@ -118,26 +95,3 @@ async function searchProject({pid, requestBody}) {
         console.error("Error fetching project files:", error);
     }
 }
-async function getFilesByDate({StartDate, EndDate}) {
-    const sD = StartDate ? new Date(StartDate).toISOString() : '0001-01-01T00:00:00Z';
-    const eD = EndDate ? new Date(EndDate).toISOString() : '0001-01-01T00:00:00Z';
-    try {
-        const url = `${IMAGE_URL}/date/${sD}/${eD}`;
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-            },
-        });
-        if (!response.ok) {
-            throw new Error(`HTTP errr! Status: ${response.status}`);
-        }
-        return await response.json();
-        ;
-    } catch (error) {
-        console.error("Error fetching project files:", error);
-    }
-
-
-    }
-
