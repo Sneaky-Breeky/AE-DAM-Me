@@ -310,8 +310,8 @@ export default function UserDashboard() {
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 sessionStorage.setItem('menu', 1);
-                                                navigate(`/projectDirectory/projectOverview/${project.id}`, {state: {project}});
-                                                window.location.reload();
+                                                navigate(`/projectDirectory/projectOverview/${project.id}`, { state: { project } });
+                                                //window.location.reload();
                                             }}
                                             style={{borderRadius: '10px', overflow: 'hidden'}}
                                         >
