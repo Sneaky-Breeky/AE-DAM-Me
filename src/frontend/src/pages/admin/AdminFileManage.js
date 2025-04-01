@@ -5,7 +5,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import { Typography, Input, Space, Image, Button, Popconfirm, Form, Tooltip} from 'antd';
 import { SearchOutlined, DeleteOutlined, CloseOutlined, EditOutlined, QuestionCircleOutlined} from '@ant-design/icons';
-import { fetchProjects, putProject} from '../../api/projectApi'
+import { fetchProjects, putProject, getFilesForProject} from '../../api/projectApi'
 
 const { Title } = Typography;
 
@@ -14,8 +14,8 @@ export default function AdminFileManage() {
   const [isPopupFormOpen, setPopupFormOpen] = useState(false);
   const [isEditOpen, setEditOpen] = useState(false);
   const [project, setProject] = useState(null);
-  const [imageList, setImageList] = useState(new Set());
-  const [imageEdit, setImageEdit] = useState(null);
+    const [imageList, setImageList] = useState([]);
+    const [imageEdit, setImageEdit] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedImages, setSelectedImages] = useState(new Set());
   const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -27,11 +27,11 @@ export default function AdminFileManage() {
 
     useEffect(() => {
         const loadProjects = async () => {
-            const response = await fetchProjects();
-            if (response && !response.error) {
-                setFetchedProjects(response);
+            const projectData = await fetchProjects();
+            if (projectData && !projectData.error) {
+                setFetchedProjects(projectData);
             } else {
-                console.error("Error fetching projects:", response?.error || "Unknown error");
+                console.error("Error fetching projects:", projectData?.error || "Unknown error");
             }
         };
 
@@ -42,7 +42,8 @@ export default function AdminFileManage() {
     
 
     const deleteSelectedImages = () => {
-    setImageList(imageList.filter((_, index) => !selectedImages.has(index)));
+        //TODO: CONNECT W BACKEND
+    //setImageList(imageList.filter((_, index) => !selectedImages.has(index)));
     setSelectedImages(new Set());
     setIsEditMode(false);
   };
@@ -51,31 +52,34 @@ export default function AdminFileManage() {
     setIsEditMode((prev) => !prev);
     setSelectedImages(new Set());
   };
-  
-  const toggleSelectImage = (index) => {
-    if (!isEditMode) {
-      setDialogOpen(true);
-      setImageEdit(imageList[index]);
-    } else {
-      const updatedSelection = new Set(selectedImages);
-      if (updatedSelection.has(index)) {
-          updatedSelection.delete(index);
-      } else {
-          updatedSelection.add(index);
-      }
-      setSelectedImages(updatedSelection);
-    }
-  };
+
+    const toggleSelectImage = (fileId) => {
+        if (!isEditMode) {
+            const selectedFile = imageList.find(file => file.id === fileId);
+            if (selectedFile) {
+                setDialogOpen(true);
+                setImageEdit(selectedFile);
+            }
+        } else {
+            const updatedSelection = new Set(selectedImages);
+            if (updatedSelection.has(fileId)) {
+                updatedSelection.delete(fileId);
+            } else {
+                updatedSelection.add(fileId);
+            }
+            setSelectedImages(updatedSelection);
+        }
+    };
 
   useEffect(() => {
-    // When the `md` array changes, update the form fields
-    if (imageEdit && dialogOpen) {
-      const newFormValues = {};
-      imageEdit.Metadata.forEach((md, index) => {
-        newFormValues[index] = md;
-      });
-      form.setFieldsValue(newFormValues);
-    }
+      // When the `md` array changes, update the form fields
+      if (imageEdit && dialogOpen && Array.isArray(imageEdit.Metadata)) {
+          const newFormValues = {};
+          imageEdit.Metadata.forEach((md, index) => {
+              newFormValues[index] = md;
+          });
+          form.setFieldsValue(newFormValues);
+      }
   }, [imageEdit, dialogOpen]);
 
   const handleDialogClose = () => setDialogOpen(false);
@@ -169,12 +173,18 @@ export default function AdminFileManage() {
             p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             p.id.toString().includes(searchQuery)
         ).map((p) => (
-            <tr onClick={() => {
-            setPopupFormOpen(true);
-            setEditOpen(false);
-            setImageList(p.files);
-            setProject(p);
-          }} style={{height: '50px'}}
+            <tr onClick={async () => {
+                setPopupFormOpen(true);
+                setEditOpen(false);
+                setProject(p);
+                try {
+                    const files = await getFilesForProject({ projectId: p.id });
+                    setImageList(files || []);
+                } catch (err) {
+                    console.error("Error fetching files for project:", err);
+                    setImageList([]);
+                }
+            }} style={{height: '50px'}}
             onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#fcfcfc';}}
             onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '';}}>
               <td style={{ fontSize: '12px', textAlign: 'left', borderBottom:'1px solid black' }}>
@@ -266,25 +276,31 @@ export default function AdminFileManage() {
           )}
         </Box>
 
+          {imageList.length === 0 ? (
+              <Typography.Text type="secondary" style={{ margin: '20px auto' }}>
+                  No files available for this project.
+              </Typography.Text>
+          ) : (
         <Space wrap size={16} style={{ justifyContent: 'center' }}>
             {imageList.map((file) => (
                 <div
-                    key={file.Id}
+                    key={file.id}
                     style={{ position: 'relative', cursor: 'pointer' }}
-                    onClick={() => toggleSelectImage(file.Id)}
+                    onClick={() => toggleSelectImage(file.id)}
                     onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.5)';}}
                     onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '';}}
                 >
                   <Tooltip title="Edit Tags">
-                  <Image
-                        src={file.FilePath}
-                        width={150}
-                        preview={false}
-                        style={{
-                            border: selectedImages.has(file.Id) ? '4px solid red' : 'none',
-                            transition: '0.2s ease-in-out',
-                        }}
-                    />
+                      <Image
+                          key={file.id}
+                          src={file.thumbnailPath || file.viewPath || file.originalPath}t
+                          width={150}
+                          preview={false}
+                          style={{
+                              border: selectedImages.has(file.id) ? '4px solid red' : 'none',
+                              transition: '0.2s ease-in-out',
+                          }}
+                      />
                   </Tooltip>
                     
                     {selectedImages.has(file.Id) && (
@@ -306,8 +322,8 @@ export default function AdminFileManage() {
                     
                 </div>
             ))}
-
         </Space>
+          )}
 
         
 
@@ -356,14 +372,14 @@ export default function AdminFileManage() {
           >
           <div class='column'>
             <h5 style={{ marginTop: "5%", marginBottom: "5%" }}>Tags:</h5>
-            {(imageEdit.Metadata).map((md, index) => (
+              {(imageEdit.Metadata || []).map((md, index) => (
 
               <Form.Item
               key={index}  // Unique key for each item
               style={{ marginBottom: "5px", marginRight: "10px" }}
               name={index}
             >
-              <Input/>
+                  <Input defaultValue={md} />
             </Form.Item>))}
             
           </div>

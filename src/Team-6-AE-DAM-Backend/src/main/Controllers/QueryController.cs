@@ -143,6 +143,23 @@
 
              return Ok(mTags);
          }
+         
+         [HttpGet("metadataKeyUpload/{pid}")]
+         public async Task<ActionResult<IEnumerable<string>>> ProjectMetadataKeysQuery(int pid)
+         {
+             var project = await _context.Projects.FindAsync(pid);
+             if (project == null)
+             {
+                 return NotFound("Project not found.");
+             }
+
+             var mTags = await _context.MetadataTags
+                 .Where(mt => _context.Files.Any(f => f.ProjectId == pid && f.Id == mt.FileId))
+                 .Select(mt => mt.Key)
+                 .Distinct()
+                 .ToListAsync();
+             return Ok(mTags);
+         }
 
 
 
@@ -330,33 +347,7 @@
 
          }
 
-
-         // Query projects based on image tags
-         // get all images that contain the tag
-         // show all the projects associated wth those images
-//         [HttpGet("projectImageQuery")]
-//         public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjectQueryResult(string imageTag){
-//
-//
-//             var imageFileQuery = _context.Files
-////                                             .Where(fm => fm.bTags.Contains(imageTag.Value))
-//                 .Select(fm => fm.ProjectId);
-//
-//             var projectIds = await imageFileQuery.ToListAsync();
-//             if (projectIds == null || !projectIds.Any())
-//             {
-//                 return NotFound("No images found with this tag.");
-//             }
-//             var projectsQuery = _context.Projects.Where(p => projectIds.Contains(p.Id));
-//             var projects = await projectsQuery.ToListAsync();
-//             if (projects == null || !projects.Any())
-//             {
-//                 return NotFound("No projects found matching the image tag.");
-//             }
-//             return Ok(projects);
-//
-//         }
-//
+         
 
      }
 

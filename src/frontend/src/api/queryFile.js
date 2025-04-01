@@ -29,8 +29,67 @@ export async function fetchProjectsByDateRange({ StartDate, EndDate }) {
         return [];
     }
 }
+export async function getProjectBasicTags ({pid}){
+    try {
+        const url = `${QUERY_URL}/basicTags/${pid}`
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
 
-async function searchProject(pid, requestBody) {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching basic tags:', error);
+        return null;
+    }
+}
+export async function getProjectMetaDataKeysUpload ({pid}){
+    try {
+        const url = `${QUERY_URL}/metadataKeyUpload/${pid}`
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching basic tags:', error);
+        return null;
+    }
+}
+export async function getProjectMetaDataTags ({pid}){
+    try {
+        const url = `${QUERY_URL}/metadataTags/${pid}`
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching basic tags:', error);
+        return null;
+    }
+}
+async function searchProject({pid, requestBody}) {
     try {
         const url = `${QUERY_URL}/searchProject/${pid}`;
         const response = await fetch(url, {
