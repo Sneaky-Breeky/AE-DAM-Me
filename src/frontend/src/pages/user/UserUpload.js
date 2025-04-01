@@ -42,6 +42,8 @@ export default function UserUpload() {
     const [selectProjectTags, setSelectProjectTags] = useState([]);
     const [selectFile, setSelectFile] = useState(null);
     const [selectFileMode, setSelectFileMode] = useState(false);
+    const [existingSelectProjectMD, setExistingSelectProjectMD] = useState({});
+    const [existingSelectProjectTags, setExistingSelectProjectTags] = useState([]);
 
     const [userProjects, setUserProjects] = useState([]);
     const [project, setProject] = useState(null);
@@ -288,11 +290,6 @@ export default function UserUpload() {
         })));
     };
 
-    // TO BE DELETED, assume these are values from selectedProject.metadata and selectedProject.tags
-    //const existingSelectProjectMD = [{key:'key1', value:'value1'}, {key:'key2', value:'value2'}, {key:'key3', value:'value3'}];
-    const existingSelectProjectMD = {key1:'value1', key2:'value2', key3:'value3'};
-    const existingSelectProjectTags = ['tag1', 'tag2', 'tag3'];
-
     const [currentSelectedExistingMDkey, setCurrentSelectedExistingMDkey] = useState(null);
     const [currentSelectedExistingMDvalue, setCurrentSelectedExistingMDvalue] = useState(null);
 
@@ -304,6 +301,7 @@ export default function UserUpload() {
     const [currentCreatedTag, setCurrentCreatedTag] = useState(null);
 
     const handleApplyFileMD = () => {
+        // TODO: using endpoints, apply md and tags to selected file
         console.log(selectFile);
         console.log(selectProjectMD);
         console.log(selectProjectTags);
@@ -321,6 +319,11 @@ export default function UserUpload() {
 
         const selectedProject = userProjects.find(proj => proj.id === value);
         setSelectProject(selectedProject);
+        // TODO: using endpoints, set vars of existing md and tags of files in selected project
+        // existingSelectProjectMD = {key1:'value1', key2:'value2', key3:'value3'};
+        // existingSelectProjectTags = ['tag1', 'tag2', 'tag3'];
+        setExistingSelectProjectMD({key1:'value1', key2:'value2', key3:'value3'});
+        setExistingSelectProjectTags(['tag1', 'tag2', 'tag3']);
     };
 
     const handleSelectExistingMD = () => {
@@ -407,6 +410,9 @@ export default function UserUpload() {
         } else {
             setSelectFile(null);
         }
+        console.log(fileObj);
+        console.log(fileObj.file);
+        // TODO: set this shit up
         //setSelectProjectMD(fileName.metadata);
         //setSelectProjectTags(fileName.tags);
     };
@@ -571,6 +577,7 @@ export default function UserUpload() {
                     <Button icon={<PlusOutlined />} type="primary" color="cyan" variant="solid" onClick={() => fileInputRef.current.click()} disabled={files.length >= MAX_FILES}>
                         Add Files
                     </Button>
+                    <p style={{ color: 'grey', marginBottom: '0', fontSize:'80%' }}>Accepting PNG, JPG, JPEG, RAW, MP4, ARW</p>
                 </Box>
 
                 {/* Image preview & edit options */}
