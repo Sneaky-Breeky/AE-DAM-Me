@@ -67,9 +67,8 @@
                                              .Select(mt => mt.Key)
                                             .Distinct()
                                             .ToListAsync();
-
           return Ok(mTags);
-}
+        }
 
          // GET: api/query/basicTags/{pid}
          // list of all basic tags associated with a project (easy)
