@@ -51,7 +51,7 @@ export async function getProjectBasicTags ({pid}){
 }
 export async function getProjectMetaDataKeysUpload ({pid}){
     try {
-        const url = `${QUERY_URL}/metadataKeyUpload/${pid}`
+        const url = `${QUERY_URL}/metadatatags/${pid}`
         const response = await fetch(url, {
             method: "GET",
             headers: {
