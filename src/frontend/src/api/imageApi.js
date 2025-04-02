@@ -21,7 +21,7 @@ export async function getProjectImageBasicTags ({pid,fid}){
         return null;
     }
 }
-// shows all the metadata tsghsfgfb
+// shows all the metadata
 export async function getProjectImageMetaDataTags ({pid,fid}){
     try {
         const url = `${IMAGE_URL}/metaDataTagsForImage/${pid}/${fid}`

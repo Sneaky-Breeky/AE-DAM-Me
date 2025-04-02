@@ -112,3 +112,26 @@ async function searchProject({pid, requestBody}) {
         console.error("Error fetching project files:", error);
     }
 }
+
+export async function searchProjectFiles(pid, filterPayload) {
+    try {
+        const response = await fetch(`${QUERY_URL}/searchProject/${pid}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(filterPayload)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+
+        const files = await response.json();
+        return files;
+    } catch (error) {
+        console.error("Error fetching filtered project files:", error);
+        return [];
+    }
+}

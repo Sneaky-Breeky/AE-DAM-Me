@@ -253,7 +253,7 @@ export async function postProject(projectData) {
 
 
 // edit a project
-export async function putProject(projectId, updatedProjectData) {
+export async function putProject({projectId, updatedProjectData}) {
     try {
         const response = await fetch(`${PROJECTS_URL}/${projectId}`, {
             method: "PUT",
