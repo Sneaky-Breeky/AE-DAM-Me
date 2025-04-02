@@ -267,7 +267,10 @@ export default function AdminProjectSecurity() {
                 accessLevel: newAccessLevel,
             };
 
-            const updateResult = await putProject(project.id, updatedProjectData);
+            const updateResult = await putProject({
+                projectId: project.id,
+                updatedProjectData: updatedProjectData
+            });
             if (updateResult.error) {
                 throw new Error(updateResult.error);
             }
