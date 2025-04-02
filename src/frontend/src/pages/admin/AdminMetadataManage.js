@@ -80,8 +80,11 @@ if (Object.keys(updatedFields).length > 0) {
     }));
 
     const updatedProject = { ...project, ...updatedFields, tags: formattedTags };
+    const putRes = await putProject({
+        projectId: project.id,
+        updatedProjectData: updatedProject
+    });
 
-const putRes = await putProject(project.id, updatedProject);
 if (putRes.error) throw new Error(putRes.error);
 }
 
