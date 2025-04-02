@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import Box from '@mui/material/Box';
-import { Input, Typography, DatePicker, Button, Form, Select, Tag, Flex, Image, Modal, Slider, message, Result, Spin } from "antd";
+import { Input, Typography, DatePicker, Button, Form, Select, Tag, Flex, Image, Modal, Slider, message, Result, Spin, Alert } from "antd";
 import { PlusOutlined, RotateLeftOutlined, RotateRightOutlined, ExclamationCircleOutlined, CalendarOutlined, DownOutlined, CloseOutlined, DownloadOutlined } from '@ant-design/icons';
 import Cropper from 'react-easy-crop';
 import dayjs from 'dayjs';
@@ -46,6 +46,7 @@ export default function UserUpload() {
     const [selectFileMode, setSelectFileMode] = useState(false);
     const [existingSelectProjectMD, setExistingSelectProjectMD] = useState([]);
     const [existingSelectProjectTags, setExistingSelectProjectTags] = useState([]);
+    const [alertSaveFilePalette, setAlertSaveFilePalette]  = useState(null);
 
     const [userProjects, setUserProjects] = useState([]);
     const [project, setProject] = useState(null);
@@ -331,16 +332,10 @@ export default function UserUpload() {
 
         const proj = userProjects.find(proj => proj.id === value);
         setSelectProject(proj);
-        // TODO: using endpoints, set vars of existing md and tags of files in selected project
-        // existingSelectProjectMD = {key1:'value1', key2:'value2', key3:'value3'};
-        // existingSelectProjectTags = ['tag1', 'tag2', 'tag3'];
-        console.log("here i am");
 
         const resultMD = await getProjectMetaDataKeysUpload(value);
         const resultTags = await getProjectBasicTags(value);
-        console.log(resultMD);
-  
-        //console.log(stringList);
+
         resultMD && setExistingSelectProjectMD(resultMD);
         resultTags && setExistingSelectProjectTags(resultTags);
     };
@@ -423,12 +418,15 @@ export default function UserUpload() {
     const toggleSelectFile = (fileObj) => {
 
         const fileName = fileObj;
-        // const fileName = fileObj.id;
 
-         if (selectFile === null) {
-             setSelectFile(fileName);
-         } else {
+         if (selectFile === fileName) {
              setSelectFile(null);
+         } else if (!fileObj.id) {
+            setAlertSaveFilePalette(fileObj);
+            setSelectFile(null);
+        } else {
+            setSelectFile(fileName);
+            setAlertSaveFilePalette(null);
         }
         // console.log(fileName);
         // console.log(fileObj.file.id);
@@ -620,7 +618,7 @@ export default function UserUpload() {
                             key={file.Id}
                             style={{ position: 'relative', cursor: 'pointer' }}
                             onClick={() => toggleFileSelection(files[index])}
-                        >
+                            >
                             <Image
                                 src={preview}
                                 width={150}
@@ -638,13 +636,16 @@ export default function UserUpload() {
                             key={file.Id}
                             style={{ position: 'relative', cursor: 'pointer' }}
                             onClick={() => toggleSelectFile(files[index])}
-                        >
+                            >
+                            {alertSaveFilePalette === files[index] && <Alert showIcon message="Save to Palette First!" type="error"/>}
                             <Image
                                 src={preview}
                                 width={150}
                                 preview={false}
                                 style={{
-                                    border: selectFile && selectFile.file.name === (files[index].file.name) ? '4px solid cyan' : 'none',
+                                    border: selectFile && selectFile.file.name === (files[index].file.name) ? '4px solid cyan' 
+                                    : alertSaveFilePalette === files[index] ?  '4px solid red'
+                                    :'none',
                                     borderRadius: '8px',
                                     transition: '0.2s ease-in-out',
                                 }}
