@@ -313,7 +313,7 @@ export default function UserUpload() {
         //console.log(body);
 
         //const result = await addMetaAdvanceTag(31,body);
-        const result = await addMetaBasicTag(31, "test")
+        const result = await addMetaBasicTag(selectFile.id, "test")
         console.log(result);
 
 
