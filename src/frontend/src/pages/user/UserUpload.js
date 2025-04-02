@@ -8,7 +8,7 @@ import { addLog, addLogProject } from "../../api/logApi";
 import { API_BASE_URL } from '../../api/apiURL.js';
 import { Palette } from '@mui/icons-material';
 import { fetchProjectsForUser } from '../../api/projectApi';
-import { addMetaAdvanceTag } from '../../api/fileApi';
+import { addMetaAdvanceTag, addMetaBasicTag } from '../../api/fileApi';
 import { getProjectMetaDataKeysUpload, getProjectBasicTags } from '../../api/queryFile';
 import { useEffect } from "react";
 import { useAuth } from '../../contexts/AuthContext';
@@ -309,10 +309,12 @@ export default function UserUpload() {
         console.log(selectProjectTags);
         console.log("on click submit");
         const body = {Key:"department",Value:"eng",Type:0};
-        console.log(body);
+        //console.log(body);
 
-        const result = await addMetaAdvanceTag(108,body);
+        //const result = await addMetaAdvanceTag(31,body);
+        const result = await addMetaBasicTag(31, "test")
         console.log(result);
+
 
         //selectProjectMD.map((md) => {})
 
@@ -336,11 +338,11 @@ export default function UserUpload() {
 
         const resultMD = await getProjectMetaDataKeysUpload(value);
         const resultTags = await getProjectBasicTags(value);
-        console.log(resultTags);
+        console.log(resultMD);
   
         //console.log(stringList);
         resultMD && setExistingSelectProjectMD(resultMD);
-        setExistingSelectProjectTags(['tag1', 'tag2', 'tag3']);
+        resultTags && setExistingSelectProjectTags(resultTags);
     };
 
     const handleSelectExistingMD = () => {

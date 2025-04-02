@@ -29,8 +29,9 @@ export async function fetchProjectsByDateRange({ StartDate, EndDate }) {
         return [];
     }
 }
-export async function getProjectBasicTags ({pid}){
+export async function getProjectBasicTags (pid){
     console.log("insider query api");
+    console.log(pid);
     try {
         const url = `${QUERY_URL}/basicTags/${pid}`
         const response = await fetch(url, {
