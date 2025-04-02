@@ -2,10 +2,8 @@
 // upload the metadata values
 
 import { API_BASE_URL } from "./apiURL.js";
-
-const QUERY_URL = `${API_BASE_URL}/api/query`;
 const META_URL = `${API_BASE_URL}/api/metaData`;
-export async function addMetaBasicTag({fid,value}) {
+export async function addMetaBasicTag(fid,value) {
     try {
         const response = await fetch(`${META_URL}/basic/${fid}/${value}`, {
             method: "POST",
