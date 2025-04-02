@@ -29,7 +29,9 @@ export async function fetchProjectsByDateRange({ StartDate, EndDate }) {
         return [];
     }
 }
-export async function getProjectBasicTags ({pid}){
+export async function getProjectBasicTags (pid){
+    console.log("insider query api");
+    console.log(pid);
     try {
         const url = `${QUERY_URL}/basicTags/${pid}`
         const response = await fetch(url, {
@@ -49,7 +51,7 @@ export async function getProjectBasicTags ({pid}){
         return null;
     }
 }
-export async function getProjectMetaDataKeysUpload ({pid}){
+export async function getProjectMetaDataKeysUpload (pid){
     try {
         const url = `${QUERY_URL}/metadatatags/${pid}`
         const response = await fetch(url, {

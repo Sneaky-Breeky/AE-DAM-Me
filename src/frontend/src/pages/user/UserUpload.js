@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import Box from '@mui/material/Box';
-import { Input, Typography, DatePicker, Button, Form, Select, Tag, Flex, Image, Modal, Slider, message, Result, Spin } from "antd";
+import { Input, Typography, DatePicker, Button, Form, Select, Tag, Flex, Image, Modal, Slider, message, Result, Spin, Alert } from "antd";
 import { PlusOutlined, RotateLeftOutlined, RotateRightOutlined, ExclamationCircleOutlined, CalendarOutlined, DownOutlined, CloseOutlined, DownloadOutlined } from '@ant-design/icons';
 import Cropper from 'react-easy-crop';
 import dayjs from 'dayjs';
@@ -8,6 +8,8 @@ import { addLog, addLogProject } from "../../api/logApi";
 import { API_BASE_URL } from '../../api/apiURL.js';
 import { Palette } from '@mui/icons-material';
 import { fetchProjectsForUser } from '../../api/projectApi';
+import { addMetaAdvanceTag, addMetaBasicTag } from '../../api/fileApi';
+import { getProjectMetaDataKeysUpload, getProjectBasicTags } from '../../api/queryFile';
 import { useEffect } from "react";
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -42,8 +44,9 @@ export default function UserUpload() {
     const [selectProjectTags, setSelectProjectTags] = useState([]);
     const [selectFile, setSelectFile] = useState(null);
     const [selectFileMode, setSelectFileMode] = useState(false);
-    const [existingSelectProjectMD, setExistingSelectProjectMD] = useState({});
+    const [existingSelectProjectMD, setExistingSelectProjectMD] = useState([]);
     const [existingSelectProjectTags, setExistingSelectProjectTags] = useState([]);
+    const [alertSaveFilePalette, setAlertSaveFilePalette]  = useState(null);
 
     const [userProjects, setUserProjects] = useState([]);
     const [project, setProject] = useState(null);
@@ -300,11 +303,21 @@ export default function UserUpload() {
 
     const [currentCreatedTag, setCurrentCreatedTag] = useState(null);
 
-    const handleApplyFileMD = () => {
+    const handleApplyFileMD = async () => {
         // TODO: using endpoints, apply md and tags to selected file
-        console.log(selectFile);
+        console.log(selectFile.id);
         console.log(selectProjectMD);
         console.log(selectProjectTags);
+        console.log("on click submit");
+        const body = {Key:"department",Value:"eng",Type:0};
+        //console.log(body);
+
+        //const result = await addMetaAdvanceTag(31,body);
+        const result = await addMetaBasicTag(selectFile.id, "test")
+        console.log(result);
+
+
+        //selectProjectMD.map((md) => {})
 
         // NOTE: md and tags ONLY applied to selected files, SELECTED PROJECT IS NOT EDITED EVER
         // project is selected ONLY for user to access md and tags of existing files, NOT edit them
@@ -314,16 +327,17 @@ export default function UserUpload() {
     }
 
     // WHEN PROJECT IS SELECTED AND SELECTED FILE MD NEEDS TO BE SET
-    const handleSelectProjectChange = (value) => {
+    const handleSelectProjectChange = async (value) => {
         if(!value) return;
 
-        const selectedProject = userProjects.find(proj => proj.id === value);
-        setSelectProject(selectedProject);
-        // TODO: using endpoints, set vars of existing md and tags of files in selected project
-        // existingSelectProjectMD = {key1:'value1', key2:'value2', key3:'value3'};
-        // existingSelectProjectTags = ['tag1', 'tag2', 'tag3'];
-        setExistingSelectProjectMD({key1:'value1', key2:'value2', key3:'value3'});
-        setExistingSelectProjectTags(['tag1', 'tag2', 'tag3']);
+        const proj = userProjects.find(proj => proj.id === value);
+        setSelectProject(proj);
+
+        const resultMD = await getProjectMetaDataKeysUpload(value);
+        const resultTags = await getProjectBasicTags(value);
+
+        resultMD && setExistingSelectProjectMD(resultMD);
+        resultTags && setExistingSelectProjectTags(resultTags);
     };
 
     const handleSelectExistingMD = () => {
@@ -403,15 +417,19 @@ export default function UserUpload() {
 
     const toggleSelectFile = (fileObj) => {
 
-        const fileName = fileObj.file.name;
+        const fileName = fileObj;
 
-        if (selectFile === null) {
-            setSelectFile(fileName);
-        } else {
+         if (selectFile === fileName) {
+             setSelectFile(null);
+         } else if (!fileObj.id) {
+            setAlertSaveFilePalette(fileObj);
             setSelectFile(null);
+        } else {
+            setSelectFile(fileName);
+            setAlertSaveFilePalette(null);
         }
-        console.log(fileObj);
-        console.log(fileObj.file);
+        // console.log(fileName);
+        // console.log(fileObj.file.id);
         // TODO: set this shit up
         //setSelectProjectMD(fileName.metadata);
         //setSelectProjectTags(fileName.tags);
@@ -600,7 +618,7 @@ export default function UserUpload() {
                             key={file.Id}
                             style={{ position: 'relative', cursor: 'pointer' }}
                             onClick={() => toggleFileSelection(files[index])}
-                        >
+                            >
                             <Image
                                 src={preview}
                                 width={150}
@@ -618,13 +636,16 @@ export default function UserUpload() {
                             key={file.Id}
                             style={{ position: 'relative', cursor: 'pointer' }}
                             onClick={() => toggleSelectFile(files[index])}
-                        >
+                            >
+                            {alertSaveFilePalette === files[index] && <Alert showIcon message="Save to Palette First!" type="error"/>}
                             <Image
                                 src={preview}
                                 width={150}
                                 preview={false}
                                 style={{
-                                    border: selectFile === (files[index].file.name) ? '4px solid cyan' : 'none',
+                                    border: selectFile && selectFile.file.name === (files[index].file.name) ? '4px solid cyan' 
+                                    : alertSaveFilePalette === files[index] ?  '4px solid red'
+                                    :'none',
                                     borderRadius: '8px',
                                     transition: '0.2s ease-in-out',
                                 }}
@@ -803,7 +824,7 @@ export default function UserUpload() {
                             filterOption={(input, option) =>
                                 (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                             }
-                            options={Object.keys(existingSelectProjectMD).map(md => ({
+                            options={existingSelectProjectMD.map(md => ({
                                 value: md,
                                 disabled: Object.keys(selectProjectMD).includes(md),
                                 label: `${md}`
@@ -848,7 +869,7 @@ export default function UserUpload() {
                         </div>
                         <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleCreateMD} 
                         disabled={selectProject === null || currentCreatedMDkey === null || currentCreatedMDvalue === null || 
-                                Object.keys(selectProjectMD).includes(currentCreatedMDkey) || Object.keys(existingSelectProjectMD).includes(currentCreatedMDkey)} >
+                                Object.keys(selectProjectMD).includes(currentCreatedMDkey) || existingSelectProjectMD.includes(currentCreatedMDkey)} >
                             Create Metadata
                         </Button>
                     </div>
