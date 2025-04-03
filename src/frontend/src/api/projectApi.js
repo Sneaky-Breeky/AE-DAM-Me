@@ -467,3 +467,25 @@ export async function archiveProject(projectId) {
     }
 }
 
+export async function exportProject(projectId) {
+    try {
+        const url = `${PROJECTS_URL}/${projectId}/export`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            const errText = await response.json();
+            throw new Error(`Failed to fetch images: ${errText}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error("getFilesForImages error:", error);
+        return [];
+    }
+}
