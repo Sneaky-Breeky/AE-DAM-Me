@@ -164,6 +164,7 @@ namespace DAMBackend.Controllers
             var tagsExists = new List<String>{};
             var tagsDoNotExists = new List<String>{};
             var existingTags = new List<TagBasicModel>{};
+            
             foreach (var file in files)
             {
                 ProjectModel project = null;
