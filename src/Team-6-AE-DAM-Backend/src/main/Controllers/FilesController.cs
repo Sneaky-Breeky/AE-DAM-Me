@@ -135,6 +135,7 @@ namespace DAMBackend.Controllers
                 {
                     return BadRequest($"File {file.FileName} exceeds the maximum allowed size.");
                 }
+
                 var id = Guid.NewGuid();
 
                 var fileName = string.Concat("Original_", id.ToString(), fileExtension);
@@ -143,6 +144,7 @@ namespace DAMBackend.Controllers
                 string fileUrl = await _azureBlobService.UploadAsync(file, fileName, ContainerType.Palette);
                 filesLinks.Add(fileUrl);
             }
+            
             return Ok(filesLinks);
         }
 
@@ -164,7 +166,7 @@ namespace DAMBackend.Controllers
             var tagsExists = new List<String>{};
             var tagsDoNotExists = new List<String>{};
             var existingTags = new List<TagBasicModel>{};
-            
+
             foreach (var file in files)
             {
                 ProjectModel project = null;

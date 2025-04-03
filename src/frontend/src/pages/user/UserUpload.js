@@ -195,6 +195,7 @@ export default function UserUpload() {
         selectedFiles.forEach(file => {
             formData.append('files', file);
         });
+
         try {
             setSpinning(true);
             // Upload the files to the server

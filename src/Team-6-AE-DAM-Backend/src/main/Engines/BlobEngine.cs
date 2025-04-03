@@ -12,6 +12,7 @@ namespace DAMBackend.blob
         private readonly BlobContainerClient _projectsContainer;
         private readonly BlobContainerClient _palettesContainer;
         private readonly BlobContainerClient _assetsContainer;
+        private readonly BlobContainerClient _thumbnailContainer;
 
         private readonly BlobContainerClient _projectExportContainer;
 
@@ -27,6 +28,7 @@ namespace DAMBackend.blob
                 var palettesContainerName = "palettes";
                 var assetsContainerName = "assets";
                 var projectExportContainerName = "export";
+                var thumbnailContainerName = "thumbnail";
 
     
                 _projectsContainer = blobServiceClient.GetBlobContainerClient(projectsContainerName);
@@ -44,6 +46,10 @@ namespace DAMBackend.blob
                 _assetsContainer = blobServiceClient.GetBlobContainerClient(assetsContainerName);
                 _assetsContainer.CreateIfNotExists();
                 Console.WriteLine($"Azure Blob container '{assetsContainerName}' is ready.");
+
+                _thumbnailContainer = blobServiceClient.GetBlobContainerClient(thumbnailContainerName);
+                _thumbnailContainer.CreateIfNotExists();
+                Console.WriteLine($"Azure Blob container '{thumbnailContainerName}' is ready.");
             }
             catch (Exception ex)
             {
