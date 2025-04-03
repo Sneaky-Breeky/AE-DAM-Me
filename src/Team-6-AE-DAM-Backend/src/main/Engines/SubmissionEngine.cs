@@ -33,8 +33,7 @@ namespace DAMBackend.SubmissionEngine
     }
     public class SubmissionEngine
     {
-
-        private readonly string _uploadPath = "../../../TestOutput"; //hard coded value
+		public readonly string _uploadPath = "";
 
         public SubmissionEngine()
         {
@@ -163,6 +162,8 @@ namespace DAMBackend.SubmissionEngine
             return compressedFile;
         }
 
+
+		// compression method for RAW file
        	public async Task<IFormFile> UploadRaw(IFormFile file, CompressionLevel option)
         {
             if (file == null || file.Length == 0)
@@ -324,6 +325,9 @@ namespace DAMBackend.SubmissionEngine
                 ContentType = "video/mp4"
             };
         }
+
+		// ----------------------------------- thumbnail generation --------------------------------
+
 		public async Task<IFormFile> GenerateThumbnail(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -356,73 +360,70 @@ namespace DAMBackend.SubmissionEngine
         }
         
        public async Task<IFormFile> GenerateMp4ThumbnailAsync(IFormFile videoFile)
-{
-    string tempDir = Path.Combine(Directory.GetCurrentDirectory(), "TestOutput", "Temp");
-    Directory.CreateDirectory(tempDir);
-
-    string tempVideoPath = Path.Combine(tempDir, $"input_{Guid.NewGuid()}.mp4");
-    string tempThumbnailPath = Path.Combine(tempDir, $"thumb_{Guid.NewGuid()}.jpg");
-
-    try
-    {
-        // Save uploaded video
-        await using (var fs = new FileStream(tempVideoPath, FileMode.Create))
-            await videoFile.CopyToAsync(fs);
-
-        // FFmpeg arguments to generate a thumbnail (no orientation adjustments)
-        string ffmpegArgs = $"-ss 00:00:00 -i \"{tempVideoPath}\" -vframes 1 -q:v 3 \"{tempThumbnailPath}\"";
-		//string ffmpegArgs = $"-ss 00:00:10 -i \"{tempVideoPath}\" -vf \"thumbnail,scale=iw:ih\" -vframes 1 -q:v 3 \"{tempThumbnailPath}\"";
-
-		
-
-
-        var startInfo = new ProcessStartInfo("ffmpeg", ffmpegArgs)
         {
-            RedirectStandardError = true,
-            RedirectStandardOutput = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-
-        string ffmpegError = "";
-        string ffmpegOutput = "";
-
-        using (var process = Process.Start(startInfo))
-        {
-            ffmpegError = await process.StandardError.ReadToEndAsync();
-            ffmpegOutput = await process.StandardOutput.ReadToEndAsync();
-            await process.WaitForExitAsync();
-
-            if (process.ExitCode != 0 || !File.Exists(tempThumbnailPath))
+            string tempDir = Path.Combine(Directory.GetCurrentDirectory(), "TestOutput", "Temp");
+            Directory.CreateDirectory(tempDir);
+        
+            string tempVideoPath = Path.Combine(tempDir, $"input_{Guid.NewGuid()}.mp4");
+            string tempThumbnailPath = Path.Combine(tempDir, $"thumb_{Guid.NewGuid()}.jpg");
+        
+            try
             {
-                throw new Exception($"FFmpeg failed. Exit Code: {process.ExitCode}\n" +
-                    $"Output: {ffmpegOutput}\n" +
-                    $"Error: {ffmpegError}");
+                // Save uploaded video
+                await using (var fs = new FileStream(tempVideoPath, FileMode.Create))
+                    await videoFile.CopyToAsync(fs);
+        
+                // FFmpeg arguments to generate a thumbnail (no orientation adjustments)
+                string ffmpegArgs = $"-ss 00:00:00 -i \"{tempVideoPath}\" -vframes 1 -q:v 3 \"{tempThumbnailPath}\"";
+                //string ffmpegArgs = $"-ss 00:00:10 -i \"{tempVideoPath}\" -vf \"thumbnail,scale=iw:ih\" -vframes 1 -q:v 3 \"{tempThumbnailPath}\"";
+        
+                var startInfo = new ProcessStartInfo("ffmpeg", ffmpegArgs)
+                {
+                    RedirectStandardError = true,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+        
+                string ffmpegError = "";
+                string ffmpegOutput = "";
+        
+                using (var process = Process.Start(startInfo))
+                {
+                    ffmpegError = await process.StandardError.ReadToEndAsync();
+                    ffmpegOutput = await process.StandardOutput.ReadToEndAsync();
+                    await process.WaitForExitAsync();
+        
+                    if (process.ExitCode != 0 || !File.Exists(tempThumbnailPath))
+                    {
+                        throw new Exception($"FFmpeg failed. Exit Code: {process.ExitCode}\n" +
+                            $"Output: {ffmpegOutput}\n" +
+                            $"Error: {ffmpegError}");
+                    }
+                }
+        
+                // Return thumbnail as IFormFile
+                var memory = new MemoryStream(await File.ReadAllBytesAsync(tempThumbnailPath));
+                string fileName = $"{Path.GetFileNameWithoutExtension(videoFile.FileName)}_thumbnail.jpg";
+        
+                return new FormFile(memory, 0, memory.Length, "thumbnail", fileName)
+                {
+                    Headers = new HeaderDictionary(),
+                    ContentType = "image/jpeg"
+                };
+            }
+            catch (Exception ex)
+            {
+                // Log the full exception details
+                Console.WriteLine($"Thumbnail Generation Error: {ex}");
+                throw; // Re-throw to maintain original error handling
+            }
+            finally
+            {
+                SafeDeleteFile(tempVideoPath);
+                SafeDeleteFile(tempThumbnailPath);
             }
         }
-
-        // Return thumbnail as IFormFile
-        var memory = new MemoryStream(await File.ReadAllBytesAsync(tempThumbnailPath));
-        string fileName = $"{Path.GetFileNameWithoutExtension(videoFile.FileName)}_thumbnail.jpg";
-
-        return new FormFile(memory, 0, memory.Length, "thumbnail", fileName)
-        {
-            Headers = new HeaderDictionary(),
-            ContentType = "image/jpeg"
-        };
-    }
-    catch (Exception ex)
-    {
-        // Log the full exception details
-        Console.WriteLine($"Thumbnail Generation Error: {ex}");
-        throw; // Re-throw to maintain original error handling
-    }
-    finally
-    {
-        SafeDeleteFile(tempVideoPath);
-        SafeDeleteFile(tempThumbnailPath);
-    }
-}
         
         private void SafeDeleteFile(string path)
         {
@@ -525,8 +526,42 @@ namespace DAMBackend.SubmissionEngine
                 throw new Exception($"Unexpected error while creating thumbnail: {ex.Message}", ex);
             }
         }
+
+
+		// ----------------------------------- metadata extraction --------------------------------
+
+		public FileModel ProcessImageMetadata(IFormFile file, string basePath, UserModel currentUser)
+        {
+            if (file == null || file.Length == 0)
+            {
+                throw new Exception("Invalid file.");
+            }
         
-        public FileModel ProcessImageMetadataJpgPng(IFormFile imageFile, string basePath, UserModel currentUser)
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        
+            // Check the file extension and call the appropriate method based on the type
+            if (new[] { ".arw", ".cr2", ".nef", ".dng" }.Contains(fileExtension))
+            {
+                // Call the GenerateThumbnailRaw for RAW files
+                return ProcessImageMetadataRaw(file, basePath, currentUser);
+            }
+			else if (new[] { ".mp4" }.Contains(fileExtension))
+            {
+                // Call the GenerateThumbnailJpgPng for JPG/PNG files
+                return ProcessImageMetadataMp4(file, basePath, currentUser);
+            }
+            else if (new[] { ".jpg", ".jpeg", ".png" }.Contains(fileExtension))
+            {
+                // Call the GenerateThumbnailJpgPng for JPG/PNG files
+                return ProcessImageMetadataJpgPng(file, basePath, currentUser);
+            }
+            else
+            {
+                throw new Exception("Unsupported file format for thumbnail generation.");
+            }
+        }
+        
+        private FileModel ProcessImageMetadataJpgPng(IFormFile imageFile, string basePath, UserModel currentUser)
 		{
             // Validate input
             if (imageFile == null || imageFile.Length == 0)
@@ -662,47 +697,468 @@ namespace DAMBackend.SubmissionEngine
             return null;
         }
 
-        public  void PrintImageMetadata(string imagePath)
+		// process metadata for raw format
+		private FileModel ProcessImageMetadataRaw(IFormFile rawFile, string basePath, UserModel currentUser)
         {
-            // Load the image
-            using (Image image = Image.Load(imagePath))
+            // Validate input
+            if (rawFile == null || rawFile.Length == 0)
             {
-                Console.WriteLine($"Image loaded with dimensions: {image.Width}x{image.Height}");
-
-                // Check for EXIF metadata
-                if (image.Metadata.ExifProfile != null)
-                {
-                    Console.WriteLine("\nEXIF Metadata:");
-                    foreach (var tag in image.Metadata.ExifProfile.Values)
-                    {
-                        Console.WriteLine($"Tag: {tag.Tag}, Value: {tag.GetValue()}");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("\nNo EXIF metadata found in the image.");
-                }
+                throw new ArgumentException("Invalid raw file");
             }
-        }
+    
+            // Ensure the file is either .raw or .arw
+            string extension = Path.GetExtension(rawFile.FileName).ToLowerInvariant();
+            if (extension != ".raw" && extension != ".arw")
+            {
+                throw new ArgumentException("Unsupported file format. Only .raw and .arw files are supported.");
+            }
+    
+            // Get the original file name (keep it as is)
+            string originalFileName = rawFile.FileName;
+			string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(originalFileName);
 
-        // Extract EXIF data from the file using ExifTool
-        public Dictionary<string, string> ExtractExifData(string file)
-        {
-            var metadata = new Dictionary<string, string>();
-
+    
+            // Create a temporary file path using the original file name
+            string tempFilePath = Path.Combine(Path.GetTempPath(), originalFileName);
+    
             try
             {
-                // TODO:  Run ExifTool on the file and capture output
-                // nedded fields can be seen on ER diagram
-              
+                // Save the raw file to the temporary location
+                using (var fileStream = new FileStream(tempFilePath, FileMode.Create))
+                {
+                    rawFile.CopyTo(fileStream);
+                }
+    
+                // Run ExifTool to extract metadata
+                string exifToolArgs = $"\"{tempFilePath}\""; // ExifTool command to extract metadata
+    
+                var startInfo = new ProcessStartInfo("exiftool", exifToolArgs)
+                {
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+    
+                using (var process = Process.Start(startInfo))
+                using (var reader = process.StandardOutput)
+                {
+                    // Read the output from ExifTool
+                    string output = reader.ReadToEnd();
+    
+                    // Split the output by new lines and process each tag
+                    string[] lines = output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    
+                    // Create FileModel instance and assign default values
+                    var fileModel = new FileModel
+                    {
+                        Name = fileNameWithoutExtension,
+                        Extension = extension,
+                        ThumbnailPath = Path.Combine(basePath, "thumbnails", originalFileName),
+                        ViewPath = Path.Combine(basePath, "views", originalFileName),
+                        OriginalPath = Path.Combine(basePath, "originals", originalFileName),
+                        PixelWidth = 0,
+                        PixelHeight = 0,
+                        User = currentUser,
+                        UserId = currentUser.Id,
+						Palette = true
+                    };
+    
+                    // Process each metadata line
+                    foreach (var line in lines)
+                    {
+                        // Split metadata line into tag and value
+                        var parts = line.Split(":", 2);
+                        if (parts.Length < 2) continue;  // Skip invalid lines
+    
+                        string tag = parts[0].Trim();
+                        string value = parts[1].Trim();
+    
+                        // Check each metadata tag and assign to the correct field using if-else
+                        if (tag == "File Name")
+                        {
+                            // No need to assign since it's already assigned from the original file name
+                        }
+                        else if (tag == "Make") // // Assign to Make
+                        {
+                            fileModel.Make = value;
+                        }
+                        else if (tag == "Camera Model Name") // // Assign to Model
+                        {
+                            fileModel.Model = value;
+                        }
+                        else if (tag == "Focal Length") // // Assign to FocalLength
+                        {
+                            if (int.TryParse(value, out int focalLength))
+                            {
+                                fileModel.FocalLength = focalLength;
+                            }
+                        }
+                        else if (tag == "Aperture") // // Assign to Aperture
+                        {
+                            if (float.TryParse(value, out float aperture))
+                            {
+                                fileModel.Aperture = aperture;
+                            }
+                        }
+                        else if (tag == "Date/Time Original") // // Assign to DateTimeOriginal
+                        {
+                            if (DateTime.TryParse(value, out DateTime dateTime))
+                            {
+                                fileModel.DateTimeOriginal = dateTime;
+                            }
+                        }
+                        else if (tag == "Copyright") // // Assign to Copyright
+                        {
+                            fileModel.Copyright = value;
+                        }
+                        else if (tag == "GPS Latitude") // // Assign to GPSLat
+                        {
+                            if (decimal.TryParse(value, out decimal latitude))
+                            {
+                                fileModel.GPSLat = latitude;
+                            }
+                        }
+                        else if (tag == "GPS Longitude") // // Assign to GPSLon
+                        {
+                            if (decimal.TryParse(value, out decimal longitude))
+                            {
+                                fileModel.GPSLon = longitude;
+                            }
+                        }
+                        else if (tag == "GPS Altitude") // // Assign to GPSAlt
+                        {
+                            if (decimal.TryParse(value, out decimal altitude))
+                            {
+                                fileModel.GPSAlt = altitude;
+                            }
+                        }
+                        else if (tag == "Image Width") // // Assign to PixelWidth
+                        {
+                            if (int.TryParse(value, out int width))
+                            {
+                                fileModel.PixelWidth = width;
+                            }
+                        }
+                        else if (tag == "Image Height") // // Assign to PixelHeight
+                        {
+                            if (int.TryParse(value, out int height))
+                            {
+                                fileModel.PixelHeight = height;
+                            }
+                        }
+                        else
+                        {
+                            // Handle or ignore other metadata tags as needed
+                        }
+                    }
+    
+                    // Return the populated FileModel
+                    return fileModel;
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error extracting EXIF data from {file}: {ex.Message}");
+                Console.WriteLine($"Error: {ex.Message}");
+                return null;
             }
-
-            return metadata;
+            finally
+            {
+                // Clean up the temporary file
+                if (File.Exists(tempFilePath))
+                {
+                    File.Delete(tempFilePath);
+                }
+            }
         }
+
+		private FileModel ProcessImageMetadataMp4(IFormFile videoFile, string basePath, UserModel currentUser)
+        {
+            // Validate input
+            if (videoFile == null || videoFile.Length == 0)
+            {
+                throw new ArgumentException("Invalid MP4 file");
+            }
+        
+            // Ensure the file is a .mp4
+            string extension = Path.GetExtension(videoFile.FileName).ToLowerInvariant();
+            if (extension != ".mp4")
+            {
+                throw new ArgumentException("Only .mp4 files are supported.");
+            }
+        
+            // Get the original file name (keep it as is)
+            string originalFileName = videoFile.FileName;
+            string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(originalFileName);
+        
+            // Create a temporary file path using the original file name
+            string tempFilePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + extension);
+        
+            try
+            {
+                // Save the .mp4 file to a temporary location
+                using (var fileStream = new FileStream(tempFilePath, FileMode.Create))
+                {
+                    videoFile.CopyTo(fileStream);
+                }
+        
+                // Run ffprobe to extract metadata from the video file in JSON format
+                string ffprobeArgs = $"-v quiet -print_format json -show_format -show_streams \"{tempFilePath}\"";
+        
+                var startInfo = new ProcessStartInfo("ffprobe", ffprobeArgs)
+                {
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+        
+                using (var process = Process.Start(startInfo))
+                using (var reader = process.StandardOutput)
+                {
+                    // Read the output from ffprobe
+                    string output = reader.ReadToEnd();
+        
+                    // Deserialize JSON output
+                    var metadata = Newtonsoft.Json.Linq.JObject.Parse(output);
+        
+                    // Create FileModel instance and assign default values
+                    var fileModel = new FileModel
+                    {
+                        Name = fileNameWithoutExtension,
+                        Extension = extension,
+                        ThumbnailPath = Path.Combine(basePath, "thumbnails", originalFileName),
+                        ViewPath = Path.Combine(basePath, "views", originalFileName),
+                        OriginalPath = Path.Combine(basePath, "originals", originalFileName),
+                        PixelWidth = 0,
+                        PixelHeight = 0,
+                        User = currentUser,
+                        UserId = currentUser.Id,
+                        Palette = true
+                    };
+        
+                    // Extract width and height from streams
+                    var videoStream = metadata["streams"]?.FirstOrDefault(stream => stream["codec_type"]?.ToString() == "video");
+                    if (videoStream != null)
+                    {
+                        // Extract width and height from the video stream metadata
+                        int width = videoStream["width"]?.ToObject<int>() ?? 0;
+                        int height = videoStream["height"]?.ToObject<int>() ?? 0;
+        
+                        // Assign extracted width and height to the file model
+                        fileModel.PixelWidth = width;
+                        fileModel.PixelHeight = height;
+                    }
+        
+                    // Return the populated FileModel
+                    return fileModel;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                return null;
+            }
+            finally
+            {
+                // Clean up the temporary file
+                if (File.Exists(tempFilePath))
+                {
+                    File.Delete(tempFilePath);
+                }
+            }
+        }
+
+
+		// ------------------------------------------ disposable methods for debugging -----------------------------
+		// public void PrintMp4Metadata(IFormFile videoFile)
+//     {
+//         // Validate input
+//         if (videoFile == null || videoFile.Length == 0)
+//         {
+//             throw new ArgumentException("Invalid video file");
+//         }
+//
+//         // Ensure the file is a .mp4 file
+//         string extension = Path.GetExtension(videoFile.FileName).ToLowerInvariant();
+//         if (extension != ".mp4")
+//         {
+//             throw new ArgumentException("Only .mp4 files are supported.");
+//         }
+//
+//         // Create a temporary file path
+//         string tempFilePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + extension);
+//
+//         try
+//         {
+//             // Save the .mp4 file to a temporary location
+//             using (var fileStream = new FileStream(tempFilePath, FileMode.Create))
+//             {
+//                 videoFile.CopyTo(fileStream);
+//             }
+//
+//             // Run ffprobe to extract metadata from the video file
+//             string ffprobeArgs = $"-v quiet -print_format json -show_format -show_streams \"{tempFilePath}\""; // FFprobe command to extract metadata
+//
+//             var startInfo = new ProcessStartInfo("ffprobe", ffprobeArgs)
+//             {
+//                 RedirectStandardOutput = true,
+//                 RedirectStandardError = true,
+//                 UseShellExecute = false,
+//                 CreateNoWindow = true
+//             };
+//
+//             using (var process = Process.Start(startInfo))
+//             using (var reader = process.StandardOutput)
+//             {
+//                 // Read the output from ffprobe
+//                 string output = reader.ReadToEnd();
+//
+//                 // Deserialize JSON output
+//                 var metadata = Newtonsoft.Json.Linq.JObject.Parse(output);
+//
+//                 // Loop through and print each stream and format metadata
+//                 Console.WriteLine("Metadata for Video:");
+//
+//                 // Print general file information from "format"
+//                 foreach (var item in metadata["format"])
+//                 {
+//                     Console.WriteLine($"{item.Path}: {item.First}");
+//                 }
+//
+//                 // Print stream information (video and audio streams)
+//                 foreach (var stream in metadata["streams"])
+//                 {
+//                     foreach (var item in stream)
+//                     {
+//                         Console.WriteLine($"{item.Path}: {item.First}");
+//                     }
+//                 }
+//             }
+//         }
+//         catch (Exception ex)
+//         {
+//             Console.WriteLine($"Error: {ex.Message}");
+//         }
+//         finally
+//         {
+//             // Clean up the temporary file
+//             if (File.Exists(tempFilePath))
+//             {
+//                 File.Delete(tempFilePath);
+//             }
+//         }
+//     }
+//
+// 		public void PrintRawMetadata(IFormFile rawFile)
+//     {
+//         // Validate input
+//         if (rawFile == null || rawFile.Length == 0)
+//         {
+//             throw new ArgumentException("Invalid raw file");
+//         }
+//
+//         // Ensure the file is either .raw or .arw
+//         string extension = Path.GetExtension(rawFile.FileName).ToLowerInvariant();
+//         if (extension != ".raw" && extension != ".arw")
+//         {
+//             throw new ArgumentException("Unsupported file format. Only .raw and .arw files are supported.");
+//         }
+//
+//         // Get the original file name (keep it as is)
+//         string originalFileName = rawFile.FileName;
+//         
+//         // Create a temporary file path using the original file name
+//         string tempFilePath = Path.Combine(Path.GetTempPath(), originalFileName);
+//
+//         try
+//         {
+//             // Save the raw file to the temporary location with its original name
+//             using (var fileStream = new FileStream(tempFilePath, FileMode.Create))
+//             {
+//                 rawFile.CopyTo(fileStream);
+//             }
+//
+//             // Run ExifTool to extract metadata
+//             string exifToolArgs = $"\"{tempFilePath}\""; // ExifTool command to extract metadata
+//
+//             var startInfo = new ProcessStartInfo("exiftool", exifToolArgs)
+//             {
+//                 RedirectStandardOutput = true,
+//                 RedirectStandardError = true,
+//                 UseShellExecute = false,
+//                 CreateNoWindow = true
+//             };
+//
+//             using (var process = Process.Start(startInfo))
+//             using (var reader = process.StandardOutput)
+//             {
+//                 // Read the output from ExifTool
+//                 string output = reader.ReadToEnd();
+//
+//                 // Split the output by new lines and print each tag
+//                 string[] lines = output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+//                 foreach (var line in lines)
+//                 {
+//                     Console.WriteLine(line);  // Print each metadata tag line
+//                 }
+//             }
+//         }
+//         catch (Exception ex)
+//         {
+//             Console.WriteLine($"Error: {ex.Message}");
+//         }
+//         finally
+//         {
+//             // Clean up the temporary file
+//             if (File.Exists(tempFilePath))
+//             {
+//                 File.Delete(tempFilePath);
+//             }
+//         }
+//     }
+//
+//         public  void PrintImageMetadata(string imagePath)
+//         {
+//             // Load the image
+//             using (Image image = Image.Load(imagePath))
+//             {
+//                 Console.WriteLine($"Image loaded with dimensions: {image.Width}x{image.Height}");
+//
+//                 // Check for EXIF metadata
+//                 if (image.Metadata.ExifProfile != null)
+//                 {
+//                     Console.WriteLine("\nEXIF Metadata:");
+//                     foreach (var tag in image.Metadata.ExifProfile.Values)
+//                     {
+//                         Console.WriteLine($"Tag: {tag.Tag}, Value: {tag.GetValue()}");
+//                     }
+//                 }
+//                 else
+//                 {
+//                     Console.WriteLine("\nNo EXIF metadata found in the image.");
+//                 }
+//             }
+//         }
+//
+//         // Extract EXIF data from the file using ExifTool
+//         public Dictionary<string, string> ExtractExifData(string file)
+//         {
+//             var metadata = new Dictionary<string, string>();
+//
+//             try
+//             {
+//                 // TODO:  Run ExifTool on the file and capture output
+//                 // nedded fields can be seen on ER diagram
+//               
+//             }
+//             catch (Exception ex)
+//             {
+//                 Console.WriteLine($"Error extracting EXIF data from {file}: {ex.Message}");
+//             }
+//
+//             return metadata;
+//         }
 
        
     }
