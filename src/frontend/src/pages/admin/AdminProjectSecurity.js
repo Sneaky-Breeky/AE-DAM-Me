@@ -274,9 +274,10 @@ export default function AdminProjectSecurity() {
                 projectId: project.id,
                 updatedProjectData: updatedProjectData
             });
-
-            const updateResult = await putProject(project.id, updatedProjectData);
             await addLog(user.id, null, project.id, 'updated tag for project');
+
+            // const updateResult = await putProject(project.id, updatedProjectData);
+
 //             if (updateResult.error) {
 //                 throw new Error(updateResult.error);
 //             }
