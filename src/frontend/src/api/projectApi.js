@@ -253,7 +253,7 @@ export async function postProject(projectData) {
 
 
 // edit a project
-export async function putProject({projectId, updatedProjectData}) {
+export async function putProject({ projectId, updatedProjectData }) {
     try {
         const response = await fetch(`${PROJECTS_URL}/${projectId}`, {
             method: "PUT",
@@ -365,9 +365,9 @@ export async function addProjectTag(ProjectId, Key, Value, type) {
         //         Type: type
         //     })
         // });
-        
-                
-                if (!response.ok) {
+
+
+        if (!response.ok) {
             const errorText = await response.text();
             try {
                 const errorData = JSON.parse(errorText);
@@ -416,7 +416,7 @@ export async function deleteProjectTag(key, projectId) {
     }
 }
 
-export async function getFilesForProject({projectId}) {
+export async function getFilesForProject({ projectId }) {
     try {
         const url = `${PROJECTS_URL}/files/${projectId}`;
 
@@ -437,7 +437,33 @@ export async function getFilesForProject({projectId}) {
         console.error("getFilesForImages error:", error);
         return [];
     }
+}
+
+export async function archiveProject(projectId) {
+    try {
+
+
+        const response = await fetch(`${PROJECTS_URL}/${projectId}/archive`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            try {
+                const errorData = JSON.parse(errorText);
+                return { error: errorData.message || "Unknown error" };
+            } catch {
+                return { error: `HTTP Error ${response.status}: ${errorText}` };
+            }
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error("Network or archive error:", error);
+        return { error: "Network error or server unreachable", message: error.message };
     }
-
-
+}
 

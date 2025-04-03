@@ -23,10 +23,11 @@ namespace DAMBackend.Controllers
         private readonly CsvEngine _csvService;
         private readonly AzureBlobService _azureBlobService;
 
-        public ProjectsController(SQLDbContext context,CsvEngine csvService)
+        public ProjectsController(SQLDbContext context,CsvEngine csvService,AzureBlobService azureBlobService)
         {
             _context = context;
             _csvService = csvService;
+            _azureBlobService = azureBlobService;
         }
 
 
