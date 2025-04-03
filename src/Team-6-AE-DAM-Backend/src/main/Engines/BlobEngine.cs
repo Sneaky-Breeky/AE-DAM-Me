@@ -71,7 +71,17 @@ namespace DAMBackend.blob
             await blobClient.UploadAsync(stream, overwrite: true);
             return blobClient.Uri.ToString();
         }
-        
+
+        public async Task<string> UploadThumbnailAsync(IFormFile file, string blobName)
+        {
+            BlobContainerClient container = _thumbnailContainer;
+
+            var blobClient = container.GetBlobClient(blobName);
+            using var stream = file.OpenReadStream();
+            await blobClient.UploadAsync(stream, overwrite: true);
+            return blobClient.Uri.ToString();
+        }
+
         public async Task<string> UploadAsync(MemoryStream stream, string blobName)
         {
             BlobContainerClient container = _projectExportContainer;

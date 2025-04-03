@@ -21,10 +21,17 @@ using System.Diagnostics;
 using File = System.IO.File;
 using ImageSharpExif = SixLabors.ImageSharp.Metadata.Profiles.Exif;
 using ImageSharpExifTag = SixLabors.ImageSharp.Metadata.Profiles.Exif.ExifTag;
+using DAMBackend.SubmissionEngineEnv;
 
 
 namespace DAMBackend.Controllers
 {
+    public struct UpladedFile
+    {
+        public string ThumbnailPath;
+        public string OriginalPath;
+    }
+    
     [Route("api/[controller]")]
     [ApiController]
     public class FilesController : ControllerBase
@@ -107,7 +114,7 @@ namespace DAMBackend.Controllers
         // Call function in submission engine
         [HttpPost("upload")]
         [Consumes("multipart/form-data")]
-        public async Task<ActionResult<List<FileModel>>> UploadFiles(List<IFormFile> files)
+        public async Task<ActionResult<List<UpladedFile>>> UploadFiles(List<IFormFile> files)
         {
             // Check if the number of files exceeds 100
             if (files.Count > 100)
@@ -115,7 +122,7 @@ namespace DAMBackend.Controllers
                 return BadRequest("You can upload a maximum of 100 files at once.");
             }
             Console.WriteLine("the length of files is: ", files.Count);
-            List<string> filesLinks = new List<string> { };
+            List<UpladedFile> filesLinks = new List<UpladedFile> { };
 
             // Validate and process each file
             foreach (var file in files)
@@ -129,7 +136,7 @@ namespace DAMBackend.Controllers
                 {
                     return BadRequest($"File {file.FileName} has an unsupported file type.");
                 }
-
+                
                 // Validate file size (e.g., 500MB limit)
                 if (file.Length > 500 * 1024 * 1024) // 100MB
                 {
@@ -141,8 +148,26 @@ namespace DAMBackend.Controllers
                 var fileName = string.Concat("Original_", id.ToString(), fileExtension);
                 // Save the file to the upload directory
                 using var stream = file.OpenReadStream();
-                string fileUrl = await _azureBlobService.UploadAsync(file, fileName, ContainerType.Palette);
-                filesLinks.Add(fileUrl);
+                string fileUrlOriginal = await _azureBlobService.UploadAsync(file, fileName, ContainerType.Palette);
+
+
+                // generate thumbnail
+                SubmissionEngine submissionEngine = new SubmissionEngine();
+                var thumbnail = await submissionEngine.GenerateThumbnail(file);
+                var fileExtensionThumbnail = Path.GetExtension(thumbnail.FileName).ToLowerInvariant();
+                // do the same upload for thumbnail
+                var fileNameThumbnail = string.Concat("Thumbnail_", id.ToString(), fileExtensionThumbnail);
+                // Save the thumbnail to the thumbnail directory
+                using var streamthumbnail = thumbnail.OpenReadStream();
+                string fileUrlThumbnail = await _azureBlobService.UploadThumbnailAsync(thumbnail, fileNameThumbnail);
+                
+                UpladedFile uploadedFile = new UpladedFile
+                {
+                    ThumbnailPath = fileUrlThumbnail,
+                    OriginalPath = fileUrlOriginal
+                };
+                
+                filesLinks.Add(uploadedFile);
             }
             
             return Ok(filesLinks);
