@@ -10,6 +10,7 @@ import { fetchUsers } from '../../api/authApi';
 import { giveUserAccess } from '../../api/userApi';
 import { API_BASE_URL } from "../../api/apiURL.js";
 import { UploadOutlined } from '@ant-design/icons';
+import {addLog} from "../../api/logApi";
 const { Title } = Typography;
 
 const tagStyle = {
@@ -83,6 +84,8 @@ export default function ProjectManagement() {
 
         try {
             const result = await postProject(projectData);
+            await addLog(10, null, project.id, 'added a new project');
+            // change the userID
 
             if (result.error) {
                 throw new Error(result.error);

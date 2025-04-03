@@ -5,6 +5,7 @@ import {SearchOutlined, EditOutlined, CloseOutlined} from '@ant-design/icons';
 import {fetchProjects, fetchUsersForProject, putProject} from '../../api/projectApi';
 import {fetchUsers} from '../../api/authApi';
 import {giveUserAccess, removeAllUserAccess} from "../../api/userApi";
+import {addLog} from "../../api/logApi";
 
 
 const {Title} = Typography;
@@ -268,6 +269,7 @@ export default function AdminProjectSecurity() {
             };
 
             const updateResult = await putProject(project.id, updatedProjectData);
+            await addLog(user.id, null, project.id, 'updated tag for project');
             if (updateResult.error) {
                 throw new Error(updateResult.error);
             }
