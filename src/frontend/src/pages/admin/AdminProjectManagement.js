@@ -18,6 +18,7 @@ const tagStyle = {
 };
 
 export default function ProjectManagement() {
+    const [project, setProject] = useState(null);
     const [createOpen, setCreateOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [archiveOpen, setArchiveOpen] = useState(false);
@@ -84,7 +85,10 @@ export default function ProjectManagement() {
 
         try {
             const result = await postProject(projectData);
-            await addLog(10, null, project.id, 'added a new project');
+            setProject(result);
+            if (project != null) {
+                await addLog(10, null, project.id, 'added a new project');
+                }
             // change the userID
 
             if (result.error) {

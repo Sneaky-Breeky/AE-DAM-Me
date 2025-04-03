@@ -10,7 +10,6 @@ import {useAuth} from "../../contexts/AuthContext";
 
 
 const {Title} = Typography;
-const { user } = useAuth();
 
 function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, allChecked, setAllChecked, selectedChecked, setSelectedChecked, listUsers, setListUsers, fetchedUsersForAProject, setFetchedUsersForProject, originalUsersForProject, setOriginalUsersForProject, handleAccessUpdate, setLoading, getProjects) {
 
@@ -198,6 +197,7 @@ export default function AdminProjectSecurity() {
     const [selectedChecked, setSelectedChecked] = useState(false);
     const [listUsers, setListUsers] = useState([]);
     const [originalUsersForProject, setOriginalUsersForProject] = useState([]);
+    const { user } = useAuth();
 
 // Fetch users
     const getUsers = async () => {
