@@ -33,7 +33,7 @@ export async function getProjectBasicTags (pid){
     console.log("insider query api");
     console.log(pid);
     try {
-        const url = `${QUERY_URL}/basicTags/${pid}`
+        const url = `${QUERY_URL}/basictags/${pid}`
         const response = await fetch(url, {
             method: "GET",
             headers: {
@@ -73,7 +73,7 @@ export async function getProjectMetaDataKeysUpload (pid){
 }
 export async function getProjectMetaDataTags ({pid}){
     try {
-        const url = `${QUERY_URL}/metadataTags/${pid}`
+        const url = `${QUERY_URL}/metadatatags/${pid}`
         const response = await fetch(url, {
             method: "GET",
             headers: {
