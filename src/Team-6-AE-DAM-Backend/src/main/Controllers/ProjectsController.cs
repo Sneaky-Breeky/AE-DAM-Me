@@ -329,16 +329,21 @@ namespace DAMBackend.Controllers
         public async Task<IActionResult> DeleteProject(int id)
         {
             var project = await _context.Projects.FindAsync(id);
+            
             if (project == null)
             {
                 return NotFound();
             }
+            
             var files = await _context.Files.Where(f => f.ProjectId == id).ToListAsync();
+            
             if (files.Any())
             {
-                
                 _context.Files.RemoveRange(files);
             }
+
+            _context.Projects.Remove(project);
+
             await _context.SaveChangesAsync();
 
             return NoContent();
