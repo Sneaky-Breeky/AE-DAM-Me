@@ -554,11 +554,14 @@ export default function UserUpload() {
             filePath: rest.original,
             palette: false
         }));
+
         await saveFiles(filesToSave);
+        // addLog(userID, fileID, projectId, typeOfLog);
+        for (const file of userFiles) {
+            await addLog(user.id, file.id, projectId, 'uploading file to project');
+        }
         setSpinning(false);
-        userFiles.forEach(file => {
-            addLog(user.id, file.id, projectId, 'upload');
-        });
+
 
 
         setFiles([]);
@@ -569,7 +572,7 @@ export default function UserUpload() {
         setSelectedDate(dayjs().format('YYYY-MM-DD'));
         setLocation(null);
         setUploadSuccess(true);
-        addLogProject(user.id, 3, 'upload');
+        // addLogProject(user.id, 3, 'upload');
 
     };
 
