@@ -4,9 +4,8 @@ import { Typography, Button, Input, Form, Space, DatePicker, Spin, message, Popc
 import { SearchOutlined, CloseOutlined, MinusCircleOutlined, PlusOutlined, CalendarOutlined} from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { fetchProjects, putProject, addProjectTag, deleteProjectTag, fetchTagsForProject } from '../../api/projectApi';
-import {useAuth} from "../../contexts/AuthContext";
 
-const { user } = useAuth();
+
 const { Title } = Typography;
 
 export default function AdminMetadataManage() {
