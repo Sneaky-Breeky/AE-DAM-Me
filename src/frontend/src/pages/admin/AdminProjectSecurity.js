@@ -185,7 +185,7 @@ function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, all
 }
 
 export default function AdminProjectSecurity() {
-
+    const { user } = useAuth();
     const [searchQuery, setSearchQuery] = useState('');
     const [isPopupFormOpen, setPopupFormOpen] = useState(false);
     const [project, setProject] = useState(null);
