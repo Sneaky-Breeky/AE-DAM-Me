@@ -23,10 +23,11 @@ namespace DAMBackend.Controllers
         private readonly CsvEngine _csvService;
         private readonly AzureBlobService _azureBlobService;
 
-        public ProjectsController(SQLDbContext context,CsvEngine csvService)
+        public ProjectsController(SQLDbContext context,CsvEngine csvService,AzureBlobService azureBlobService)
         {
             _context = context;
             _csvService = csvService;
+            _azureBlobService = azureBlobService;
         }
 
 
@@ -328,16 +329,21 @@ namespace DAMBackend.Controllers
         public async Task<IActionResult> DeleteProject(int id)
         {
             var project = await _context.Projects.FindAsync(id);
+            
             if (project == null)
             {
                 return NotFound();
             }
+            
             var files = await _context.Files.Where(f => f.ProjectId == id).ToListAsync();
+            
             if (files.Any())
             {
-                
                 _context.Files.RemoveRange(files);
             }
+
+            _context.Projects.Remove(project);
+
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -527,6 +533,7 @@ namespace DAMBackend.Controllers
             if (success)
             {
                 project.isArchived = true;
+                project.Status = "inactive";
                 await _context.SaveChangesAsync();
 
                 return Ok("Archived successfully.");
@@ -552,6 +559,7 @@ namespace DAMBackend.Controllers
             if (success)
             {
                 project.isArchived = false;
+                project.Status = "Active";
                 await _context.SaveChangesAsync();
 
                 return Ok("Archived successfully.");

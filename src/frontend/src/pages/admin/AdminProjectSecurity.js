@@ -270,16 +270,21 @@ export default function AdminProjectSecurity() {
                 accessLevel: newAccessLevel,
             };
 
+            const updateResult = await putProject({
+                projectId: project.id,
+                updatedProjectData: updatedProjectData
+            });
+
             const updateResult = await putProject(project.id, updatedProjectData);
             await addLog(user.id, null, project.id, 'updated tag for project');
-            if (updateResult.error) {
-                throw new Error(updateResult.error);
-            }
+//             if (updateResult.error) {
+//                 throw new Error(updateResult.error);
+//             }
 
-            await removeAllUserAccess(project.id);
-            for (const user of usersToGrantAccess) {
-                await giveUserAccess(user.id, project.id);
-            }
+//             await removeAllUserAccess(project.id);
+//             for (const user of usersToGrantAccess) {
+//                 await giveUserAccess(user.id, project.id);
+//             }
 
             setOriginalUsersForProject(usersToGrantAccess);
             await getProjects();

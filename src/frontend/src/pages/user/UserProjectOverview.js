@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
-import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Space, Image, Popconfirm, Tooltip } from 'antd';
+import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Space, Image, Popconfirm, Tooltip, message } from 'antd';
 import {
     SearchOutlined,
     CalendarOutlined,
@@ -19,7 +19,7 @@ import {
 import { useParams } from 'react-router-dom';
 import {fetchProject, getFilesForProject} from '../../api/projectApi';
 import dayjs from 'dayjs';
-import {getProjectBasicTags, getProjectMetaDataTags} from "../../api/queryFile";
+import {getProjectBasicTags, getProjectMetaDataTags, searchProjectFiles} from "../../api/queryFile";
 import {getProjectImageBasicTags, getProjectImageMetaDataTags} from "../../api/imageApi";
 
 const { RangePicker } = DatePicker;
@@ -27,29 +27,42 @@ const { Title } = Typography;
 const { Meta } = Card;
 
 export default function UserProjectOverview() {
+    //project variables
     const { id } = useParams();
     const [project, setProject] = useState(null);
     const [projectMetaTags, setProjectMetaTags] = useState([]);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedDate, setSelectedDate] = useState(null);
-    const [current, setCurrent] = React.useState(0);
+    
+    //project's files' metadata variables
+    const [allFileMetaTags, setAllFileMetaTags] = useState([]);
+    const [selectedFileMDKey, setSelectedFileMDKey] = useState([]);
+    const [fileMDValue, setFileMDValue] = useState([]);
+    const [selectedOperator, setSelectedOperator] = useState(null);
+    const [operatorDisabled, setOperatorDisabled] = useState(false);
+
+    //project's files' tags
+    const [allFileTags, setAllFileTags] = useState([]);
+    const [selectedFileTag, setSelectedFileTag] = useState([]);
+    
+    
+    //image variables
     const [imageList, setImageList] = useState([]);
-    const [isEditMode, setIsEditMode] = useState(false);
-
     const [selectedImages, setSelectedImages] = useState(new Set());
-    const [selectedStatus, setSelectedStatus] = useState("");
 
+    //other variables
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedDateRange, setSelectedDateRange] = useState([]);
+    const [selectedStatus, setSelectedStatus] = useState("");
+    const [current, setCurrent] = React.useState(0);
+    const [isEditMode, setIsEditMode] = useState(false);
 
     useEffect(() => {
         async function fetchProjectAndFiles() {
             try {
-                console.log("current project id: ", id);
                 const projectData = await fetchProject(id);
-                // THIS FNX IS NOT METADATA FOR A PROJVVV
-                const metaTags = await getProjectMetaDataTags({ pid: id });
-                const tags = await getProjectBasicTags({ pid: id });
-                //console.log("JUST THE TAGS: ", tags);
-                 //console.log("MD TAGS: ", metaTags);
+                const projectFilesMetadataData = await getProjectMetaDataTags({ pid: id });
+                const projectFilesTagsData = await getProjectBasicTags({ pid: id });
+                setAllFileMetaTags(Array.isArray(projectFilesMetadataData) ? projectFilesMetadataData : []);
+                setAllFileTags(Array.isArray(projectFilesTagsData) ? projectFilesTagsData : []);
 
                 if (!projectData) {
                     console.warn("No project found");
@@ -58,12 +71,10 @@ export default function UserProjectOverview() {
                 }
 
                 const files = await getFilesForProject({ projectId: id });
-                console.log("FILESSSS: ", files);
 
                 const filesWithTags = await Promise.all(files.map(async (file) => {
                     const basicTags = await getProjectImageBasicTags({ pid: id, fid: file.id });
                     const metadataTags = await getProjectImageMetaDataTags({ pid: id, fid: file.id });
-                    console.log("MD: ", metadataTags);
 
                     return {
                         ...file,
@@ -93,45 +104,114 @@ export default function UserProjectOverview() {
         return <p>Loading project...</p>;
     }
 
-    
+    const handleSearch = async () => {
+        const metadataFields = [selectedFileMDKey, selectedOperator, fileMDValue];
+        const metadataFilledCount = metadataFields.filter(val => {
+            if (Array.isArray(val)) return val.length > 0; // treat [] as no input 
+            return Boolean(val);
+        }).length;
 
-    const handleSearch = () => {
-        let filteredImages = imageList;
-
-        console.log(project.status);
-        if (searchQuery.trim() !== '') {
-            const query = searchQuery.toLowerCase();
-            filteredImages = filteredImages.filter(file =>
-                file.Metadata.some(tag => tag.toLowerCase().includes(query))
-            );
+        if (metadataFilledCount > 0 && metadataFilledCount < 3) {
+            message.warning('Please fill out all 3 metadata fields: key, operator, and value.');
+            return;
         }
 
-        if (selectedDate) {
-            filteredImages = filteredImages.filter(file =>
-                dayjs(file.Date).isSame(selectedDate, 'day')
-            );
+        const isNumber = !isNaN(fileMDValue);
+        const v_type = isNumber ? 1 : 0;
+
+        if (!isNumber && selectedOperator !== "=") {
+            message.warning("Only '=' is allowed for string metadata comparisons.");
+            return;
         }
 
-        if (selectedStatus) {
-            filteredImages = filteredImages.filter(file =>
-                file.Status.toLowerCase() === selectedStatus.toLowerCase()
-            );
-        }
+        const metadataFilters = metadataFilledCount === 3 ? [
+            {
+                Key: selectedFileMDKey,
+                Op: selectedOperator,
+                Value: fileMDValue,
+                v_type: v_type
+            }
+        ] : [];
 
-        setImageList(filteredImages);
-        console.log("Filtered images:", filteredImages);
+        const tagArray = selectedFileTag && selectedFileTag.length > 0
+            ? Array.isArray(selectedFileTag)
+                ? selectedFileTag
+                : [selectedFileTag]
+            : [];
+
+        const filterPayload = {
+            BasicTags: { bTags: tagArray },
+            MetadataTags: metadataFilters
+        };
+
+
+        try {
+            const result = await searchProjectFiles(id, filterPayload);
+            let filtered = result;
+
+            if (selectedDateRange && selectedDateRange.length === 2) {
+                const [start, end] = selectedDateRange;
+                filtered = result.filter(file => {
+                    const fileDate = dayjs(file.dateTimeOriginal);
+                    return fileDate.isValid() && fileDate.isAfter(start) && fileDate.isBefore(end);
+                });
+            }
+
+            const hydratedFiles = await Promise.all(
+                filtered.map(async (file) => {
+                    const basicTags = await getProjectImageBasicTags({ pid: id, fid: file.id });
+                    const metadataTags = await getProjectImageMetaDataTags({ pid: id, fid: file.id });
+
+                    return {
+                        ...file,
+                        basicTags: basicTags || [],
+                        metadataTags: metadataTags || [],
+                    };
+                })
+            );
+
+            setImageList(hydratedFiles);
+        } catch (error) {
+            console.error("Search failed:", error);
+            setImageList([]);
+        }
     };
 
 
-    const handleClearFilters = () => {
+
+
+
+    const handleClearFilters = async () => {
         setSearchQuery('');
-        setSelectedDate(null);
+        setSelectedDateRange(null);
         setSelectedStatus('');
-        getFilesForProject({ id }).then(files => {
-            setImageList(files);
-        });
+        setSelectedFileMDKey(null);
+        setSelectedOperator(null);
+        setFileMDValue('');
+        setSelectedFileTag(null);
+        setOperatorDisabled(false);
+
+        try {
+            const files = await getFilesForProject({ projectId: id });
+            const filesWithTags = await Promise.all(files.map(async (file) => {
+                const basicTags = await getProjectImageBasicTags({ pid: id, fid: file.id });
+                const metadataTags = await getProjectImageMetaDataTags({ pid: id, fid: file.id });
+
+                return {
+                    ...file,
+                    basicTags: basicTags || [],
+                    metadataTags: metadataTags || [],
+                };
+            }));
+
+            setImageList(filesWithTags);
+        } catch (err) {
+            console.error("Failed to reload project files:", err);
+            setImageList([]);
+        }
     };
 
+    
 
     const onDownload = () => {
         const url = imageList[current];
@@ -231,10 +311,15 @@ export default function UserProjectOverview() {
             <Box
                 sx={{
                     flexGrow: 1,
-                    backgroundColor: 'gray.50',
                     padding: 1,
+                    width:'70%',
+                    margin: '20px auto',
+                    backgroundColor: '#f5f5f5',
+                    borderRadius: '10px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
                 }}
             >
+                
                 <Form
                     layout="inline"
                     onFinish={handleSearch}
@@ -243,40 +328,143 @@ export default function UserProjectOverview() {
                         justifyContent: 'center',
                         alignItems: 'center',
                         gap: '10px',
+                        marginBottom: '10px',
                     }}
                 >
+                    <Box
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        gap={2}
+                        mb={2}
+                    >
+                    <span style={{ fontWeight: 'bold', fontSize: '20px' }}>Filter Date:</span>
+
+                        <Form.Item>
+                            <RangePicker
+                                maxDate={dayjs()}
+                                onChange={(dates) => setSelectedDateRange(dates)}
+                                allowClear
+                                style={{ width: 300 }}
+                                placeholder={['Start date', 'End date']}
+                                suffixIcon={<CalendarOutlined />}
+                                value={selectedDateRange}
+                            />
+                        </Form.Item>
+                    </Box>
+
+                    
+                    <Box
+                        display="flex"
+                        alignItems="center"
+                        gap={2}
+                        mb={2}
+                        justifyContent="center"
+                    >
+
+                    <span style={{ fontWeight: 'bold', fontSize: '20px' }}>Filter Metadata:</span>
                     <Form.Item>
-                        <Input
-                            placeholder="Search images by key word..."
-                            prefix={<SearchOutlined />}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            style={{ width: '300px' }}
+                        <Select
+                            showSearch
+                            placeholder="Metadata key"
+                            allowClear
+                            filterOption={(input, option) =>
+                                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                            }
+                            options={allFileMetaTags.map((md) => ({
+                                value: md,
+                                label: md,
+                            }))}
+                            onChange={setSelectedFileMDKey}
+                            style={{ width:'100%', marginBottom:'5%'}}
+                            //disabled={selectProject === null}
+                            value={selectedFileMDKey !== null ? selectedFileMDKey : undefined}
                         />
                     </Form.Item>
+                    
 
                     <Form.Item>
                         <Select
-                            defaultValue="Active"
-                            style={{ width: 120 }}
+                            placeholder="?"
+                            //style={{ width: 60 }}
+                            style={{ width:'100%', marginBottom:'5%', overflow:'auto'}}
                             allowClear
+                            disabled={operatorDisabled}
                             options={[
-                                { value: 'active', label: 'Active' },
-                                { value: 'archived', label: 'Archived' }]}
-                            onChange={(value) => setSelectedStatus(value)}
-                            placeholder="Select status"
+                                { value: '>', label: '>' },
+                                { value: '<', label: '<' },
+                                { value: '=', label: '=' },
+                                { value: '<=', label: '≤' },
+                                { value: '>=', label: '≥' },
+                            ]}
+                            onChange={(value) => setSelectedOperator(value)}
+                            value={selectedOperator}
                         />
                     </Form.Item>
 
+                        <Form.Item>
+                            <Input
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setFileMDValue(value);
+
+                                    // if string is in metadata value input, automatically have '=' in operator field and disable it
+                                    if (value === '') {
+                                        setOperatorDisabled(false);
+                                        setSelectedOperator(null);
+                                    } else if (isNaN(value)) {
+                                        setSelectedOperator('=');
+                                        setOperatorDisabled(true);
+                                    } else {
+                                        setOperatorDisabled(false);
+                                    }
+                                }}
+                                style={{ width:'100%', marginBottom:'5%', overflow:'auto' }}
+                                placeholder="Metadata value"
+                                value={fileMDValue}
+                            />
+                        </Form.Item>
+
+                    </Box>
+
+
+
+                    <Box
+                            display="flex"
+                            alignItems="center"
+                            gap={2}
+                            mb={2}
+                            justifyContent="center"
+                        >
+                    <span style={{ fontWeight: 'bold', fontSize: '20px' }}>Filter Tags:</span>
                     <Form.Item>
-                        <DatePicker
-                            maxDate={dayjs()}
-                            placeholder="Select date"
-                            onChange={(date, dateString) => setSelectedDate(dateString)}
-                            suffixIcon={<CalendarOutlined />}
+                        <Select
+                            showSearch
+                            placeholder="Tag"
+                            allowClear
+                            filterOption={(input, option) =>
+                                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                            }
+                            options={allFileTags.map((md) => ({
+                                value: md,
+                                label: md,
+                            }))}
+                            onChange={setSelectedFileTag}
+                            style={{ width:'100%', marginBottom:'5%', overflow:'auto'}}
+                            //disabled={selectProject === null}
+                            value={selectedFileTag !== null ? selectedFileTag : undefined}
                         />
                     </Form.Item>
+                    </Box>
 
+
+                <Box
+                    display="flex"
+                    alignItems="center"
+                    gap={2}
+                    mb={2}
+                    justifyContent="center"
+                >
                     <Form.Item>
                         <Button type="primary" htmlType="submit" color="cyan" variant="solid">
                             Search
@@ -288,10 +476,13 @@ export default function UserProjectOverview() {
                             Clear Filters
                         </Button>
                     </Form.Item>
-                </Form>
-            </Box>
+                    
+                </Box>
+            </Form>
 
-
+        </Box>
+        
+        
 
             {/* Main content */}
             <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
