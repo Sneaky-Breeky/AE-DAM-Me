@@ -528,6 +528,7 @@ namespace DAMBackend.Controllers
             if (success)
             {
                 project.isArchived = true;
+                project.Status = "inactive"
                 await _context.SaveChangesAsync();
 
                 return Ok("Archived successfully.");
@@ -553,6 +554,7 @@ namespace DAMBackend.Controllers
             if (success)
             {
                 project.isArchived = false;
+                project.Status = "Active";
                 await _context.SaveChangesAsync();
 
                 return Ok("Archived successfully.");
