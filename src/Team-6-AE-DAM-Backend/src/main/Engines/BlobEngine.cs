@@ -15,16 +15,20 @@ namespace DAMBackend.blob
 
         private readonly BlobContainerClient _projectExportContainer;
 
+        private readonly BlobServiceClient _blobServiceClient;
+
         public AzureBlobService(BlobServiceClient blobServiceClient)
         {
             try
             {
+                _blobServiceClient = blobServiceClient;
+
                 var projectsContainerName = "projects";
                 var palettesContainerName = "palettes";
                 var assetsContainerName = "assets";
                 var projectExportContainerName = "export";
 
-
+    
                 _projectsContainer = blobServiceClient.GetBlobContainerClient(projectsContainerName);
                 _projectsContainer.CreateIfNotExists();
                 Console.WriteLine($"Azure Blob container '{projectsContainerName}' is ready.");
@@ -150,11 +154,20 @@ namespace DAMBackend.blob
                         var uris = new[] { file.OriginalPath, file.ViewPath, file.ThumbnailPath };
                         foreach (var uri in uris)
                         {
-                            if (!string.IsNullOrEmpty(uri))
+                            if (string.IsNullOrWhiteSpace(uri))
+                                continue;
+
+                            try
                             {
-                                var blobClient = new BlobClient(new Uri(uri));
+                                var (container, blobName) = ParseBlobInfoFromUri(uri);
+                                var containerClient = _blobServiceClient.GetBlobContainerClient(container);
+                                var blobClient = containerClient.GetBlobClient(blobName);
                                 await blobClient.SetAccessTierAsync(AccessTier.Archive);
                                 Console.WriteLine($"Archived: {uri}");
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Failed to archive blob {uri}: {ex.Message}");
                             }
                         }
                     }
@@ -196,11 +209,20 @@ namespace DAMBackend.blob
                         var uris = new[] { file.OriginalPath, file.ViewPath, file.ThumbnailPath };
                         foreach (var uri in uris)
                         {
-                            if (!string.IsNullOrEmpty(uri))
+                            if (string.IsNullOrWhiteSpace(uri))
+                                continue;
+
+                            try
                             {
-                                var blobClient = new BlobClient(new Uri(uri));
+                                var (container, blobName) = ParseBlobInfoFromUri(uri);
+                                var containerClient = _blobServiceClient.GetBlobContainerClient(container);
+                                var blobClient = containerClient.GetBlobClient(blobName);
                                 await blobClient.SetAccessTierAsync(AccessTier.Hot);
                                 Console.WriteLine($"Unarchived: {uri}");
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Failed to unarchive blob {uri}: {ex.Message}");
                             }
                         }
                     }
@@ -214,9 +236,16 @@ namespace DAMBackend.blob
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to archive project {projectId}: {ex.Message}");
+                Console.WriteLine($"Failed to unarchive project {projectId}: {ex.Message}");
                 return false;
             }
+        }
+
+        private (string containerName, string blobName) ParseBlobInfoFromUri(string uri)
+        {
+            var parsedUri = new Uri(uri);
+            var segments = parsedUri.AbsolutePath.TrimStart('/').Split('/', 2); // [container, blobPath]
+            return (segments[0], segments[1]);
         }
     }
 
