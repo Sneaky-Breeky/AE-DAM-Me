@@ -53,6 +53,12 @@ export default function MenuContent({setLoggedIn}) {
     if (sessionStorage.getItem('menu') === null) {
       sessionStorage.setItem('menu', 0);
     }
+
+    console.log("adminUser is");
+    
+    console.log(typeof(sessionStorage.getItem('adminUser')));
+    console.log(adminUser);
+      //setAdminUser(sessionStorage.getItem('adminUser'));
   }, []);
 
   const handleLogout = () => {
@@ -84,7 +90,13 @@ export default function MenuContent({setLoggedIn}) {
             (<ListItem key={1} disablePadding sx={{ display: 'block' }}>
               <ListItemButton onClick={() => {
                 setAdminUser(!adminUser);
+                sessionStorage.setItem('adminUser', adminUser);
                 sessionStorage.setItem('menu', 0);
+
+                console.log("change user");
+                console.log(sessionStorage.getItem('adminUser'));
+                console.log(adminUser);
+                
                 navigate(GetDirectoryPrefix(isAdmin & adminUser) + 'dashboard')
               }}>
                 <ListItemIcon sx={{ color: 'white' }}>{adminUser ? <SupervisedUserCircleIcon /> : <AccountCircleIcon />}</ListItemIcon>
