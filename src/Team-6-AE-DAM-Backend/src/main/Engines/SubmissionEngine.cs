@@ -23,7 +23,7 @@ using ImageSharpExifTag = SixLabors.ImageSharp.Metadata.Profiles.Exif.ExifTag;
 
 
 
-namespace DAMBackend.SubmissionEngine
+namespace DAMBackend.SubmissionEngineEnv
 {
     public enum CompressionLevel // used for Compress method
     {
@@ -93,8 +93,6 @@ namespace DAMBackend.SubmissionEngine
             {
                 throw new Exception("No valid files were uploaded.");
             }
-
-
             // perform the query to the database for 
 
             return uploadedFileNames;
