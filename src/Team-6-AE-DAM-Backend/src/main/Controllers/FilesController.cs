@@ -26,10 +26,10 @@ using DAMBackend.SubmissionEngineEnv;
 
 namespace DAMBackend.Controllers
 {
-    public struct UpladedFile
+    public class UpladedFile
     {
-        public string ThumbnailPath;
-        public string OriginalPath;
+        public string ThumbnailPath { get; set; }
+        public string OriginalPath { get; set; }
     }
     
     [Route("api/[controller]")]
@@ -121,7 +121,7 @@ namespace DAMBackend.Controllers
             {
                 return BadRequest("You can upload a maximum of 100 files at once.");
             }
-            Console.WriteLine("the length of files is: ", files.Count);
+            Console.WriteLine($"the length of files is: {files.Count}");
             List<UpladedFile> filesLinks = new List<UpladedFile> { };
 
             // Validate and process each file
@@ -167,9 +167,11 @@ namespace DAMBackend.Controllers
                     OriginalPath = fileUrlOriginal
                 };
                 
+                // filesLinks.Add(new {thumbnail = fileUrlThumbnail, origin = fileUrlOriginal});
+                // Console.WriteLine($"bruh: {fileUrlOriginal} {fileUrlThumbnail}");
                 filesLinks.Add(uploadedFile);
             }
-            
+
             return Ok(filesLinks);
         }
 

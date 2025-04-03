@@ -46,7 +46,7 @@ export default function UserUpload() {
     const [selectFileMode, setSelectFileMode] = useState(false);
     const [existingSelectProjectMD, setExistingSelectProjectMD] = useState([]);
     const [existingSelectProjectTags, setExistingSelectProjectTags] = useState([]);
-    const [alertSaveFilePalette, setAlertSaveFilePalette]  = useState(null);
+    const [alertSaveFilePalette, setAlertSaveFilePalette] = useState(null);
 
     const [userProjects, setUserProjects] = useState([]);
     const [project, setProject] = useState(null);
@@ -75,7 +75,7 @@ export default function UserUpload() {
             await getUserPalette();
             if (user?.id) {
                 const result = await fetchProjectsForUser(user.id);
-                if (!result.error) {    
+                if (!result.error) {
                     setUserProjects(result);
                 } else {
                     console.error("Failed to load projects:", result.error);
@@ -86,8 +86,8 @@ export default function UserUpload() {
         fetchPaletteAndProjects();
     }, [user]);
 
-    
-    
+
+
     useEffect(() => {
         const fetchPalette = async () => {
             await getUserPalette();
@@ -120,6 +120,7 @@ export default function UserUpload() {
                 {
                     id: file.id,
                     preview: file.thumbnailPath || file.viewPath,
+                    original: file.originalPath,
                     metadata: file.bTags.length > 0 ? file.bTags.map(item => item.value) : [],
                     date: file.dateTimeOriginal.split("T")[0],
                     location: file.location || "",
@@ -203,16 +204,21 @@ export default function UserUpload() {
                 method: 'POST',
                 body: formData,
             });
+
             setSpinning(false);
+
             if (!response.ok) {
                 throw new Error('Failed to upload files.');
             }
 
             const uploadedFileUrls = await response.json();
 
+            console.log("dump", uploadedFileUrls);
+
             const newFiles = selectedFiles.map((file, index) => ({
-                file: { name: getFileName(uploadedFileUrls[index]) },
-                preview: uploadedFileUrls[index] || URL.createObjectURL(file),
+                file: { name: getFileName(uploadedFileUrls[index].originalPath) },
+                preview: uploadedFileUrls[index].thumbnailPath || URL.createObjectURL(file),
+                original: uploadedFileUrls[index].originalPath,
                 metadata: [],
                 date: selectedDate || null,
                 location: location || "",
@@ -279,7 +285,7 @@ export default function UserUpload() {
     };
 
     const handleProjectChange = (value) => {
-        if(!value) return;
+        if (!value) return;
 
         const selectedProject = userProjects.find(proj => proj.id === value);
         if (!selectedProject) {
@@ -310,7 +316,7 @@ export default function UserUpload() {
         console.log(selectProjectMD);
         console.log(selectProjectTags);
         console.log("on click submit");
-        const body = {Key:"department",Value:"eng",Type:0};
+        const body = { Key: "department", Value: "eng", Type: 0 };
         //console.log(body);
 
         //const result = await addMetaAdvanceTag(31,body);
@@ -329,7 +335,7 @@ export default function UserUpload() {
 
     // WHEN PROJECT IS SELECTED AND SELECTED FILE MD NEEDS TO BE SET
     const handleSelectProjectChange = async (value) => {
-        if(!value) return;
+        if (!value) return;
 
         const proj = userProjects.find(proj => proj.id === value);
         setSelectProject(proj);
@@ -360,7 +366,7 @@ export default function UserUpload() {
     };
 
     const handleRemoveSelectMD = (md) => {
-        const updateProjectMD = {...selectProjectMD};
+        const updateProjectMD = { ...selectProjectMD };
         delete updateProjectMD[md];
         setSelectProjectMD(updateProjectMD);
     };
@@ -420,9 +426,9 @@ export default function UserUpload() {
 
         const fileName = fileObj;
 
-         if (selectFile === fileName) {
-             setSelectFile(null);
-         } else if (!fileObj.id) {
+        if (selectFile === fileName) {
+            setSelectFile(null);
+        } else if (!fileObj.id) {
             setAlertSaveFilePalette(fileObj);
             setSelectFile(null);
         } else {
@@ -492,7 +498,7 @@ export default function UserUpload() {
     };
 
     const handleDateChange = (date, dateString) => {
-        if(!dateString) return;
+        if (!dateString) return;
         setSelectedDate(dateString);
         setFiles(prevFiles => prevFiles.map(file => ({ ...file, date: dateString })));
     };
@@ -507,7 +513,7 @@ export default function UserUpload() {
         setSpinning(true);
         const filesToSave = files.map(({ file, ...rest }) => ({
             ...rest,
-            filePath: rest.preview,
+            filePath: rest.original,
             palette: true
         }));
         await saveFiles(filesToSave);
@@ -545,7 +551,7 @@ export default function UserUpload() {
         setSpinning(true);
         const filesToSave = files.map(({ file, ...rest }) => ({
             ...rest,
-            filePath: rest.preview,
+            filePath: rest.original,
             palette: false
         }));
         await saveFiles(filesToSave);
@@ -597,7 +603,7 @@ export default function UserUpload() {
                     <Button icon={<PlusOutlined />} type="primary" color="cyan" variant="solid" onClick={() => fileInputRef.current.click()} disabled={files.length >= MAX_FILES}>
                         Add Files
                     </Button>
-                    <p style={{ color: 'grey', marginBottom: '0', fontSize:'80%' }}>Accepting PNG, JPG, JPEG, RAW, MP4, ARW</p>
+                    <p style={{ color: 'grey', marginBottom: '0', fontSize: '80%' }}>Accepting PNG, JPG, JPEG, RAW, MP4, ARW</p>
                 </Box>
 
                 {/* Image preview & edit options */}
@@ -609,52 +615,52 @@ export default function UserUpload() {
                         Select All
                     </Button>
                 </Box>
-                
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, padding: 4 }}>
-                    
-                    {files.map(({ file, preview }, index) => (
-                        <div key={index} style={{ position: 'relative', width: '150px' }}>
-                            {selectMode ? 
-                            <div
-                            key={file.Id}
-                            style={{ position: 'relative', cursor: 'pointer' }}
-                            onClick={() => toggleFileSelection(files[index])}
-                            >
-                            <Image
-                                src={preview}
-                                width={150}
-                                preview={false}
-                                style={{
-                                    border: selectedFiles.has(files[index].file.name) ? '4px solid blue' : 'none',
-                                    borderRadius: '8px',
-                                    transition: '0.2s ease-in-out',
-                                }}
-                            />
-                            </div>
 
-                            :selectFileMode ? 
-                            <div
-                            key={file.Id}
-                            style={{ position: 'relative', cursor: 'pointer' }}
-                            onClick={() => toggleSelectFile(files[index])}
-                            >
-                            {alertSaveFilePalette === files[index] && <Alert showIcon message="Save to Palette First!" type="error"/>}
-                            <Image
-                                src={preview}
-                                width={150}
-                                preview={false}
-                                style={{
-                                    border: selectFile && selectFile.file.name === (files[index].file.name) ? '4px solid cyan' 
-                                    : alertSaveFilePalette === files[index] ?  '4px solid red'
-                                    :'none',
-                                    borderRadius: '8px',
-                                    transition: '0.2s ease-in-out',
-                                }}
-                            />
-                            </div>
-                            : <Image src={preview} width={150} preview={false} />
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, padding: 4 }}>
+
+                    {files.map(({ file, preview, original }, index) => (
+                        <div key={index} style={{ position: 'relative', width: '150px' }}>
+                            {selectMode ?
+                                <div
+                                key={file.Id}
+                                style={{ position: 'relative', cursor: 'pointer' }}
+                                onClick={() => toggleFileSelection(files[index])}
+                                >
+                                    <Image
+                                        src={preview}
+                                        width={150}
+                                        preview={false}
+                                        style={{
+                                            border: selectedFiles.has(files[index].file.name) ? '4px solid blue' : 'none',
+                                            borderRadius: '8px',
+                                            transition: '0.2s ease-in-out',
+                                        }}
+                                    />
+                                </div>
+
+                                : selectFileMode ?
+                                    <div
+                                        key={file.Id}
+                                        style={{ position: 'relative', cursor: 'pointer' }}
+                                        onClick={() => toggleSelectFile(files[index])}
+                                    >
+                                        {alertSaveFilePalette === files[index] && <Alert showIcon message="Save to Palette First!" type="error" />}
+                                        <Image
+                                            src={preview}
+                                            width={150}
+                                            preview={false}
+                                            style={{
+                                                border: selectFile && selectFile.file.name === (files[index].file.name) ? '4px solid cyan'
+                                                    : alertSaveFilePalette === files[index] ? '4px solid red'
+                                                        : 'none',
+                                                borderRadius: '8px',
+                                                transition: '0.2s ease-in-out',
+                                            }}
+                                        />
+                                    </div>
+                                    : <Image src={preview} width={150} preview={false} />
                             }
-                            
+
                             {taggingMode && (
                                 <div
                                     onClick={() => toggleFileSelection(files[index])}
@@ -679,7 +685,7 @@ export default function UserUpload() {
                                 </div>
                             )}
 
-                            <Button size="small" onClick={() => handleEditImage({ file, preview })}>Edit</Button>
+                            <Button size="small" onClick={() => handleEditImage({ file, preview: original })}>Edit</Button>
                             <Button danger size="small" onClick={() => {
                                 confirmRemoveFile(files[index]);
                             }}>
@@ -788,157 +794,163 @@ export default function UserUpload() {
                             label: `${proj.id}: ${proj.name}`
                         }))}
                         onChange={handleSelectProjectChange}
-                        style={{ width: '100%', marginBottom:'5%'}}
+                        style={{ width: '100%', marginBottom: '5%' }}
                         disabled={selectFile === null}
                         value={selectProject !== null ? selectProject.id : undefined}
                     />
 
-                    <table style={{ width: '100%', borderCollapse: 'collapse', borderBottomWidth: 'thin', borderBottomStyle:'solid', borderColor: 'LightGray', paddingBottom:'5%'}}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', borderBottomWidth: 'thin', borderBottomStyle: 'solid', borderColor: 'LightGray', paddingBottom: '5%' }}>
                         <thead>
-                        <tr style={{ height: '10%' }}>
-                            <th colSpan={2} style={{ width: '100%', textAlign: 'center', fontWeight:'600'}}>
-                                <span style={{fontSize: '100%'}}>Metadata</span>
-                            </th>
-                        </tr>
+                            <tr style={{ height: '10%' }}>
+                                <th colSpan={2} style={{ width: '100%', textAlign: 'center', fontWeight: '600' }}>
+                                    <span style={{ fontSize: '100%' }}>Metadata</span>
+                                </th>
+                            </tr>
                         </thead>
-                        <tbody style={{borderBottomWidth: 'thin', borderBottomStyle:'solid', borderColor: 'LightGray', padding:'20%'}}>
+                        <tbody style={{ borderBottomWidth: 'thin', borderBottomStyle: 'solid', borderColor: 'LightGray', padding: '20%' }}>
                             {Object.entries(selectProjectMD).map((metadata, index) => (
                                 <tr key={index}>
                                     <td style={{ width: '15%', textAlign: 'left' }}>
-                                        <Button type='text' size='small' icon={<CloseOutlined />} 
-                                        onClick={() => handleRemoveSelectMD(metadata[0])}/>
+                                        <Button type='text' size='small' icon={<CloseOutlined />}
+                                            onClick={() => handleRemoveSelectMD(metadata[0])} />
                                     </td>
                                     <td style={{ width: '85%', textAlign: 'left' }}>
-                                        <span style={{fontSize: '90%'}}>{metadata[0]}</span> : <span style={{fontSize: '90%', color: 'grey', fontStyle: 'italic' }}>{metadata[1]}</span>
+                                        <span style={{ fontSize: '90%' }}>{metadata[0]}</span> : <span style={{ fontSize: '90%', color: 'grey', fontStyle: 'italic' }}>{metadata[1]}</span>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                    
-                    <div style={{borderBottomWidth: 'thin', borderBottomStyle:'solid', borderColor: 'LightGray', paddingBottom:'5%'}}>
-                        <p style={{width: '100%', textAlign: 'left', fontWeight:'550', fontSize: '90%'}}>Add Metadata from Project</p>
-                        <div><span style={{fontSize: '90%'}}>Key: </span>
-                        <Select
-                            showSearch
-                            placeholder="pick existing metadata key"
-                            filterOption={(input, option) =>
-                                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                            }
-                            options={existingSelectProjectMD.map(md => ({
-                                value: md,
-                                disabled: Object.keys(selectProjectMD).includes(md),
-                                label: `${md}`
-                            }))}
-                            onChange={setCurrentSelectedExistingMDkey}
-                            style={{ width:'80%', marginBottom:'5%', overflow:'atuo'}}
-                            disabled={selectProject === null}
-                            value={currentSelectedExistingMDkey !== null ? currentSelectedExistingMDkey : undefined}
-                        />
+
+                    <div style={{ borderBottomWidth: 'thin', borderBottomStyle: 'solid', borderColor: 'LightGray', paddingBottom: '5%' }}>
+                        <p style={{ width: '100%', textAlign: 'left', fontWeight: '550', fontSize: '90%' }}>Add Metadata from Project</p>
+                        <div><span style={{ fontSize: '90%' }}>Key: </span>
+                            <Select
+                                showSearch
+                                placeholder="pick existing metadata key"
+                                filterOption={(input, option) =>
+                                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                                }
+                                options={existingSelectProjectMD.map(md => ({
+                                    value: md,
+                                    disabled: Object.keys(selectProjectMD).includes(md),
+                                    label: `${md}`
+                                }))}
+                                onChange={setCurrentSelectedExistingMDkey}
+                                style={{ width: '80%', marginBottom: '5%', overflow: 'atuo' }}
+                                disabled={selectProject === null}
+                                value={currentSelectedExistingMDkey !== null ? currentSelectedExistingMDkey : undefined}
+                            />
                         </div>
-                        <div><span style={{fontSize: '90%'}}>Value: </span>
-                        <Input
-                            onChange={e => setCurrentSelectedExistingMDvalue(e.target.value)}
-                            style={{ width:'80%' ,marginBottom:'5%', overflow:'atuo'}}
-                            placeholder="apply metadata value"
-                            disabled={selectProject === null}
-                            value={currentSelectedExistingMDvalue !== null ? currentSelectedExistingMDvalue : undefined}/>
+                        <div><span style={{ fontSize: '90%' }}>Value: </span>
+                            <Input
+                                onChange={e => setCurrentSelectedExistingMDvalue(e.target.value)}
+                                style={{ width: '80%', marginBottom: '5%', overflow: 'atuo' }}
+                                placeholder="apply metadata value"
+                                disabled={selectProject === null}
+                                value={currentSelectedExistingMDvalue !== null ? currentSelectedExistingMDvalue : undefined} />
                         </div>
-                        <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleSelectExistingMD} 
-                        disabled={selectProject === null || currentSelectedExistingMDkey === null || currentSelectedExistingMDvalue === null} >
+                        <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleSelectExistingMD}
+                            disabled={selectProject === null || currentSelectedExistingMDkey === null || currentSelectedExistingMDvalue === null} >
                             Add Metadata
                         </Button>
                     </div>
 
-                    <div style={{paddingBottom:'5%'}}>
-                        <p style={{width: '100%', textAlign: 'left', fontWeight:'550',fontSize: '90%'}}>Create Metadata</p>
-                        <div><span style={{fontSize: '90%'}}>Key: </span>
-                        <Input
-                            onChange={e => setCurrentCreatedMDkey(e.target.value)}
-                            style={{ width:'80%' ,marginBottom:'5%', overflow:'atuo'}}
-                            placeholder="set metadata key"
-                            disabled={selectProject === null}
-                            value={currentCreatedMDkey !== null ? currentCreatedMDkey : undefined}/>
+                    <div style={{ paddingBottom: '5%' }}>
+                        <p style={{ width: '100%', textAlign: 'left', fontWeight: '550', fontSize: '90%' }}>Create Metadata</p>
+                        <div><span style={{ fontSize: '90%' }}>Key: </span>
+                            <Input
+                                onChange={e => setCurrentCreatedMDkey(e.target.value)}
+                                style={{ width: '80%', marginBottom: '5%', overflow: 'atuo' }}
+                                placeholder="set metadata key"
+                                disabled={selectProject === null}
+                                value={currentCreatedMDkey !== null ? currentCreatedMDkey : undefined} />
                         </div>
-                        <div><span style={{fontSize: '90%'}}>Value: </span>
-                        <Input
-                            onChange={e => setCurrentCreatedMDvalue(e.target.value)}
-                            style={{ width:'80%' ,marginBottom:'5%', overflow:'atuo'}}
-                            placeholder="set metadata value"
-                            disabled={selectProject === null}
-                            value={currentCreatedMDvalue !== null ? currentCreatedMDvalue : undefined}/>
+                        <div><span style={{ fontSize: '90%' }}>Value: </span>
+                            <Input
+                                onChange={e => setCurrentCreatedMDvalue(e.target.value)}
+                                style={{ width: '80%', marginBottom: '5%', overflow: 'atuo' }}
+                                placeholder="set metadata value"
+                                disabled={selectProject === null}
+                                value={currentCreatedMDvalue !== null ? currentCreatedMDvalue : undefined} />
                         </div>
-                        <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleCreateMD} 
-                        disabled={selectProject === null || currentCreatedMDkey === null || currentCreatedMDvalue === null || 
+                        <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleCreateMD}
+                            disabled={selectProject === null || currentCreatedMDkey === null || currentCreatedMDvalue === null ||
                                 Object.keys(selectProjectMD).includes(currentCreatedMDkey) || existingSelectProjectMD.includes(currentCreatedMDkey)} >
                             Create Metadata
                         </Button>
                     </div>
 
-                    <table style={{ width: '100%', borderCollapse: 'collapse', 
-                        borderTopWidth: 'thin', borderTopStyle:'solid', borderTopColor: 'black',
-                        borderBottomWidth: 'thin', borderBottomStyle:'solid', borderBottomColor: 'LightGray', paddingBottom:'5%'}}>
+                    <table style={{
+                        width: '100%', borderCollapse: 'collapse',
+                        borderTopWidth: 'thin', borderTopStyle: 'solid', borderTopColor: 'black',
+                        borderBottomWidth: 'thin', borderBottomStyle: 'solid', borderBottomColor: 'LightGray', paddingBottom: '5%'
+                    }}>
                         <thead>
-                        <tr style={{ height: '10%' }}>
-                            <th style={{ width: '100%', textAlign: 'center', fontWeight:'600'}}>
-                                <span style={{fontSize: '100%'}}>Tags</span>
-                            </th>
-                        </tr>
+                            <tr style={{ height: '10%' }}>
+                                <th style={{ width: '100%', textAlign: 'center', fontWeight: '600' }}>
+                                    <span style={{ fontSize: '100%' }}>Tags</span>
+                                </th>
+                            </tr>
                         </thead>
 
-                        <tbody style={{borderBottomWidth: 'thin', borderBottomStyle:'solid', borderColor: 'LightGray', padding:'20%'}}>
-                            <Flex wrap="wrap" style={{ marginTop: '10px' }}>
-                                {selectProjectTags.map((tag) => (
-                                   <Tag
-                                        style={tagStyle}
-                                        key={tag}
-                                        closable={true}
-                                        onClose={() => handleRemoveSelectTag(tag)}
-                                    >
-                                        {tag}
-                                    </Tag>
-                                ))}
-                            </Flex>
+                        <tbody style={{ borderBottomWidth: 'thin', borderBottomStyle: 'solid', borderColor: 'LightGray', padding: '20%' }}>
+                            <tr>
+                                <td>
+                                    <Flex wrap="wrap" style={{ marginTop: '10px' }}>
+                                        {selectProjectTags.map((tag) => (
+                                            <Tag
+                                                style={tagStyle}
+                                                key={tag}
+                                                closable={true}
+                                                onClose={() => handleRemoveSelectTag(tag)}
+                                            >
+                                                {tag}
+                                            </Tag>
+                                        ))}
+                                    </Flex>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
-                    <div style={{borderBottomWidth: 'thin', borderBottomStyle:'solid', borderColor: 'LightGray', paddingBottom:'5%'}}>
-                        <p style={{width: '100%', textAlign: 'left', fontWeight:'550',fontSize: '90%'}}>Add Tags from Project</p>
-                        <div><span style={{fontSize: '90%'}}>Tag: </span>
-                        <Select
-                            showSearch
-                            placeholder="pick existing tag"
-                            filterOption={(input, option) =>
-                                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                            }
-                            options={existingSelectProjectTags.map(tag => ({
-                                value: tag,
-                                disabled: selectProjectTags.includes(tag),
-                                label: `${tag}`
-                            }))}
-                            onChange={setCurrentSelectedExistingTag}
-                            style={{ width:'80%', marginBottom:'5%', overflow:'atuo'}}
-                            disabled={selectProject === null}
-                            value={currentSelectedExistingTag !== null ? currentSelectedExistingTag : undefined}
-                        />
+                    <div style={{ borderBottomWidth: 'thin', borderBottomStyle: 'solid', borderColor: 'LightGray', paddingBottom: '5%' }}>
+                        <p style={{ width: '100%', textAlign: 'left', fontWeight: '550', fontSize: '90%' }}>Add Tags from Project</p>
+                        <div><span style={{ fontSize: '90%' }}>Tag: </span>
+                            <Select
+                                showSearch
+                                placeholder="pick existing tag"
+                                filterOption={(input, option) =>
+                                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                                }
+                                options={existingSelectProjectTags.map(tag => ({
+                                    value: tag,
+                                    disabled: selectProjectTags.includes(tag),
+                                    label: `${tag}`
+                                }))}
+                                onChange={setCurrentSelectedExistingTag}
+                                style={{ width: '80%', marginBottom: '5%', overflow: 'atuo' }}
+                                disabled={selectProject === null}
+                                value={currentSelectedExistingTag !== null ? currentSelectedExistingTag : undefined}
+                            />
                         </div>
-                        <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleSelectExistingTag} 
-                        disabled={selectProject === null || currentSelectedExistingTag === null} >
+                        <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleSelectExistingTag}
+                            disabled={selectProject === null || currentSelectedExistingTag === null} >
                             Add Tag
                         </Button>
                     </div>
 
-                    <div style={{paddingBottom:'5%'}}>
-                        <p style={{width: '100%', textAlign: 'left', fontWeight:'550',fontSize: '90%'}}>Create Tags</p>
-                        <div><span style={{fontSize: '90%'}}>Tag: </span>
-                        <Input
-                            onChange={e => setCurrentCreatedTag(e.target.value)}
-                            style={{ width:'80%' ,marginBottom:'5%', overflow:'atuo'}}
-                            placeholder="input tag"
-                            disabled={selectProject === null}
-                            value={currentCreatedTag !== null ? currentCreatedTag : undefined}/>
+                    <div style={{ paddingBottom: '5%' }}>
+                        <p style={{ width: '100%', textAlign: 'left', fontWeight: '550', fontSize: '90%' }}>Create Tags</p>
+                        <div><span style={{ fontSize: '90%' }}>Tag: </span>
+                            <Input
+                                onChange={e => setCurrentCreatedTag(e.target.value)}
+                                style={{ width: '80%', marginBottom: '5%', overflow: 'atuo' }}
+                                placeholder="input tag"
+                                disabled={selectProject === null}
+                                value={currentCreatedTag !== null ? currentCreatedTag : undefined} />
                         </div>
-                        <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleCreateTag} 
-                        disabled={selectProject === null || currentCreatedTag === null || 
+                        <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleCreateTag}
+                            disabled={selectProject === null || currentCreatedTag === null ||
                                 selectProjectTags.includes(currentCreatedTag) || existingSelectProjectTags.includes(currentCreatedTag)} >
                             Create Tag
                         </Button>

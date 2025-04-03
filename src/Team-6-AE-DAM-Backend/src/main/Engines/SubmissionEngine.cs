@@ -21,8 +21,6 @@ using ImageSharpExif = SixLabors.ImageSharp.Metadata.Profiles.Exif;
 using ImageSharpExifTag = SixLabors.ImageSharp.Metadata.Profiles.Exif.ExifTag;
 
 
-
-
 namespace DAMBackend.SubmissionEngineEnv
 {
     public enum CompressionLevel // used for Compress method
