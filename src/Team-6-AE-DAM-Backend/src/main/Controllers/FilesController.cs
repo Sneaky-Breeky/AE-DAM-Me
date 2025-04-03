@@ -22,6 +22,7 @@ using File = System.IO.File;
 using ImageSharpExif = SixLabors.ImageSharp.Metadata.Profiles.Exif;
 using ImageSharpExifTag = SixLabors.ImageSharp.Metadata.Profiles.Exif.ExifTag;
 using DAMBackend.SubmissionEngineEnv;
+using System.IO.Compression;
 
 
 namespace DAMBackend.Controllers
@@ -429,5 +430,39 @@ namespace DAMBackend.Controllers
 
                     return null;
                 }
+    
+    [HttpPost("download-zip")]
+    public async Task<IActionResult> DownloadFilesAsZip([FromBody] List<string> fileNames)
+    {
+        if (fileNames == null || fileNames.Count == 0)
+        {
+            return BadRequest("No files specified for download.");
+        }
+
+        var containerClient = _azureBlobService.ProjectsContainer;
+        using (var memoryStream = new MemoryStream())
+        {
+            using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+            {
+                foreach (var fileName in fileNames)
+                {
+                    var blobClient = containerClient.GetBlobClient(fileName);
+
+                    if (await blobClient.ExistsAsync())
+                    {
+                        var zipEntry = zipArchive.CreateEntry(fileName, System.IO.Compression.CompressionLevel.Fastest);
+                        using (var entryStream = zipEntry.Open())
+                        using (var blobStream = await blobClient.OpenReadAsync())
+                        {
+                            await blobStream.CopyToAsync(entryStream);
+                        }
+                    }
+                }
             }
+
+            memoryStream.Seek(0, SeekOrigin.Begin);
+            return File(memoryStream.ToArray(), "application/zip", "DownloadedFiles.zip");
+        }
+    }
+    }
     }
