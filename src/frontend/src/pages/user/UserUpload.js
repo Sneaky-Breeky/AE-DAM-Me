@@ -13,6 +13,7 @@ import { getProjectMetaDataKeysUpload, getProjectBasicTags } from '../../api/que
 import { useEffect } from "react";
 import { useAuth } from '../../contexts/AuthContext';
 
+
 const { Title } = Typography;
 const { confirm } = Modal;
 const projectId = 6;
@@ -556,7 +557,6 @@ export default function UserUpload() {
         }));
 
         await saveFiles(filesToSave);
-        // addLog(userID, fileID, projectId, typeOfLog);
         for (const file of userFiles) {
             await addLog(user.id, file.id, projectId, 'uploading file to project');
         }

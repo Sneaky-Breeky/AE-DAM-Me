@@ -4,7 +4,8 @@ import { Typography, Button, Input, Form, Space, DatePicker, Spin, message, Popc
 import { SearchOutlined, CloseOutlined, MinusCircleOutlined, PlusOutlined, CalendarOutlined} from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { fetchProjects, putProject, addProjectTag, deleteProjectTag, fetchTagsForProject } from '../../api/projectApi';
-
+import { useAuth } from '../../contexts/AuthContext';
+import {addLog} from "../../api/logApi";
 
 const { Title } = Typography;
 
@@ -17,6 +18,7 @@ const [project, setProject] = useState(null);
 const [loading, setLoading] = useState(true);
 
 const [form] = Form.useForm();
+    const { user } = useAuth();
 
 
 // Fetch projects
@@ -122,7 +124,7 @@ await addProjectTag(project.id, tag.field, tag.fieldMD, type);
         ...prev,
         tags: updatedTags
     }));
-
+    await addLog(user.id,null,null,"Updated Project");
 
 message.success("Project updated successfully");
 setEditOpen(false);

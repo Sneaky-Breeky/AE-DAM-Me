@@ -11,7 +11,9 @@ import { giveUserAccess } from '../../api/userApi';
 import { API_BASE_URL } from "../../api/apiURL.js";
 import { UploadOutlined } from '@ant-design/icons';
 import {addLog} from "../../api/logApi";
+import { useAuth } from '../../contexts/AuthContext';
 const { Title } = Typography;
+
 
 const tagStyle = {
     backgroundColor: '#dbdbdb'
@@ -44,6 +46,8 @@ export default function ProjectManagement() {
             }
         }
     }
+    const { user } = useAuth();
+
 
 
     // Fetch projects
@@ -83,14 +87,10 @@ export default function ProjectManagement() {
             files: [],
             users: []
         };
-
         try {
             const result = await postProject(projectData);
+            await addLog(user.id, null, result.id, 'added a new project');
             setProject(result);
-            if (project != null) {
-                await addLog(10, null, project.id, 'added a new project');
-                }
-            // change the userID
 
             if (result.error) {
                 throw new Error(result.error);
@@ -118,6 +118,7 @@ export default function ProjectManagement() {
     const handleDeleteProject = async (p) => {
         try {
             const result = await deleteProject(p.id);
+            await addLog(user.id, null, p.id, 'deleted a project');
 
             if (result.error) {
                 throw new Error(result.error);
@@ -134,6 +135,7 @@ export default function ProjectManagement() {
     const handleArchiveProject = async (p) => {
         try {
             const response = await archiveProject(p.id);
+            await addLog(user.id, null, p.id, 'archived a project');
 
             if (response.error) {
                 throw new Error("Archive error", response.error);
@@ -147,6 +149,7 @@ export default function ProjectManagement() {
         }
     };
     const handleProjectExport = async (p) => {
+        await addLog(user.id, null, p.id, 'exported a project');
         const archiveFileUrl = await exportProject(p.id);
         const a = document.createElement("a");
         a.href = archiveFileUrl;

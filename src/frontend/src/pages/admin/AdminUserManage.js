@@ -3,14 +3,20 @@ import Box from '@mui/material/Box';
 import { Typography, Button, Popover, Radio, Form, Input, message, Popconfirm } from 'antd';
 import { PlusOutlined, EditOutlined, CloseOutlined, DeleteOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { fetchUsers, addUser, deleteUser, updateUser } from '../../api/authApi.js';
+import {addLog} from "../../api/logApi";
+import {useAuth} from "../../contexts/AuthContext";
 
 const { Title } = Typography;
+// const { user } = useAuth();
 
 
 function PopupForm({ visible, onClose, refreshUsers }) {
   const [form] = Form.useForm();
+    const { user } = useAuth();
+
 
   const handleSubmit = async (values) => {
+      await addLog(user.id, null,null, 'added new user');
     try {
       await addUser(values);
       message.success("User added successfully!");
@@ -161,6 +167,7 @@ export default function AdminUserManage() {
   const [isPopupFormOpen, setPopupFormOpen] = useState(false);
   const [userList, setUserList] = useState([]);
   const [currentEditingUser, setCurrentEditingUser] = useState(null);
+    const { user } = useAuth();
 
 
   const fetchUsersList = async () => {
@@ -185,6 +192,7 @@ export default function AdminUserManage() {
   const handleEditUser = async (values) => {
     const email = editForm.getFieldValue("editEmail");
 
+
     if (!currentEditingUser) return;
 
     const payload = {
@@ -200,6 +208,7 @@ export default function AdminUserManage() {
     
     try {
       const result = await updateUser(email, payload);
+      await addLog(user.id,null,null,"Updated a user");
 
       if (result.error) {
         message.error(`Error updating user: ${result.error}`);
@@ -215,6 +224,7 @@ export default function AdminUserManage() {
 
   const handleDeleteUser = async (email) => {
     try {
+        await addLog(user.id,null,null,"Deleted a user");
       await deleteUser(email);
       message.success("User deleted successfully!");
       fetchUsersList();  // Refresh user list after deletion

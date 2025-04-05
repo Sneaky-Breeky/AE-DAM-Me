@@ -31,17 +31,11 @@
                      .Where(l => l.UserId == userId)
                      .ToListAsync();
 
-                 foreach (var log in logs)
-                 {
-                     Console.WriteLine($"LogId: {log.LogId}, LogDate: {log.LogDate}, UserId: {log.UserId}");
-                 }
                  return Ok(logs);
 
              }
              catch (Exception ex)
              {
-                 Console.WriteLine($"An error occurred while retrieving logs: {ex.Message}");
-                 Console.WriteLine($"StackTrace: {ex.StackTrace}");
                  return BadRequest(ex.Message);
              }
 
