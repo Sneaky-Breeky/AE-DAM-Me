@@ -415,26 +415,28 @@ namespace DAMBackend.Controllers
 
 
         // // DELETE: api/damprojects/{key}/{pId}
-        // [HttpDelete("{key}/{pId}")]
-        // public async Task<IActionResult> DeleteProject(string key, int pId)
-        // {
-        //     var tag = await _context.ProjectTags
-        //         .Where(pt => pt.Key == key && pt.ProjectId == pId)
-        //         .FirstOrDefaultAsync();
-        //
-        //     if (tag == null)
-        //     {
-        //         return NotFound();
-        //     }
-        //
-        //     _context.ProjectTags.Remove(tag);
-        //     await _context.SaveChangesAsync();
-        //
-        //     return NoContent();
-        // }
-
-        
-        
+//         [HttpDelete("{key}/{pId}")]
+//         public async Task<IActionResult> DeleteProject(string key, int pId)
+//         {
+//             var tag = await _context.ProjectTags
+////                 .Where(pt => pt.Key == key && pt.ProjectId == pId)
+//                    .Where(pt => pt.Key == key)
+//
+//                 .FirstOrDefaultAsync();
+//
+//             if (tag == null)
+//             {
+//                 return NotFound();
+//             }
+//
+//             _context.ProjectTags.Remove(tag);
+//             await _context.SaveChangesAsync();
+//
+//             return NoContent();
+//         }
+//
+//
+//
 
         [HttpPost("postproj/bulk")]
         public async Task<ActionResult<List<ProjectModel>>> bulkUploadProjects(IFormFile file)
