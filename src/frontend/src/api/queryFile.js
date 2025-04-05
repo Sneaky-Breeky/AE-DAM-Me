@@ -2,11 +2,15 @@ import { API_BASE_URL } from "./apiURL.js";
 
 const QUERY_URL = `${API_BASE_URL}/api/query`;
 
-export async function fetchProjectsByDateRange( StartDate, EndDate ) {
+export async function fetchProjectsByDateRange(StartDate, EndDate) {
     try {
+        const isValid = (d) => {
+            const date = new Date(d);
+            return date instanceof Date && !isNaN(date);
+        };
 
-        const sD = StartDate ? new Date(StartDate).toISOString() : '0001-01-01T00:00:00Z';
-        const eD = EndDate ? new Date(EndDate).toISOString() : '0001-01-01T00:00:00Z';
+        const sD = isValid(StartDate) ? new Date(StartDate).toISOString() : '0001-01-01T00:00:00Z';
+        const eD = isValid(EndDate) ? new Date(EndDate).toISOString() : '0001-01-01T00:00:00Z';
 
         const url = `${QUERY_URL}/projectQuery/null/null/${sD}/${eD}`;
 
@@ -16,7 +20,6 @@ export async function fetchProjectsByDateRange( StartDate, EndDate ) {
                 'Accept': 'application/json',
             },
         });
-        console.log(response);
 
         if (!response.ok) {
             const errText = await response.text();
