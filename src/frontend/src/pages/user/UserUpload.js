@@ -431,18 +431,19 @@ export default function UserUpload() {
         console.log(selectProjectMD);
         console.log(selectProjectTags);
         console.log("on click submit");
-        const body = { Key: "department", Value: "eng", Type: 0 };
-        //console.log(body);
 
-        //const result = await addMetaAdvanceTag(31,body);
-        const result = await addMetaBasicTag(selectFile.id, "test")
-        console.log(result);
+        for (const [key, value] of Object.entries(selectProjectMD)) {
+            // number value
+            const resultMD = await addMetaAdvanceTag(selectFile.id,{"key":key,"value":value,"type":(!isNaN(value) ? 1: 0)});
+            console.log(resultMD);
 
+        }
 
-        //selectProjectMD.map((md) => {})
+        selectProjectTags.map(async (tag) => {
+            const resultTag = await addMetaBasicTag(selectFile.id, tag);
+            console.log(resultTag);
+        })
 
-        // NOTE: md and tags ONLY applied to selected files, SELECTED PROJECT IS NOT EDITED EVER
-        // project is selected ONLY for user to access md and tags of existing files, NOT edit them
         setSelectProjectMD({});
         setSelectProjectTags([]);
         setSelectFile(null);
@@ -891,9 +892,9 @@ export default function UserUpload() {
                 </Box>
 
                 <Box sx={metadataBoxStyle}>
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                        <Button type="primary" color="cyan" variant={selectFileMode ? "solid" : "filled"} onClick={handleToggleSelectFile} disabled={files.length === 0}>
-                            {selectFileMode ? "Selecting" : "Select File"}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-around' }}>
+                        <Button type="primary" color={selectFileMode ? "red" : "cyan"} variant={selectFileMode ? "filled" : "solid"} onClick={handleToggleSelectFile} disabled={files.length === 0}>
+                            {selectFileMode ? "Close File" : "Select File"}
                         </Button>
                         <Button type="primary" color="cyan" variant="solid" onClick={handleApplyFileMD} disabled={selectFile === null}>
                             Submit File Metadata

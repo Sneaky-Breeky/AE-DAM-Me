@@ -2,7 +2,7 @@ import { API_BASE_URL } from "./apiURL.js";
 
 const QUERY_URL = `${API_BASE_URL}/api/query`;
 
-export async function fetchProjectsByDateRange({ StartDate, EndDate }) {
+export async function fetchProjectsByDateRange( StartDate, EndDate ) {
     try {
 
         const sD = StartDate ? new Date(StartDate).toISOString() : '0001-01-01T00:00:00Z';
@@ -71,7 +71,7 @@ export async function getProjectMetaDataKeysUpload (pid){
         return null;
     }
 }
-export async function getProjectMetaDataTags ({pid}){
+export async function getProjectMetaDataTags (pid){
     try {
         const url = `${QUERY_URL}/metadatatags/${pid}`
         const response = await fetch(url, {
@@ -111,7 +111,7 @@ export async function getProjectMetaDataValuesTags ({pid}){
         return null;
     }
 }
-async function searchProject({pid, requestBody}) {
+async function searchProject(pid, requestBody) {
     try {
         const url = `${QUERY_URL}/searchProject/${pid}`;
         const response = await fetch(url, {

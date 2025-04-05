@@ -5,6 +5,7 @@ import { API_BASE_URL } from "./apiURL.js";
 const META_URL = `${API_BASE_URL}/api/metaData`;
 const FILES_URL = `${API_BASE_URL}/api/files`;
 export async function addMetaBasicTag(fid,value) {
+    console.log("i am here");
     try {
         const response = await fetch(`${META_URL}/basic/${fid}/${value}`, {
             method: "POST",
@@ -28,7 +29,7 @@ export async function addMetaBasicTag(fid,value) {
         return { error: "Network error or server unreachable", message: error.message };
     }
 }
-export async function addMetaAdvanceTag({fid,requestBody}) {
+export async function addMetaAdvanceTag(fid,requestBody) {
     try {
         const response = await fetch(`${META_URL}/advanced/${fid}`, {
             method: "POST",
