@@ -66,7 +66,7 @@ export default function UserProjectOverview() {
         async function fetchProjectAndFiles() {
             try {
                 const projectData = await fetchProject(id);
-                const projectFilesMetadataData = await getProjectMetaDataTags({ pid: id });
+                const projectFilesMetadataData = await getProjectMetaDataTags(id);
                 const projectFilesTagsData = await getProjectBasicTags(id);
                 const projectMetadata = await fetchTagsForProject(id);
                 setProjectMetaTags(projectMetadata || []);
