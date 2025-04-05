@@ -28,6 +28,7 @@ export default function UserUpload() {
     const [files, setFiles] = useState([]);
     const [croppedImages, setCroppedImages] = useState([]);
     const [currentFile, setCurrentFile] = useState(null);
+    const [currentIndex, setCurrentIndex] = useState(-1);
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [rotation, setRotation] = useState(0);
@@ -158,7 +159,12 @@ export default function UserUpload() {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
 
-            const data = await response.json();
+            if (response.status === 204) {
+                console.log("File deleted with no content returned.");
+            } else {
+                const data = await response.json();  // only if body exists
+                console.log("File Deleted:", data);
+            }            
 
             console.log("File Deleted : ");
 
@@ -238,46 +244,88 @@ export default function UserUpload() {
     const getFileName = (url) => {
         return url.split('/').pop().split('?')[0].split('#')[0];
     };
-    const handleEditImage = (file) => {
+    const handleEditImage = (file, index) => {
         setCurrentFile(file);
+        setCurrentIndex(index);
         setEditing(true);
     };
 
+    // const getCroppedImg = async (imageSrc, pixelCrop, rotation = 0) => {
+    //     const createImage = (url) =>
+    //         new Promise((resolve, reject) => {
+    //             const image = new window.Image();
+    //             image.crossOrigin = 'anonymous';
+    //             image.onload = () => resolve(image);
+    //             image.onerror = (err) => {
+    //                 console.error('Image load error:', err);
+    //                 reject(err);
+    //             };
+    //             // Add cache-busting parameter
+    //             const cacheBuster = `${url.includes('?') ? '&' : '?'}t=${new Date().getTime()}`;
+    //             image.src = url + cacheBuster;
+    //         });
+
+    //     try {
+    //         const image = await createImage(imageSrc);
+    //         const canvas = document.createElement('canvas');
+    //         const ctx = canvas.getContext('2d');
+
+    //         const safeArea = Math.max(image.width, image.height) * 2;
+    //         canvas.width = safeArea;
+    //         canvas.height = safeArea;
+
+    //         ctx.translate(safeArea / 2, safeArea / 2);
+    //         ctx.rotate((rotation * Math.PI) / 180);
+    //         ctx.translate(-safeArea / 2, -safeArea / 2);
+    //         ctx.drawImage(image, (safeArea - image.width) / 2, (safeArea - image.height) / 2);
+
+    //         const data = ctx.getImageData(pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height);
+
+    //         canvas.width = pixelCrop.width;
+    //         canvas.height = pixelCrop.height;
+
+    //         ctx.putImageData(data, 0, 0);
+
+    //         return canvas.toDataURL('image/jpeg');
+    //     } catch (error) {
+    //         console.error('Error in getCroppedImg:', error);
+    //         throw error;
+    //     }
+    // };
     const getCroppedImg = async (imageSrc, pixelCrop, rotation = 0) => {
         const createImage = (url) =>
             new Promise((resolve, reject) => {
                 const image = new window.Image();
-                image.setAttribute('crossOrigin', 'anonymous');
+                image.crossOrigin = 'anonymous';
                 image.onload = () => resolve(image);
-                image.onerror = (err) => reject(err);
-                image.src = url;
+                image.onerror = reject;
+                image.src = url + `?t=${new Date().getTime()}`; // cache busting
             });
-
+    
         const image = await createImage(imageSrc);
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-
-        const safeArea = Math.max(image.width, image.height) * 2;
-        canvas.width = safeArea;
-        canvas.height = safeArea;
-
-        ctx.translate(safeArea / 2, safeArea / 2);
-        ctx.rotate((rotation * Math.PI) / 180);
-        ctx.translate(-safeArea / 2, -safeArea / 2);
-        ctx.drawImage(image, (safeArea - image.width) / 2, (safeArea - image.height) / 2);
-
-        const data = ctx.getImageData(pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height);
-
+    
+        // Set canvas to the cropped area size
         canvas.width = pixelCrop.width;
         canvas.height = pixelCrop.height;
-
-        ctx.putImageData(data, 0, 0);
-
+    
+        // Move the origin to the center of the crop area
+        ctx.translate(-pixelCrop.x, -pixelCrop.y);
+    
+        // Move origin to the center of the image and rotate
+        ctx.translate(image.width / 2, image.height / 2);
+        ctx.rotate((rotation * Math.PI) / 180);
+        ctx.translate(-image.width / 2, -image.height / 2);
+    
+        ctx.drawImage(image, 0, 0);
+    
         return canvas.toDataURL('image/jpeg');
     };
-
-
     
+
+
+
 
     const onCropComplete = useCallback((croppedArea, croppedPixels) => {
         setCroppedAreaPixels(croppedPixels);
@@ -285,15 +333,30 @@ export default function UserUpload() {
 
     const saveEditedImage = async () => {
         try {
-            const croppedImgUrl = await getCroppedImg(currentFile.preview, croppedAreaPixels, rotation);
-            const updatedFile = {
-                ...currentFile,
-                preview: croppedImgUrl,
-                original: croppedImgUrl,
-                edited: true
-            };
-            setFiles(prev => prev.map(f => f.file.name === currentFile.file.name ? updatedFile : f));
-            setUserFiles(prev => prev.map(f => f.file.name === currentFile.file.name ? updatedFile : f));
+            const croppedImgUrl = await getCroppedImg(currentFile.original, croppedAreaPixels, rotation);
+            console.log("Cropped URL generated:", croppedImgUrl);
+
+            const updatedFiles = files.map(f => {
+                if (f.file.name === currentFile.file.name) {
+                    console.log("Matching file found, updating preview");
+                    return {
+                        ...f,
+                        preview: croppedImgUrl,
+                        original: croppedImgUrl,
+                        edited: true
+                    };
+                }
+                return f;
+            });
+            console.log("Files before update:", files);
+            console.log("Files after update:", updatedFiles);
+
+            setFiles(updatedFiles);
+            setUserFiles(prev => prev.map(f =>
+                f.file.name === currentFile.file.name ?
+                    { ...f, preview: croppedImgUrl, original: croppedImgUrl, edited: true } : f
+            ));
+
             setEditing(false);
             setCurrentFile(null);
         } catch (error) {
@@ -676,9 +739,9 @@ export default function UserUpload() {
                         <div key={index} style={{ position: 'relative', width: '150px' }}>
                             {selectMode ?
                                 <div
-                                key={file.Id}
-                                style={{ position: 'relative', cursor: 'pointer' }}
-                                onClick={() => toggleFileSelection(files[index])}
+                                    key={file.Id}
+                                    style={{ position: 'relative', cursor: 'pointer' }}
+                                    onClick={() => toggleFileSelection(files[index])}
                                 >
                                     <Image
                                         src={preview}
@@ -739,7 +802,7 @@ export default function UserUpload() {
                                 </div>
                             )}
 
-                            <Button size="small" onClick={() => handleEditImage({ file, preview: original })}>Edit</Button>
+                            <Button size="small" onClick={() => handleEditImage(files[index], index)}>Edit</Button>
                             <Button danger size="small" onClick={() => {
                                 confirmRemoveFile(files[index]);
                             }}>
@@ -762,7 +825,7 @@ export default function UserUpload() {
                     {currentFile && (
                         <div style={{ width: '100%', height: 400, position: 'relative' }}>
                             <Cropper
-                                image={currentFile.preview}
+                                image={currentFile.original}
                                 crop={crop}
                                 zoom={zoom}
                                 rotation={rotation}
