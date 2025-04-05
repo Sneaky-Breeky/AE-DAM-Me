@@ -91,6 +91,26 @@ export async function getProjectMetaDataTags ({pid}){
         return null;
     }
 }
+export async function getProjectMetaDataValuesTags ({pid}){
+    try {
+        const url = `${QUERY_URL}/metadatatagsValues/${pid}`
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching basic tags:', error);
+        return null;
+    }
+}
 async function searchProject({pid, requestBody}) {
     try {
         const url = `${QUERY_URL}/searchProject/${pid}`;
