@@ -18,7 +18,7 @@ import {
     CheckCircleOutlined
 } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
-import {fetchProject, getFilesForProject} from '../../api/projectApi';
+import {fetchProject, getFilesForProject, fetchTagsForProject} from '../../api/projectApi';
 import {downloadFilesZip} from '../../api/fileApi';
 import dayjs from 'dayjs';
 import {getProjectBasicTags, getProjectMetaDataTags, searchProjectFiles} from "../../api/queryFile";
@@ -68,6 +68,9 @@ export default function UserProjectOverview() {
                 const projectData = await fetchProject(id);
                 const projectFilesMetadataData = await getProjectMetaDataTags({ pid: id });
                 const projectFilesTagsData = await getProjectBasicTags(id);
+                const projectMetadata = await fetchTagsForProject(id);
+                setProjectMetaTags(projectMetadata || []);
+
                 setAllFileMetaTags(Array.isArray(projectFilesMetadataData) ? projectFilesMetadataData : []);
                 setAllFileTags(Array.isArray(projectFilesTagsData) ? projectFilesTagsData : []);
 
@@ -519,14 +522,16 @@ export default function UserProjectOverview() {
                         <div><strong>State: </strong><span>{project.status}</span></div>
                         <div><strong>Phase: </strong><span>{project.phase}</span></div>
                         </div>
-                    <div style={{ margin: '20px auto', marginBottom: '0', width: '100%' }}>
-                        <strong>Metadata: </strong>
+                    <div style={{ margin: '20px auto', marginBottom: '0', width: '100%', display: 'flex', alignItems: 'center' }}>
+                        <strong style={{ marginRight: '10px' }}>Metadata:</strong>
                         {projectMetaTags.length > 0 ? (
-                            projectMetaTags.map((tag, idx) => (
-                                <span key={idx} style={{ marginRight: '8px', color: 'grey', fontStyle: 'italic' }}>
-                {tag}
-            </span>
-                            ))
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px' }}>
+                                {projectMetaTags.map((tag, idx) => (
+                                    <span key={idx} style={{ fontSize: '16px' }}>
+          <span style={{ fontWeight: '500' }}>{tag.key}</span>: <span style={{ color: 'grey', fontStyle: 'italic' }}>{tag.sValue || tag.iValue}</span>
+        </span>
+                                ))}
+                            </div>
                         ) : (
                             <span style={{ color: 'grey', fontStyle: 'italic' }}>No metadata</span>
                         )}
