@@ -14,6 +14,7 @@ import dayjs from 'dayjs';
 import {addFavorite, removeFavorite, fetchProjects, fetchFavoriteProjects} from '../../api/projectApi';
 import {fetchProjectsByDateRange} from '../../api/queryFile';
 import {useAuth} from '../../contexts/AuthContext';
+import {getProjectBasicTags} from "../../api/queryFile";
 
 const {Title} = Typography;
 const {Meta} = Card;
@@ -68,21 +69,30 @@ export default function UserDashboard() {
             EndDate: end ? dayjs(end).toISOString() : '0001-01-01T00:00:00Z'
         };
 
-
         try {
             const response = await fetchProjectsByDateRange(query);
             let filtered = response;
 
-            console.log("THE RESPONSE: ", response);
-
             if (searchQuery.trim() !== '') {
                 const lowerQuery = searchQuery.toLowerCase();
 
-                filtered = filtered.filter(project =>
-                    project.name.toLowerCase().includes(lowerQuery) ||
-                    project.id.toString().includes(lowerQuery) ||
-                    project.location.toLowerCase().includes(lowerQuery)
+                filtered = await Promise.all(
+                    response.map(async (project) => {
+                        const match =
+                            project.name.toLowerCase().includes(lowerQuery) ||
+                            project.id.toString().includes(lowerQuery) ||
+                            project.location.toLowerCase().includes(lowerQuery);
+
+                        const tags = await getProjectBasicTags(project.id);
+                        const tagMatch = tags?.some(tag =>
+                            tag.toLowerCase().includes(lowerQuery)
+                        );
+
+                        return match || tagMatch ? project : null;
+                    })
                 );
+
+                filtered = filtered.filter(Boolean);
             }
 
             setProjects(response);
