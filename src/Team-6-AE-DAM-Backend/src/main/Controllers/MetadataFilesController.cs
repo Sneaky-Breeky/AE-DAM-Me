@@ -177,6 +177,7 @@ namespace DAMBackend.Controllers
             }
             
             file.ProjectId = pid;
+            await _context.SaveChangesAsync();
             
             return Ok("Suggestion assigned");
             
