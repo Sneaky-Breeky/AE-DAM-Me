@@ -10,7 +10,7 @@ import {useAuth} from "../../contexts/AuthContext";
 
 
 const {Title} = Typography;
-
+// const { user } = useAuth();
 function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, allChecked, setAllChecked, selectedChecked, setSelectedChecked, listUsers, setListUsers, fetchedUsersForAProject, setFetchedUsersForProject, originalUsersForProject, setOriginalUsersForProject, handleAccessUpdate, setLoading, getProjects) {
 
 
@@ -67,6 +67,7 @@ function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, all
         } else {
             updatedUsers = fetchedUsersForAProject.filter((u) => u.id !== user.id);
         }
+        //     await addLog(user.id,project.id,null,"Changed user access for project");
 
         setFetchedUsersForProject(updatedUsers);
         setSelectedChecked(true);

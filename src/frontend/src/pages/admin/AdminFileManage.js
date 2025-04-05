@@ -5,7 +5,8 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import { Typography, Input, Space, Image, Button, Popconfirm, Form, Tooltip} from 'antd';
 import { SearchOutlined, DeleteOutlined, CloseOutlined, EditOutlined, QuestionCircleOutlined} from '@ant-design/icons';
-import { fetchProjects, putProject, getFilesForProject} from '../../api/projectApi'
+import { fetchProjects, putProject, getFilesForProject} from '../../api/projectApi';
+import { useAuth } from '../../contexts/AuthContext';
 
 const { Title } = Typography;
 
@@ -23,6 +24,9 @@ export default function AdminFileManage() {
   const [formValues, setFormValues] = useState({});
 
   const [form] = Form.useForm();
+  const { user } = useAuth();
+
+
 
 
     useEffect(() => {
@@ -44,7 +48,9 @@ export default function AdminFileManage() {
     const deleteSelectedImages = () => {
         //TODO: CONNECT W BACKEND
     //setImageList(imageList.filter((_, index) => !selectedImages.has(index)));
-    setSelectedImages(new Set());
+        //     await addLog(user.id,project.id,file.id,"Deleted image from file");
+
+        setSelectedImages(new Set());
     setIsEditMode(false);
   };
 
@@ -87,6 +93,7 @@ export default function AdminFileManage() {
   const handleSubmitForm = () => {
 
     console.log(Object.values(form.getFieldsValue())); // gives array, use to replace tags
+
     form.resetFields();
     setDialogOpen(false);
   };
