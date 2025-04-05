@@ -97,7 +97,7 @@
              }
              
              var bTags = await _context.FileTags
-                 .Where(ft => _context.Files.Any(f => f.ProjectId == pid && f.Id == ft.FileId))
+                 .Where(ft => _context.Files.Any(f => f.ProjectId == pid && f.Id == ft.FileId && !f.Palette))
                  .Select(ft => ft.TagId)
                  .Distinct()
                  .ToListAsync();
@@ -131,7 +131,7 @@
              }
 
              var mTags = await _context.MetadataTags
-                 .Where(mt => _context.Files.Any(f => f.ProjectId == pid && f.Id == mt.FileId))
+                 .Where(mt => _context.Files.Any(f => f.ProjectId == pid && f.Id == mt.FileId && !f.Palette))
                  .Select(mt => mt.Key)
                  .Distinct()
                  .ToListAsync();
@@ -181,7 +181,7 @@
              }
 
              var mTags = await _context.MetadataTags
-                 .Where(mt => _context.Files.Any(f => f.ProjectId == pid && f.Id == mt.FileId))
+                 .Where(mt => _context.Files.Any(f => f.ProjectId == pid && f.Id == mt.FileId && !f.Palette))
                  .Select(mt => mt.Key)
                  .Distinct()
                  .ToListAsync();
@@ -206,7 +206,7 @@
          // Helper for finding files with associated basictags
          private async Task<IQueryable<FileModel>> GetFilesBasicTagQuery(List<string> searchTags, ProjectModel project)
          {
-             var files = _context.Files.AsQueryable();
+             var files = _context.Files.Where(f => !f.Palette);
 
              foreach (var tag in searchTags)
              {
@@ -322,7 +322,7 @@
 
              if (bTags == null || !bTags.Any())
              {
-                 files = _context.Files.Where(f => f.ProjectId == pid);
+                 files = _context.Files.Where(f => f.ProjectId == pid && !f.Palette);
              }
              else
              {

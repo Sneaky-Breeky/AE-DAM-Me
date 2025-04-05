@@ -304,7 +304,7 @@ namespace DAMBackend.Controllers
             foreach (var tagToUpdate in tagsToUpdate)
             {
                 var existingTag = currentProject.Tags.First(t => t.Key == tagToUpdate.Key);
-                // mukund be better
+                
                 existingTag.sValue = tagToUpdate.sValue;
                 existingTag.iValue = tagToUpdate.iValue;
             }
