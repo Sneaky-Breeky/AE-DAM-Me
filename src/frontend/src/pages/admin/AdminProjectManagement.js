@@ -1,25 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { Typography, Input, Form, Button, Tag, Flex, message, Spin, Popconfirm, DatePicker, CalendarOutlined, Upload } from "antd"
 import Box from '@mui/material/Box';
-import { CloseOutlined, SearchOutlined, DeleteOutlined, QuestionCircleOutlined, ToTopOutlined } from '@ant-design/icons';
+import { CloseOutlined, SearchOutlined, DeleteOutlined, QuestionCircleOutlined, ToTopOutlined,ExportOutlined } from '@ant-design/icons';
 import CreateNewFolderOutlinedIcon from '@mui/icons-material/CreateNewFolderOutlined';
 import FolderDeleteOutlinedIcon from '@mui/icons-material/FolderDeleteOutlined';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
-import { fetchProjects, postProject, deleteProject } from '../../api/projectApi';
+import { fetchProjects, postProject, deleteProject, archiveProject,exportProject } from '../../api/projectApi';
 import { fetchUsers } from '../../api/authApi';
 import { giveUserAccess } from '../../api/userApi';
 import { API_BASE_URL } from "../../api/apiURL.js";
 import { UploadOutlined } from '@ant-design/icons';
+import {addLog} from "../../api/logApi";
+import { useAuth } from '../../contexts/AuthContext';
 const { Title } = Typography;
+
 
 const tagStyle = {
     backgroundColor: '#dbdbdb'
 };
 
 export default function ProjectManagement() {
+    const [project, setProject] = useState(null);
     const [createOpen, setCreateOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [archiveOpen, setArchiveOpen] = useState(false);
+    const [exportOpen, setExportOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
     const [fetchedProjects, setFetchedProjects] = useState([]);
@@ -41,6 +46,8 @@ export default function ProjectManagement() {
             }
         }
     }
+    const { user } = useAuth();
+
 
 
     // Fetch projects
@@ -80,9 +87,10 @@ export default function ProjectManagement() {
             files: [],
             users: []
         };
-
         try {
             const result = await postProject(projectData);
+            await addLog(user.id, null, result.id, 'added a new project');
+            setProject(result);
 
             if (result.error) {
                 throw new Error(result.error);
@@ -110,6 +118,7 @@ export default function ProjectManagement() {
     const handleDeleteProject = async (p) => {
         try {
             const result = await deleteProject(p.id);
+            await addLog(user.id, null, p.id, 'deleted a project');
 
             if (result.error) {
                 throw new Error(result.error);
@@ -119,13 +128,36 @@ export default function ProjectManagement() {
             await getProjects();
         } catch (error) {
             console.error("Error deleting project:", error);
-            message.error("Failed to delete project");
+            message.error("Failed to delete project.");
         }
     };
 
-    const handleArchiveProject = (p) => {
-        console.log("archive project");
-        console.log(p);
+    const handleArchiveProject = async (p) => {
+        try {
+            const response = await archiveProject(p.id);
+            await addLog(user.id, null, p.id, 'archived a project');
+
+            if (response.error) {
+                throw new Error("Archive error", response.error);
+            }
+
+            message.success("Project archived successfully!");
+            await getProjects();
+        } catch (error) {
+            console.error("Error archiving project:", error);
+            message.error("Failed to archive project.");
+        }
+    };
+    const handleProjectExport = async (p) => {
+        await addLog(user.id, null, p.id, 'exported a project');
+        const archiveFileUrl = await exportProject(p.id);
+        const a = document.createElement("a");
+        a.href = archiveFileUrl;
+        a.download =  `${p.name}.zip`; // Name of the downloaded file
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(archiveFileUrl); 
     };
 
     return (
@@ -248,6 +280,32 @@ export default function ProjectManagement() {
                         }
                         <h4 style={{ margin: '0', marginBottom: '10%' }}>{!archiveOpen ? "Archive Project" : "Close"}</h4>
                     </Box>
+                    {/* Export a project */}
+                    <Box
+                        onClick={() => {
+                            setCreateOpen(false);
+                            setArchiveOpen(false);
+                            setDeleteOpen(false);
+                            setExportOpen(!exportOpen)
+                        }}
+                        sx={{
+                            textAlign: 'center',
+                            width: '80%',
+                            height: '100%',
+                            margin: '5%',
+                            backgroundColor: 'grey.300',
+                            border: 1,
+                            borderColor: 'grey.500',
+                            borderRadius: '16px',
+                            '&:hover': { boxShadow: 3 },
+                        }}
+                    >
+                        {!exportOpen ?
+                            <ExportOutlined style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
+                            : <CloseOutlined style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
+                        }
+                        <h4 style={{ margin: '0', marginBottom: '10%' }}>{!exportOpen ? "Export Project" : "Close"}</h4>
+                    </Box>
 
                 </Box>
 
@@ -275,7 +333,7 @@ export default function ProjectManagement() {
                                 width: '80%',
                                 height: "fit-content",
                                 margin: '10%',
-                                marginTop:'0',
+                                marginTop: '0',
                                 backgroundColor: '#f5f5f5',
                                 borderRadius: '10px',
                                 padding: '20px',
@@ -393,7 +451,7 @@ export default function ProjectManagement() {
                                 width: '80%',
                                 height: "70vh",
                                 margin: '10%',
-                                marginTop:'0',
+                                marginTop: '0',
                                 backgroundColor: '#f5f5f5',
                                 borderRadius: '10px',
                                 padding: '20px',
@@ -420,36 +478,38 @@ export default function ProjectManagement() {
                                     </div>
                                 ) : (
                                     <table style={{ width: '100%', borderCollapse: 'collapse', borderTop: '1px solid black' }}>
-                                        {(fetchedProjects.filter((p) =>
-                                            p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                            p.id.toString().includes(searchQuery)
-                                        )).map((p) => (
-                                            <tr
-                                                key={p.id}
+                                        <tbody>
+                                            {(fetchedProjects.filter((p) =>
+                                                p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                                p.id.toString().includes(searchQuery)
+                                            )).map((p) => (
+                                                <tr
+                                                    key={p.id}
 
-                                                style={{ height: '50px' }}
-                                            >
-                                                <td style={{ fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black' }}>
-                                                    {p.id} <span style={{ color: 'gray', fontStyle: 'italic' }}> - {p.name}</span>
-                                                </td>
+                                                    style={{ height: '50px' }}
+                                                >
+                                                    <td style={{ fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black' }}>
+                                                        {p.id} <span style={{ color: 'gray', fontStyle: 'italic' }}> - {p.name}</span>
+                                                    </td>
 
 
-                                                <td style={{ fontSize: '12px', textAlign: 'center', borderBottom: '1px solid black' }}>
-                                                    <Popconfirm
-                                                        title="Delete Project Directory"
-                                                        description="Are you sure you want to delete the selected project directory?"
-                                                        onConfirm={() => handleDeleteProject(p)}
-                                                        icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
-                                                        okText="Yes"
-                                                        cancelText="No"
-                                                    >
-                                                        <Button type="primary" danger icon={<DeleteOutlined />}>
-                                                            Delete
-                                                        </Button>
-                                                    </Popconfirm>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                                    <td style={{ fontSize: '12px', textAlign: 'center', borderBottom: '1px solid black' }}>
+                                                        <Popconfirm
+                                                            title="Delete Project Directory"
+                                                            description="Are you sure you want to delete the selected project directory?"
+                                                            onConfirm={() => handleDeleteProject(p)}
+                                                            icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+                                                            okText="Yes"
+                                                            cancelText="No"
+                                                        >
+                                                            <Button type="primary" danger icon={<DeleteOutlined />}>
+                                                                Delete
+                                                            </Button>
+                                                        </Popconfirm>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
                                     </table>
                                 )}
                             </div>
@@ -467,7 +527,7 @@ export default function ProjectManagement() {
                                 width: '80%',
                                 height: "70vh",
                                 margin: '10%',
-                                marginTop:'0',
+                                marginTop: '0',
                                 backgroundColor: '#f5f5f5',
                                 borderRadius: '10px',
                                 padding: '20px',
@@ -494,36 +554,113 @@ export default function ProjectManagement() {
                                     </div>
                                 ) : (
                                     <table style={{ width: '100%', borderCollapse: 'collapse', borderTop: '1px solid black' }}>
-                                        {(fetchedProjects.filter((p) =>
-                                            p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                            p.id.toString().includes(searchQuery)
-                                        )).map((p) => (
-                                            <tr
-                                                key={p.id}
+                                        <tbody>
+                                            {(fetchedProjects.filter((p) =>
+                                                p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                                p.id.toString().includes(searchQuery)
+                                            )).map((p) => (
+                                                <tr
+                                                    key={p.id}
 
-                                                style={{ height: '50px' }}
-                                            >
-                                                <td style={{ fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black' }}>
-                                                    {p.id} <span style={{ color: 'gray', fontStyle: 'italic' }}> - {p.name}</span>
-                                                </td>
+                                                    style={{ height: '50px' }}
+                                                >
+                                                    <td style={{ fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black' }}>
+                                                        {p.id} <span style={{ color: 'gray', fontStyle: 'italic' }}> - {p.name}</span>
+                                                    </td>
 
 
-                                                <td style={{ fontSize: '12px', textAlign: 'center', borderBottom: '1px solid black' }}>
-                                                    <Popconfirm
-                                                        title="Archive Project Directory"
-                                                        description="Are you sure you want to archive the selected project directory?"
-                                                        onConfirm={() => handleArchiveProject(p)}
-                                                        icon={<QuestionCircleOutlined style={{ color: 'blue' }} />}
-                                                        okText="Yes"
-                                                        cancelText="No"
-                                                    >
-                                                        <Button color="primary" variant="filled" icon={<ToTopOutlined />}>
-                                                            Archive
-                                                        </Button>
-                                                    </Popconfirm>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                                    <td style={{ fontSize: '12px', textAlign: 'center', borderBottom: '1px solid black' }}>
+                                                        <Popconfirm
+                                                            title="Archive Project Directory"
+                                                            description="Are you sure you want to archive the selected project directory?"
+                                                            onConfirm={() => handleArchiveProject(p)}
+                                                            icon={<QuestionCircleOutlined style={{ color: 'blue' }} />}
+                                                            okText="Yes"
+                                                            cancelText="No"
+                                                        >
+                                                            <Button color="primary" variant="filled" icon={<ToTopOutlined />}>
+                                                                Archive
+                                                            </Button>
+                                                        </Popconfirm>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+
+                        </Box>}
+
+                    {exportOpen &&
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'flex-start',
+                                alignItems: 'left',
+                                width: '80%',
+                                height: "70vh",
+                                margin: '10%',
+                                marginTop: '0',
+                                backgroundColor: '#f5f5f5',
+                                borderRadius: '10px',
+                                padding: '20px',
+                                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                                overflow: 'auto',
+                            }}
+                        >
+                            <Title level={4} style={{ textAlign: 'center', marginTop: '0' }}>Export Project</Title>
+
+                            <Input
+                                placeholder="Search for a project.."
+                                prefix={<SearchOutlined />}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                style={{ width: '50%', marginBottom: '2%' }}
+                                disabled={loading}
+                            />
+
+                            <div style={{ overflowY: 'auto', width: '100%', height: '100%' }}>
+                                {loading ? (
+                                    <div style={{ textAlign: 'center', padding: '20px' }}>
+                                        <Spin size="large" />
+                                        <p>Loading projects...</p>
+                                    </div>
+                                ) : (
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', borderTop: '1px solid black' }}>
+                                        <tbody>
+                                            {(fetchedProjects.filter((p) =>
+                                                p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                                p.id.toString().includes(searchQuery)
+                                            )).map((p) => (
+                                                <tr
+                                                    key={p.id}
+
+                                                    style={{ height: '50px' }}
+                                                >
+                                                    <td style={{ fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black' }}>
+                                                        {p.id} <span style={{ color: 'gray', fontStyle: 'italic' }}> - {p.name}</span>
+                                                    </td>
+
+
+                                                    <td style={{ fontSize: '12px', textAlign: 'center', borderBottom: '1px solid black' }}>
+                                                        <Popconfirm
+                                                            title="Export Project"
+                                                            description="Are you sure you want to export the selected project?"
+                                                            onConfirm={() => handleProjectExport(p)}
+                                                            icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+                                                            okText="Yes"
+                                                            cancelText="No"
+                                                        >
+                                                            <Button type="primary" info icon={<ExportOutlined />}>
+                                                                Export
+                                                            </Button>
+                                                        </Popconfirm>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
                                     </table>
                                 )}
                             </div>

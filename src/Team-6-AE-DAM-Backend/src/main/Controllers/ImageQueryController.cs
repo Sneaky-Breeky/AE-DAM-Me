@@ -58,6 +58,22 @@
 
             return Ok(mTags);
             }
+         [HttpGet("metaDataTagsValuesForImage/{pid}/{fid}")]
+         public async Task<ActionResult<IEnumerable<object>>> ProjectMetadataTagsValuesQuery(int pid, int fid)
+         {
+             var file = await _context.Files.FirstOrDefaultAsync(f => f.Id == fid && f.ProjectId == pid);
+             if (file == null)
+             {
+                 return NotFound("File not found.");
+             }
+
+             var mTags = await _context.MetadataTags
+                 .Where(mt => mt.FileId == fid) 
+                 .Select(mt => new { mt.Key, mt.sValue, mt.iValue })
+                 .ToListAsync();
+
+             return Ok(mTags);
+         }
 
           [HttpGet("basicTagsForImage/{pid}/{fid}")]
           public async Task<ActionResult<IEnumerable<string>>> ProjectBasicTagsQuery(int pid, int fid)

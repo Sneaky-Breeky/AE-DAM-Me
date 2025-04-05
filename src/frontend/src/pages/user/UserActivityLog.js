@@ -7,7 +7,7 @@ import { fetchLog } from "../../api/logApi";
 import { useAuth } from "./../../contexts/AuthContext"
 
 const { Title } = Typography;
-
+const logs = await fetchLog(18);
 export default function ActivityLog() {
     const { user, isAdmin } = useAuth();
     const [logs, setLogs] = useState([]);

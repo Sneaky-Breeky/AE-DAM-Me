@@ -14,13 +14,19 @@ import {
     ZoomInOutlined,
     ZoomOutOutlined,
     EditOutlined,
-    QuestionCircleOutlined
+    QuestionCircleOutlined,
+    CheckCircleOutlined
 } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
 import {fetchProject, getFilesForProject} from '../../api/projectApi';
+import {downloadFilesZip} from '../../api/fileApi';
 import dayjs from 'dayjs';
 import {getProjectBasicTags, getProjectMetaDataTags, searchProjectFiles} from "../../api/queryFile";
-import {getProjectImageBasicTags, getProjectImageMetaDataTags} from "../../api/imageApi";
+import {
+    getProjectImageBasicTags,
+    getProjectImageMetaDataTags,
+    getProjectImageMetaDataValuesTags
+} from "../../api/imageApi";
 
 const { RangePicker } = DatePicker;
 const { Title } = Typography;
@@ -54,13 +60,14 @@ export default function UserProjectOverview() {
     const [selectedStatus, setSelectedStatus] = useState("");
     const [current, setCurrent] = React.useState(0);
     const [isEditMode, setIsEditMode] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function fetchProjectAndFiles() {
             try {
                 const projectData = await fetchProject(id);
                 const projectFilesMetadataData = await getProjectMetaDataTags({ pid: id });
-                const projectFilesTagsData = await getProjectBasicTags({ pid: id });
+                const projectFilesTagsData = await getProjectBasicTags(id);
                 setAllFileMetaTags(Array.isArray(projectFilesMetadataData) ? projectFilesMetadataData : []);
                 setAllFileTags(Array.isArray(projectFilesTagsData) ? projectFilesTagsData : []);
 
@@ -74,16 +81,15 @@ export default function UserProjectOverview() {
 
                 const filesWithTags = await Promise.all(files.map(async (file) => {
                     const basicTags = await getProjectImageBasicTags({ pid: id, fid: file.id });
-                    const metadataTags = await getProjectImageMetaDataTags({ pid: id, fid: file.id });
+                    const metadataValues = await getProjectImageMetaDataValuesTags({ pid: id, fid: file.id });
 
                     return {
                         ...file,
                         basicTags: basicTags || [],
-                        metadataTags: metadataTags || [],
+                        metadataValues: metadataValues || [],
                     };
                 }));
 
-                //setProjectMetaTags(metaTags || []);
                 setProject(projectData);
                 setImageList(filesWithTags);
             } catch (err) {
@@ -214,44 +220,53 @@ export default function UserProjectOverview() {
     
 
     const onDownload = () => {
-        const url = imageList[current];
+        const url = imageList[current].originalPath;
         const suffix = url.slice(url.lastIndexOf('.'));
         const filename = Date.now() + suffix;
-
-        fetch(url)
-            .then((response) => response.blob())
-            .then((blob) => {
-                const blobUrl = URL.createObjectURL(new Blob([blob]));
-                const link = document.createElement('a');
-                link.href = blobUrl;
-                link.download = filename;
-                document.body.appendChild(link);
-                link.click();
-                URL.revokeObjectURL(blobUrl);
-                link.remove();
-            });
+        downloadFile(url,filename)
     };
+
+    const downloadFile = (url,filename) => {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download =  filename; // Name of the downloaded file
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url); 
+    }
 
     const toggleEditMode = () => {
         setIsEditMode((prev) => !prev);
         setSelectedImages(new Set());
     };
 
-    const toggleSelectImage = (index) => {
+    const toggleSelectImage = (file) => {                       
         if (!isEditMode) return;
-
-        const updatedSelection = new Set(selectedImages);
-        if (updatedSelection.has(index)) {
-            updatedSelection.delete(index);
-        } else {
-            updatedSelection.add(index);
-        }
-        setSelectedImages(updatedSelection);
+        addFile(file.id);
+    };
+    const addFile = (fileId) => {
+        setSelectedImages((prevSelected) => {
+            const newSelected = new Set(prevSelected); // Append new image ID
+            newSelected.has(fileId);
+            if (newSelected.has(fileId)) {
+                newSelected.delete(fileId);
+            }
+            else {
+                newSelected.add(fileId);
+            }
+            return newSelected;
+        });
     };
 
-    const downloadSelectedImages = () => {
+    const downloadSelectedImages = async () => {
         console.log(selectedImages);
-        //setImageList(imageList.filter((_, index) => !selectedImages.has(index)));
+        
+        const filesToBeDownloaded = imageList.filter((_, index) => selectedImages.has(_.id));
+        const filesNameList = Array.from(filesToBeDownloaded).map(file => file.name);
+        setLoading(true);
+        await downloadFilesZip(filesNameList);
+        setLoading(false);
         setSelectedImages(new Set());
         setIsEditMode(false);
       };
@@ -552,7 +567,6 @@ export default function UserProjectOverview() {
                                 <div
                                     key={file.Id}
                                     style={{ position: 'relative', cursor: 'pointer' }}
-                                    onClick={() => toggleSelectImage(file.Id)}
                                 >
                                     <Image
                                         key={file.id}
@@ -565,14 +579,30 @@ export default function UserProjectOverview() {
                                             objectFit: 'cover',
                                         }}
                                     />
-                                    {selectedImages.has(file.Id) && (
+                                    {!selectedImages.has(file.id) ? (
                                         <DownloadOutlined
+                                            onClick={() => toggleSelectImage(file)}
                                             style={{
                                                 position: 'absolute',
                                                 top: 5,
                                                 right: 5,
                                                 color: 'white',
-                                                background: 'blue',
+                                                background: 'red',
+                                                borderRadius: '50%',
+                                                padding: '5px',
+                                                cursor: 'pointer',
+                                                fontSize: '16px',
+                                            }}
+                                        />
+                                    ):(
+                                        <CheckCircleOutlined
+                                            onClick={() => toggleSelectImage(file)}
+                                            style={{
+                                                position: 'absolute',
+                                                top: 5,
+                                                right: 5,
+                                                color: 'white',
+                                                background: 'green',
                                                 borderRadius: '50%',
                                                 padding: '5px',
                                                 cursor: 'pointer',
@@ -610,28 +640,35 @@ export default function UserProjectOverview() {
                                 <Space wrap size={16} style={{ justifyContent: 'center' }}>
                                     {imageList.map((file) => (
                                         <Tooltip
-                                            key={file.Id}
+                                            key={file.id}
                                             title={
                                                 <>
                                                     <div><strong>Basic Tags:</strong> {file.basicTags?.join(', ') || 'None'}</div>
-                                                    <div><strong>Metadata Tags:</strong> {file.mTags?.map(t => t.value).join(', ') || 'None'}</div>
+                                                    <div><strong>Metadata Tags:</strong>
+                                                        {file.metadataValues?.length > 0
+                                                            ? file.metadataValues.map((tag, i) => (
+                                                                <div key={i} style={{ marginLeft: '8px' }}>
+                                                                    <span style={{ color: '#888' }}>{tag.key}: </span>
+                                                                    <span>{tag.sValue || tag.iValue}</span>
+                                                                </div>
+                                                            ))
+                                                            : <span style={{ marginLeft: '8px' }}>None</span>
+                                                        }
+                                                    </div>
                                                 </>
                                             }
                                         >
-                                           
                                             <Image
-                                                src={file.thumbnailPath || file.originalPath  || file.viewPath}
+                                                src={file.thumbnailPath || file.originalPath || file.viewPath}
                                                 width={200}
-                                                preview={false}
+                                                preview={true}
                                                 style={{
                                                     borderRadius: '8px',
                                                     transition: '0.2s ease-in-out',
                                                     objectFit: 'cover',
                                                 }}
                                             />
-                                            
                                         </Tooltip>
-                                        
                                     ))}
                                 </Space>
                             )}

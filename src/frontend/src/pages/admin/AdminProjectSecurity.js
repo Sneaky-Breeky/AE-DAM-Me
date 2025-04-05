@@ -105,41 +105,41 @@ function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, all
                 </table>
 
                 <div onClick={(e) => e.stopPropagation()}>
-            <table style={{width: '100%', borderCollapse: 'collapse'}}>
-                <tr style={{height: '50px'}}>
-                    <td style={{fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black'}}>
-                        <Checkbox checked={adminChecked}
-                                  onChange={toggleAdminChecked}>
-                            Admins Only
-                        </Checkbox>
-                    </td>
-                </tr>
-                <tr style={{height: '50px'}}>
-                    <td style={{fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black'}}>
-                        <Checkbox checked={allChecked && !adminChecked}
-                                  onChange={
-                                      toggleAllChecked}>
-                            Everyone
-                        </Checkbox>
-                    </td>
-                </tr>
-                {listUsers.map((user) => (
-                    <tr style={{height: '50px'}}>
-                        <td style={{fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black'}}>
-                            <Checkbox
-                                checked={Array.isArray(fetchedUsersForAProject) &&
-                                    fetchedUsersForAProject.some((u) => u.id === user.id)}
-                                onChange={(e) => toggleUserChecked(e, user)}
-                            >
-                                <span>{user.id}</span> - <span style={{ color: 'grey', fontStyle: 'italic' }}>{`${user.firstName} ${user.lastName}`}</span>
-                            </Checkbox>
+                    <table style={{width: '100%', borderCollapse: 'collapse'}}>
+                        <tr style={{height: '50px'}}>
+                            <td style={{fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black'}}>
+                                <Checkbox checked={adminChecked}
+                                          onChange={toggleAdminChecked}>
+                                    Admins Only
+                                </Checkbox>
+                            </td>
+                        </tr>
+                        <tr style={{height: '50px'}}>
+                            <td style={{fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black'}}>
+                                <Checkbox checked={allChecked && !adminChecked}
+                                          onChange={
+                                              toggleAllChecked}>
+                                    Everyone
+                                </Checkbox>
+                            </td>
+                        </tr>
+                        {listUsers.map((user) => (
+                            <tr style={{height: '50px'}}>
+                                <td style={{fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black'}}>
+                                    <Checkbox
+                                        checked={Array.isArray(fetchedUsersForAProject) &&
+                                            fetchedUsersForAProject.some((u) => u.id === user.id)}
+                                        onChange={(e) => toggleUserChecked(e, user)}
+                                    >
+                                        <span>{user.id}</span> - <span style={{ color: 'grey', fontStyle: 'italic' }}>{`${user.firstName} ${user.lastName}`}</span>
+                                    </Checkbox>
 
 
-                        </td>
-                    </tr>
-                ))}
-            </table>
-        </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </table>
+                </div>
 
                 <div style={{
                     display: 'flex',
@@ -271,6 +271,7 @@ export default function AdminProjectSecurity() {
                 projectId: project.id,
                 updatedProjectData: updatedProjectData
             });
+            
             if (updateResult.error) {
                 throw new Error(updateResult.error);
             }

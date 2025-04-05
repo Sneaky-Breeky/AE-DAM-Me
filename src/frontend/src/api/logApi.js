@@ -27,42 +27,13 @@ export async function fetchLog(userId) {
 }
 
 export async function addLog(userID, fileID, projectId, typeOfLog) {
+    console.log(typeOfLog);
+    // console.log(userID);
+    // console.log(fileID);
 
     const logData = {
         FileId: fileID,
         ProjectId: projectId,
-        UserId: userID,
-        TypeOfLog: typeOfLog,
-        Date: new Date().toISOString(),
-    };
-    try {
-        const response = await fetch(`${LOG_URL}/addLog}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(logData)
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            try {
-                const errorData = JSON.parse(errorText);
-                return { error: errorData.message || "Unknown error" };
-            } catch {
-                return { error: `HTTP Error ${response.status}: ${errorText}` };
-            }
-        }
-        return { success: true };
-    } catch (error) {
-        console.error("Network or fetch error:", error);
-        return { error: "Network error or server unreachable", message: error.message };
-    }
-}
-export async function addLogProject(userID, fileID, typeOfLog) {
-    const logData = {
-        FileId: fileID,
-        ProjectId: null ,
         UserId: userID,
         TypeOfLog: typeOfLog,
         Date: new Date().toISOString(),
@@ -85,7 +56,7 @@ export async function addLogProject(userID, fileID, typeOfLog) {
                 return { error: `HTTP Error ${response.status}: ${errorText}` };
             }
         }
-        return await response.json();
+        return { success: true };
     } catch (error) {
         console.error("Network or fetch error:", error);
         return { error: "Network error or server unreachable", message: error.message };
