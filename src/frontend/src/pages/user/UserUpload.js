@@ -58,6 +58,7 @@ export default function UserUpload() {
     const [selectedDate, setSelectedDate] = useState(dayjs().format('YYYY-MM-DD'));
     const fileInputRef = useRef(null);
     const [uploadSuccess, setUploadSuccess] = useState(false);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
     const metadataBoxStyle = {
         textAlign: 'left',
         backgroundColor: '#f5f5f5',
@@ -242,15 +243,65 @@ export default function UserUpload() {
         setEditing(true);
     };
 
-    const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
-        console.log(croppedArea, croppedAreaPixels);
+    const getCroppedImg = async (imageSrc, pixelCrop, rotation = 0) => {
+        const createImage = (url) =>
+            new Promise((resolve, reject) => {
+                const image = new window.Image();
+                image.setAttribute('crossOrigin', 'anonymous');
+                image.onload = () => resolve(image);
+                image.onerror = (err) => reject(err);
+                image.src = url;
+            });
+
+        const image = await createImage(imageSrc);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const safeArea = Math.max(image.width, image.height) * 2;
+        canvas.width = safeArea;
+        canvas.height = safeArea;
+
+        ctx.translate(safeArea / 2, safeArea / 2);
+        ctx.rotate((rotation * Math.PI) / 180);
+        ctx.translate(-safeArea / 2, -safeArea / 2);
+        ctx.drawImage(image, (safeArea - image.width) / 2, (safeArea - image.height) / 2);
+
+        const data = ctx.getImageData(pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height);
+
+        canvas.width = pixelCrop.width;
+        canvas.height = pixelCrop.height;
+
+        ctx.putImageData(data, 0, 0);
+
+        return canvas.toDataURL('image/jpeg');
+    };
+
+
+    
+
+    const onCropComplete = useCallback((croppedArea, croppedPixels) => {
+        setCroppedAreaPixels(croppedPixels);
     }, []);
 
-    const saveEditedImage = () => {
-        setCroppedImages([...croppedImages, currentFile]);
-        setEditing(false);
-        setCurrentFile(null);
+    const saveEditedImage = async () => {
+        try {
+            const croppedImgUrl = await getCroppedImg(currentFile.preview, croppedAreaPixels, rotation);
+            const updatedFile = {
+                ...currentFile,
+                preview: croppedImgUrl,
+                original: croppedImgUrl,
+                edited: true
+            };
+            setFiles(prev => prev.map(f => f.file.name === currentFile.file.name ? updatedFile : f));
+            setUserFiles(prev => prev.map(f => f.file.name === currentFile.file.name ? updatedFile : f));
+            setEditing(false);
+            setCurrentFile(null);
+        } catch (error) {
+            console.error("Error saving cropped image:", error);
+            message.error("Failed to save edited image.");
+        }
     };
+
 
     const confirmRemoveFile = (file) => {
         if (!file || !file.file) {

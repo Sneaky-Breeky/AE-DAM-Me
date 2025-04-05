@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -414,29 +414,27 @@ namespace DAMBackend.Controllers
         }
 
 
-        // // DELETE: api/damprojects/{key}/{pId}
-//         [HttpDelete("{key}/{pId}")]
-//         public async Task<IActionResult> DeleteProject(string key, int pId)
-//         {
-//             var tag = await _context.ProjectTags
-////                 .Where(pt => pt.Key == key && pt.ProjectId == pId)
-//                    .Where(pt => pt.Key == key)
-//
-//                 .FirstOrDefaultAsync();
-//
-//             if (tag == null)
-//             {
-//                 return NotFound();
-//             }
-//
-//             _context.ProjectTags.Remove(tag);
-//             await _context.SaveChangesAsync();
-//
-//             return NoContent();
-//         }
-//
-//
-//
+        // DELETE: api/damprojects/{key}/{pId}
+        [HttpDelete("{key}/{pId}")]
+        public async Task<IActionResult> DeleteProjectTag(string key, int pId)
+        {
+            var tag = await _context.ProjectTags
+                .Where(pt => pt.Key == key && pt.ProjectId == pId)
+                .FirstOrDefaultAsync();
+        
+            if (tag == null)
+            {
+                return NotFound();
+            }
+        
+            _context.ProjectTags.Remove(tag);
+            await _context.SaveChangesAsync();
+        
+            return NoContent();
+        }
+
+        
+        
 
         [HttpPost("postproj/bulk")]
         public async Task<ActionResult<List<ProjectModel>>> bulkUploadProjects(IFormFile file)

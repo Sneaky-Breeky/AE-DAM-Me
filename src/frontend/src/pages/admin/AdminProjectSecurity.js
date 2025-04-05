@@ -5,12 +5,10 @@ import {SearchOutlined, EditOutlined, CloseOutlined} from '@ant-design/icons';
 import {fetchProjects, fetchUsersForProject, putProject} from '../../api/projectApi';
 import {fetchUsers} from '../../api/authApi';
 import {giveUserAccess, removeAllUserAccess} from "../../api/userApi";
-import {addLog} from "../../api/logApi";
-import {useAuth} from "../../contexts/AuthContext";
 
 
 const {Title} = Typography;
-// const { user } = useAuth();
+
 function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, allChecked, setAllChecked, selectedChecked, setSelectedChecked, listUsers, setListUsers, fetchedUsersForAProject, setFetchedUsersForProject, originalUsersForProject, setOriginalUsersForProject, handleAccessUpdate, setLoading, getProjects) {
 
 
@@ -67,7 +65,6 @@ function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, all
         } else {
             updatedUsers = fetchedUsersForAProject.filter((u) => u.id !== user.id);
         }
-        //     await addLog(user.id,project.id,null,"Changed user access for project");
 
         setFetchedUsersForProject(updatedUsers);
         setSelectedChecked(true);
@@ -108,41 +105,41 @@ function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, all
                 </table>
 
                 <div onClick={(e) => e.stopPropagation()}>
-            <table style={{width: '100%', borderCollapse: 'collapse'}}>
-                <tr style={{height: '50px'}}>
-                    <td style={{fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black'}}>
-                        <Checkbox checked={adminChecked}
-                                  onChange={toggleAdminChecked}>
-                            Admins Only
-                        </Checkbox>
-                    </td>
-                </tr>
-                <tr style={{height: '50px'}}>
-                    <td style={{fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black'}}>
-                        <Checkbox checked={allChecked && !adminChecked}
-                                  onChange={
-                                      toggleAllChecked}>
-                            Everyone
-                        </Checkbox>
-                    </td>
-                </tr>
-                {listUsers.map((user) => (
-                    <tr style={{height: '50px'}}>
-                        <td style={{fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black'}}>
-                            <Checkbox
-                                checked={Array.isArray(fetchedUsersForAProject) &&
-                                    fetchedUsersForAProject.some((u) => u.id === user.id)}
-                                onChange={(e) => toggleUserChecked(e, user)}
-                            >
-                                <span>{user.id}</span> - <span style={{ color: 'grey', fontStyle: 'italic' }}>{`${user.firstName} ${user.lastName}`}</span>
-                            </Checkbox>
+                    <table style={{width: '100%', borderCollapse: 'collapse'}}>
+                        <tr style={{height: '50px'}}>
+                            <td style={{fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black'}}>
+                                <Checkbox checked={adminChecked}
+                                          onChange={toggleAdminChecked}>
+                                    Admins Only
+                                </Checkbox>
+                            </td>
+                        </tr>
+                        <tr style={{height: '50px'}}>
+                            <td style={{fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black'}}>
+                                <Checkbox checked={allChecked && !adminChecked}
+                                          onChange={
+                                              toggleAllChecked}>
+                                    Everyone
+                                </Checkbox>
+                            </td>
+                        </tr>
+                        {listUsers.map((user) => (
+                            <tr style={{height: '50px'}}>
+                                <td style={{fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black'}}>
+                                    <Checkbox
+                                        checked={Array.isArray(fetchedUsersForAProject) &&
+                                            fetchedUsersForAProject.some((u) => u.id === user.id)}
+                                        onChange={(e) => toggleUserChecked(e, user)}
+                                    >
+                                        <span>{user.id}</span> - <span style={{ color: 'grey', fontStyle: 'italic' }}>{`${user.firstName} ${user.lastName}`}</span>
+                                    </Checkbox>
 
 
-                        </td>
-                    </tr>
-                ))}
-            </table>
-        </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </table>
+                </div>
 
                 <div style={{
                     display: 'flex',
@@ -186,6 +183,7 @@ function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, all
 }
 
 export default function AdminProjectSecurity() {
+
     const [searchQuery, setSearchQuery] = useState('');
     const [isPopupFormOpen, setPopupFormOpen] = useState(false);
     const [project, setProject] = useState(null);
@@ -197,7 +195,6 @@ export default function AdminProjectSecurity() {
     const [selectedChecked, setSelectedChecked] = useState(false);
     const [listUsers, setListUsers] = useState([]);
     const [originalUsersForProject, setOriginalUsersForProject] = useState([]);
-    const { user } = useAuth();
 
 // Fetch users
     const getUsers = async () => {
@@ -274,18 +271,15 @@ export default function AdminProjectSecurity() {
                 projectId: project.id,
                 updatedProjectData: updatedProjectData
             });
-            await addLog(user.id, null, project.id, 'updated tag for project');
+            
+            if (updateResult.error) {
+                throw new Error(updateResult.error);
+            }
 
-            // const updateResult = await putProject(project.id, updatedProjectData);
-
-//             if (updateResult.error) {
-//                 throw new Error(updateResult.error);
-//             }
-
-//             await removeAllUserAccess(project.id);
-//             for (const user of usersToGrantAccess) {
-//                 await giveUserAccess(user.id, project.id);
-//             }
+            await removeAllUserAccess(project.id);
+            for (const user of usersToGrantAccess) {
+                await giveUserAccess(user.id, project.id);
+            }
 
             setOriginalUsersForProject(usersToGrantAccess);
             await getProjects();
