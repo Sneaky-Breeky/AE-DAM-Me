@@ -54,7 +54,7 @@
                                     logRequest.ProjectId,
                                      logRequest.UserId,
                                      logRequest.TypeOfLog,
-                                     logRequest.Date);
+                                     logRequest.LogDate);
 
              _context.LogImage.Add(log);
              await _context.SaveChangesAsync();
@@ -69,7 +69,7 @@
          public int ProjectId { get; set; }
          public int UserId { get; set; }
          public string TypeOfLog { get; set; }
-         public DateTime Date { get; set; }
+         public DateTime LogDate { get; set; }
      }
  }
 
