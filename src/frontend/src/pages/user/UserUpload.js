@@ -311,15 +311,10 @@ export default function UserUpload() {
         console.log("on click submit");
 
         for (const [key, value] of Object.entries(selectProjectMD)) {
-            if (!isNaN(value)) {
-                // number value
-                const resultMD = await addMetaAdvanceTag(selectFile.id,{"key":key,"value":Number(value),"type":1});
-                console.log(resultMD);
-            } else {
-                // string value
-                const resultMD = await addMetaAdvanceTag(selectFile.id,{"key":key,"value":value,"type":0});
-                console.log(resultMD);
-            }
+            // number value
+            const resultMD = await addMetaAdvanceTag(selectFile.id,{"key":key,"value":value,"type":(!isNaN(value) ? 1: 0)});
+            console.log(resultMD);
+
         }
 
         selectProjectTags.map(async (tag) => {
