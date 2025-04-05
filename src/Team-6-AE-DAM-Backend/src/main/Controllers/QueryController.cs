@@ -147,14 +147,14 @@
          [HttpGet("metadatatagsValues/{pid}")]
                   public async Task<ActionResult<IEnumerable<string>>> ProjectMetadataTagsValuesQuery(int pid)
                   {
-                      var project = await _context.Projects.FindAsync(pid);
-                      if (project == null)
-                      {
-                          return NotFound("Project not found.");
-                      }
+//                      var project = await _context.Projects.FindAsync(pid);
+//                      if (project == null)
+//                      {
+//                          return NotFound("Project not found.");
+//                      }
 
-                      var mTags = await _context.MetadataTags
-                          .Where(mt => _context.Files.Any(f => f.ProjectId == pid && f.Id == mt.FileId))
+                      var mTags = await _context.ProjectTags
+                          .Where(mt => mt.ProjectId == pid)
                           .Select(mt => new
                                      {
                                          mt.Key,
