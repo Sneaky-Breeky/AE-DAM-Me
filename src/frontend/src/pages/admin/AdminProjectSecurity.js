@@ -5,6 +5,8 @@ import {SearchOutlined, EditOutlined, CloseOutlined} from '@ant-design/icons';
 import {fetchProjects, fetchUsersForProject, putProject} from '../../api/projectApi';
 import {fetchUsers} from '../../api/authApi';
 import {giveUserAccess, removeAllUserAccess} from "../../api/userApi";
+import {addLog} from "../../api/logApi";
+import {useAuth} from "../../contexts/AuthContext";
 
 
 const {Title} = Typography;
@@ -183,7 +185,6 @@ function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, all
 }
 
 export default function AdminProjectSecurity() {
-
     const [searchQuery, setSearchQuery] = useState('');
     const [isPopupFormOpen, setPopupFormOpen] = useState(false);
     const [project, setProject] = useState(null);
@@ -195,6 +196,7 @@ export default function AdminProjectSecurity() {
     const [selectedChecked, setSelectedChecked] = useState(false);
     const [listUsers, setListUsers] = useState([]);
     const [originalUsersForProject, setOriginalUsersForProject] = useState([]);
+    const { user } = useAuth();
 
 // Fetch users
     const getUsers = async () => {
@@ -267,15 +269,22 @@ export default function AdminProjectSecurity() {
                 accessLevel: newAccessLevel,
             };
 
-            const updateResult = await putProject(project.id, updatedProjectData);
-            if (updateResult.error) {
-                throw new Error(updateResult.error);
-            }
+            const updateResult = await putProject({
+                projectId: project.id,
+                updatedProjectData: updatedProjectData
+            });
+            await addLog(user.id, null, project.id, 'updated tag for project');
 
-            await removeAllUserAccess(project.id);
-            for (const user of usersToGrantAccess) {
-                await giveUserAccess(user.id, project.id);
-            }
+            // const updateResult = await putProject(project.id, updatedProjectData);
+
+//             if (updateResult.error) {
+//                 throw new Error(updateResult.error);
+//             }
+
+//             await removeAllUserAccess(project.id);
+//             for (const user of usersToGrantAccess) {
+//                 await giveUserAccess(user.id, project.id);
+//             }
 
             setOriginalUsersForProject(usersToGrantAccess);
             await getProjects();

@@ -2,6 +2,21 @@ import { API_BASE_URL } from "./apiURL.js";
 
 const PROJECTS_URL = `${API_BASE_URL}/api/damprojects`;
 
+
+export async function fetchProject(projectId) {
+    try {
+        const response = await fetch(`${PROJECTS_URL}/${projectId}`);
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(errText || "Failed to fetch project");
+        }
+        return await response.json();
+    } catch (err) {
+        console.error("Error fetching project by ID:", err);
+        return { error: err.message };
+    }
+}
+
 export async function fetchProjects() {
     try {
         const response = await fetch(`${PROJECTS_URL}/getallprojs`, {
@@ -238,7 +253,7 @@ export async function postProject(projectData) {
 
 
 // edit a project
-export async function putProject(projectId, updatedProjectData) {
+export async function putProject({ projectId, updatedProjectData }) {
     try {
         const response = await fetch(`${PROJECTS_URL}/${projectId}`, {
             method: "PUT",
@@ -350,9 +365,9 @@ export async function addProjectTag(ProjectId, Key, Value, type) {
         //         Type: type
         //     })
         // });
-        
-                
-                if (!response.ok) {
+
+
+        if (!response.ok) {
             const errorText = await response.text();
             try {
                 const errorData = JSON.parse(errorText);
@@ -401,5 +416,76 @@ export async function deleteProjectTag(key, projectId) {
     }
 }
 
+export async function getFilesForProject({ projectId }) {
+    try {
+        const url = `${PROJECTS_URL}/files/${projectId}`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Failed to fetch images: ${errText}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error("getFilesForImages error:", error);
+        return [];
+    }
+}
+
+export async function archiveProject(projectId) {
+    try {
 
 
+        const response = await fetch(`${PROJECTS_URL}/${projectId}/archive`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            try {
+                const errorData = JSON.parse(errorText);
+                return { error: errorData.message || "Unknown error" };
+            } catch {
+                return { error: `HTTP Error ${response.status}: ${errorText}` };
+            }
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error("Network or archive error:", error);
+        return { error: "Network error or server unreachable", message: error.message };
+    }
+}
+
+export async function exportProject(projectId) {
+    try {
+        const url = `${PROJECTS_URL}/${projectId}/export`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            const errText = await response.json();
+            throw new Error(`Failed to fetch images: ${errText}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error("getFilesForImages error:", error);
+        return [];
+    }
+}

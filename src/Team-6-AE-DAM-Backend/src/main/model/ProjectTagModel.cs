@@ -24,7 +24,7 @@ Project and Projectid assigned to know which file is referenced
         public int ProjectId { get; set; }
         
         [JsonIgnore]
-        public ProjectModel Project { get; set; }
+        public ProjectModel? Project { get; set; }
         
         
         [Required]

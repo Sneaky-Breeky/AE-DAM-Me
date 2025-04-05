@@ -85,10 +85,7 @@ export async function addLogProject(userID, fileID, typeOfLog) {
                 return { error: `HTTP Error ${response.status}: ${errorText}` };
             }
         }
-
-        const createdLog = await response.json();
-        
-        return { success: true, log: createdLog };
+        return await response.json();
     } catch (error) {
         console.error("Network or fetch error:", error);
         return { error: "Network error or server unreachable", message: error.message };

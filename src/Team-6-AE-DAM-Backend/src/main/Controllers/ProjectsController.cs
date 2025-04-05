@@ -11,6 +11,7 @@ using DAMBackend.services;
 using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
+using DAMBackend.blob;
 
 namespace DAMBackend.Controllers
 {
@@ -20,11 +21,13 @@ namespace DAMBackend.Controllers
     {
         private readonly SQLDbContext _context;
         private readonly CsvEngine _csvService;
+        private readonly AzureBlobService _azureBlobService;
 
-        public ProjectsController(SQLDbContext context,CsvEngine csvService)
+        public ProjectsController(SQLDbContext context,CsvEngine csvService,AzureBlobService azureBlobService)
         {
             _context = context;
             _csvService = csvService;
+            _azureBlobService = azureBlobService;
         }
 
 
@@ -258,8 +261,9 @@ namespace DAMBackend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ProjectModel>> GetProject(int id)
         {
-            var project = await _context.Projects.FindAsync(id);
-
+            var project = await _context.Projects
+                .Include(p => p.Tags)
+                .FirstOrDefaultAsync(p => p.Id == id);
             if (project == null)
             {
                 return NotFound();
@@ -268,7 +272,7 @@ namespace DAMBackend.Controllers
             return Ok(project);
         }
 
-// PUT: api/damprojects/{id}
+        // PUT: api/damprojects/{id}
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProject(int id, [FromBody] ProjectModel projectData)
@@ -325,16 +329,21 @@ namespace DAMBackend.Controllers
         public async Task<IActionResult> DeleteProject(int id)
         {
             var project = await _context.Projects.FindAsync(id);
+            
             if (project == null)
             {
                 return NotFound();
             }
+            
             var files = await _context.Files.Where(f => f.ProjectId == id).ToListAsync();
+            
             if (files.Any())
             {
-                
                 _context.Files.RemoveRange(files);
             }
+
+            _context.Projects.Remove(project);
+
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -423,6 +432,7 @@ namespace DAMBackend.Controllers
         //
         //     return NoContent();
         // }
+
         
         
 
@@ -494,6 +504,70 @@ namespace DAMBackend.Controllers
             var filePaths = files.Select(f => f.ViewPath).ToList();
             var url = await _csvService.GenerateCsvAndUploadAsync(project, files);
             return Ok(url);
+        }
+
+        [HttpGet("files/{pid}")]
+        public async Task<ActionResult<IEnumerable<FileModel>>> GetProjectFiles(int pid)
+        {
+            var files = await _context.Files
+                .Where(f => f.ProjectId == pid)
+                .Include(f => f.bTags)  // Include basic tags
+                .Include(f => f.mTags)  // Include metadata tags
+                .ToListAsync();
+            
+            return Ok(files);
+        }
+
+        [HttpPost("{projectId}/archive")]        
+        public async Task<IActionResult> ArchiveProject(int projectId)
+        {
+            var project = await _context.Projects.FindAsync(projectId);
+
+            if (project == null)
+            {
+                return NotFound("Project is not found");
+            }
+
+            var success = await _azureBlobService.SetProjectToArchiveAsync(projectId, _context);
+            
+            if (success)
+            {
+                project.isArchived = true;
+                project.Status = "inactive";
+                await _context.SaveChangesAsync();
+
+                return Ok("Archived successfully.");
+            }
+            else
+            {
+                return StatusCode(500, $"Failed to archive project {projectId}.");
+            }
+        }
+
+        [HttpPost("{projectId}/unarchive")]        
+        public async Task<IActionResult> UnarchiveProject(int projectId)
+        {
+            var project = await _context.Projects.FindAsync(projectId);
+
+            if (project == null)
+            {
+                return NotFound("Project is not found");
+            }
+
+            var success = await _azureBlobService.UnarchiveProjectAsync(projectId, _context);
+            
+            if (success)
+            {
+                project.isArchived = false;
+                project.Status = "Active";
+                await _context.SaveChangesAsync();
+
+                return Ok("Archived successfully.");
+            }
+            else
+            {
+                return StatusCode(500, $"Failed to archive project {projectId}.");
+            }
         }
     }
 }

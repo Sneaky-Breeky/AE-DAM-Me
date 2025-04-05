@@ -3,7 +3,6 @@ using System.Text.Json.Serialization;
 
 namespace DAMBackend.Models
 {
-
     public class FileDTO
     {
         public FileDTO() { }

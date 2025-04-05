@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
-import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Tooltip } from 'antd';
+import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Tooltip, message } from 'antd';
 import { SearchOutlined, CalendarOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext'
-import {addFavorite, removeFavorite, fetchProjectsForUser, fetchFavoriteProjects} from '../../api/projectApi';
+import {addFavorite, removeFavorite, fetchProjects, fetchFavoriteProjects} from '../../api/projectApi';
+import {fetchProjectsByDateRange} from '../../api/queryFile';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
@@ -13,7 +14,7 @@ const { Meta } = Card;
 
 export default function UserProjectDir() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [dateRange, setDateRange] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
@@ -26,7 +27,7 @@ export default function UserProjectDir() {
         const loadProjects = async () => {
             if (!user?.id) return;
 
-            const data = await fetchProjectsForUser(user.id);
+            const data = await fetchProjects();
             if (data.error) {
                 console.error(data.error);
             } else {
@@ -47,43 +48,50 @@ export default function UserProjectDir() {
     }, [user]);
 
 
-  const handleSearch = () => {
-    let filtered = [...projects];
+    const handleSearch = async () => {
+        const [start, end] = dateRange || [];
 
-    if (searchQuery.trim() !== '') {
-      const query = searchQuery.toLowerCase();
+        const query = {
+            StartDate: start ? dayjs(start).toISOString() : '0001-01-01T00:00:00Z',
+            EndDate: end ? dayjs(end).toISOString() : '0001-01-01T00:00:00Z'
+        };
 
-      filtered = filtered.filter((project) =>
-        project.name.toLowerCase() === query ||
-        project.id.toString() === query ||
-        project.location.toLowerCase() === query ||
-        project.files.some(file =>
-          file.Metadata.some(tag => tag.toLowerCase() === query)
-        )
-      );
-    }
+        try {
+            const response = await fetchProjectsByDateRange(query);
+            let filtered = response;
 
-    if (selectedDate) {
-      filtered = filtered.filter(project =>
-        dayjs(project.startDate).isSame(selectedDate, 'day')
-      );
-    }
+            if (searchQuery.trim() !== '') {
+                const lowerQuery = searchQuery.toLowerCase();
+                filtered = filtered.filter(project =>
+                    project.name.toLowerCase().includes(lowerQuery) ||
+                    project.id.toString().includes(lowerQuery) ||
+                    project.location.toLowerCase().includes(lowerQuery)
+                );
+            }
 
-    if (selectedStatus) {
-      filtered = filtered.filter(project =>
-        project.status.toLowerCase() === selectedStatus.toLowerCase()
-      );
-    }
-    setFilteredProjects(filtered);
-  };
+            if (selectedStatus) {
+                filtered = filtered.filter(
+                    project => project.status.toLowerCase() === selectedStatus.toLowerCase()
+                );
+            }
+
+            setProjects(response);
+            setFilteredProjects(filtered);
+        } catch (error) {
+            console.error("Error fetching projects:", error);
+        }
+    };
 
 
-  const handleClearFilters = () => {
-    setSearchQuery('');
-    setSelectedDate(null);
-    setSelectedStatus('');
-    setFilteredProjects([...projects]);
-  };
+
+
+    const handleClearFilters = () => {
+        setSearchQuery('');
+        setDateRange(null);
+        setSelectedStatus("");
+        setFilteredProjects(projects);
+    };
+
 
 
     const toggleFavorite = async (projectId) => {
@@ -98,12 +106,19 @@ export default function UserProjectDir() {
             response = await addFavorite(user.id, projectId);
         }
 
-        if (!response.error) {
-            setFavProjects(new Set(updatedFavs));
+        if (response.error) {
+            if (response.error.includes("User does not have access")) {
+                message.warning("You don't have access to this project and cannot favorite it.");
+            } else {
+                console.error("Error updating favorite:", response.error);
+                message.error("Something went wrong while updating favorites.");
+            }
+            setFavProjects(new Set(favProjects)); 
         } else {
-            console.error("Error updating favorite:", response.error);
+            setFavProjects(new Set(updatedFavs));
         }
     };
+
 
 
   return (
@@ -153,28 +168,34 @@ export default function UserProjectDir() {
             />
           </Form.Item>
 
-          <Form.Item>
-            <Select
-              style={{ width: 120 }}
-              allowClear
-              options={[
-                { value: 'active', label: 'Active' },
-                { value: 'inactive', label: 'Inactive' }]}
-              onChange={(value) => setSelectedStatus(value)}
-              placeholder="Select status"
-            />
-          </Form.Item>
+            <Form.Item>
+                <Select
+                    style={{ width: 120 }}
+                    allowClear
+                    options={[
+                        { value: 'active', label: 'Active' },
+                        { value: 'inactive', label: 'Inactive' }
+                    ]}
+                    value={selectedStatus || null}
+                    onChange={(value) => {
+                        setSelectedStatus(value);
+                        handleSearch();
+                    }}
+                    placeholder="Select status"
+                />
+            </Form.Item>
 
-          <Form.Item>
-            <DatePicker
-              placeholder="Select date"
-              maxDate={dayjs()}
-              onChange={(date, dateString) => setSelectedDate(dateString)}
-              suffixIcon={<CalendarOutlined />}
-            />
-          </Form.Item>
+            <Form.Item>
+                <DatePicker.RangePicker
+                    placeholder={["Start date", "End date"]}
+                    suffixIcon={<CalendarOutlined />}
+                    value={dateRange}
+                    onChange={(dates) => setDateRange(dates)}
+                />
+            </Form.Item>
 
-          <Form.Item>
+
+            <Form.Item>
             <Button type="primary" htmlType="submit" color="cyan" variant="solid">
               Search
             </Button>
@@ -229,7 +250,6 @@ export default function UserProjectDir() {
           >
             <Row gutter={[16, 16]} justify="center">
                 {filteredProjects
-                    .filter(project => project.status.toLowerCase() === "active")
                     .sort((a, b) => (favProjects.has(a.id) ? -1 : 1) - (favProjects.has(b.id) ? -1 : 1))
                     .map((project, index) => (
                 <Col key={index} xs={24} sm={12} md={8} lg={6}>
@@ -285,11 +305,14 @@ export default function UserProjectDir() {
                         />
                       )}
                     </Tooltip>
-                    <Meta
-                      title={project.name}
-                      description={project.location}
-                      style={{ textAlign: 'center' }}
-                    />
+                      <Meta
+                          title={
+                              <div style={{ textAlign: 'center' }}>
+                                  {project.id} - {project.name}
+                              </div>
+                          }
+                          description={project.location}
+                      />
                   </Card>
                 </Col>
               ))}
