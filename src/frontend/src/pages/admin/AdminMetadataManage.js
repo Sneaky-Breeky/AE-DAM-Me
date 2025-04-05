@@ -50,7 +50,10 @@ getProjects();
                 field: tag.key,
                 fieldMD: tag.type === 0 ? tag.sValue : tag.iValue
             }));
-            form.setFieldsValue({ fields: convertedTags, status: project.status === 'Active' ? 'active' : 'inactive',  });
+            form.setFieldsValue({
+                fields: convertedTags,
+                status: project.status?.toLowerCase() === 'active' ? 'active' : 'inactive'
+            });
         }
     }, [project, isEditOpen]);
 
@@ -68,8 +71,16 @@ if (values.name && values.name !== project.name) updatedFields.name = values.nam
 if (values.location && values.location !== project.location) updatedFields.location = values.location;
     if (values.startDate && (!project.startDate || !dayjs(project.startDate).isSame(dayjs(values.startDate), 'day'))
     ) {updatedFields.startDate = values.startDate.format('YYYY-MM-DD');}
-if (values.status && values.status !== project.status) updatedFields.status = values.status;
-if (values.phase && values.phase !== project.phase) updatedFields.phase = values.phase;
+    if (
+        values.status &&
+        values.status.toLowerCase() !== project.status.toLowerCase()
+    ) {
+        // Normalize to Title Case before saving
+        updatedFields.status =
+            values.status.charAt(0).toUpperCase() + values.status.slice(1).toLowerCase();
+    }
+
+    if (values.phase && values.phase !== project.phase) updatedFields.phase = values.phase;
 
 // if any fields change then update project
 if (Object.keys(updatedFields).length > 0) {
