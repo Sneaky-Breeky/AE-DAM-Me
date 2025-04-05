@@ -143,6 +143,33 @@
 
              return Ok(mTags);
          }
+
+         [HttpGet("metadatatagsValues/{pid}")]
+                  public async Task<ActionResult<IEnumerable<string>>> ProjectMetadataTagsValuesQuery(int pid)
+                  {
+                      var project = await _context.Projects.FindAsync(pid);
+                      if (project == null)
+                      {
+                          return NotFound("Project not found.");
+                      }
+
+                      var mTags = await _context.MetadataTags
+                          .Where(mt => _context.Files.Any(f => f.ProjectId == pid && f.Id == mt.FileId))
+                          .Select(mt => new
+                                     {
+                                         mt.Key,
+                                         mt.sValue,
+                                         mt.iValue
+                                     })
+                          .ToListAsync();
+
+                      if (!mTags.Any())
+                      {
+                          return Ok("No metadata tags associated with this project.");
+                      }
+
+                      return Ok(mTags);
+                  }
          
          [HttpGet("metadataKeyUpload/{pid}")]
          public async Task<ActionResult<IEnumerable<string>>> ProjectMetadataKeysQuery(int pid)
