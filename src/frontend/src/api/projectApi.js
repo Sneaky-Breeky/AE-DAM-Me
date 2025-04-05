@@ -340,32 +340,18 @@ export async function fetchTagsForProject(projectId) {
 
 export async function addProjectTag(ProjectId, Key, Value, type) {
     try {
-        const url = new URL(`${PROJECTS_URL}/tag/add`);
-        url.searchParams.append("ProjectId", ProjectId);
-        url.searchParams.append("Key", Key);
-        url.searchParams.append("Value", Value);
-        url.searchParams.append("type", type);
-
-        const response = await fetch(url.toString(), {
+        const response = await fetch(`${PROJECTS_URL}/tag/add`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
-            }
+            },
+            body: JSON.stringify({
+                ProjectId: ProjectId,
+                Key: Key,
+                Value: Value,
+                Type: type
+            })
         });
-
-        // const response = await fetch(`${PROJECTS_URL}/tag/add`, {
-        //     method: "POST",
-        //     headers: {
-        //         "Content-Type": "application/json"
-        //     },
-        //     body: JSON.stringify({
-        //         ProjectId: ProjectId,
-        //         Key: Key,
-        //         Value: Value,
-        //         Type: type
-        //     })
-        // });
-
 
         if (!response.ok) {
             const errorText = await response.text();
