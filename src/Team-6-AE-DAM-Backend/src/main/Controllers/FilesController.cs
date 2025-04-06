@@ -23,7 +23,7 @@ using ImageSharpExif = SixLabors.ImageSharp.Metadata.Profiles.Exif;
 using ImageSharpExifTag = SixLabors.ImageSharp.Metadata.Profiles.Exif.ExifTag;
 using DAMBackend.SubmissionEngineEnv;
 using System.IO.Compression;
-
+using ImageSharpImage = SixLabors.ImageSharp.Image;
 
 namespace DAMBackend.Controllers
 {
@@ -277,24 +277,9 @@ namespace DAMBackend.Controllers
                     Resolution = file.resolution,
                     Location = file.location
                 };
-                // TODO: 
-                //call exif function and update fileModel object before saving
-                //addExifData(fileModel)
-                // ADDING EXIF
-//                using (var stream = imageFile.OpenReadStream())
-//                            using (var image = Image.Load(stream))
-//                            {
-//                                fileModel.PixelWidth = image.Width;
-//                                fileModel.PixelHeight = image.Height;
-//                                fileModel.Palette = true;
-//
-//                                var exifProfile = image.Metadata.ExifProfile;
-//                                if (exifProfile != null)
-//                                {
-//                                    ExtractExifMetadata(exifProfile, fileModel);
-//                                }
-//                            }
-                //
+
+                fileModel = await ExifExtract(updatedPath,fileModel);
+
                 _context.Files.Add(fileModel);
                 savedFiles.Add(fileModel);
             }
@@ -323,6 +308,24 @@ namespace DAMBackend.Controllers
 
             return Ok(filesWithTags);
         }
+         private async Task<FileModel> ExifExtract(string updatedPath, FileModel fileModel)
+                {
+                var imageFile = await GetBlobAsStreamAsync(updatedPath);
+                    using (var stream = imageFile.OpenReadStream())
+                         using (var image = ImageSharpImage.Load(stream))
+                         {
+                           fileModel.PixelWidth = image.Width;
+                           fileModel.PixelHeight = image.Height;
+                           fileModel.Palette = true;
+
+                           var exifProfile = image.Metadata.ExifProfile;
+                           if (exifProfile != null)
+                            {
+                             fileModel = ExtractExifMetadata(exifProfile, fileModel);
+                            }
+              }
+              return fileModel;
+}
 
         private async Task<bool> TagExistsAsync(string tagValue)
         {
@@ -377,7 +380,7 @@ namespace DAMBackend.Controllers
             return _context.Files.Any(e => e.Id == id);
         }
 
-        private void ExtractExifMetadata(ImageSharpExif.ExifProfile exifProfile, FileModel fileModel)
+        private FileModel ExtractExifMetadata(ImageSharpExif.ExifProfile exifProfile, FileModel fileModel)
         {
             object? latRef = null;
             object? lonRef = null;
@@ -432,6 +435,7 @@ namespace DAMBackend.Controllers
                     }
                 }
             }
+            return fileModel;
         }
 
         private decimal? ConvertDMSToDecimal(object dmsValue, string? reference)
@@ -578,7 +582,28 @@ namespace DAMBackend.Controllers
               return StatusCode(500, $"Error deleting files from database: {ex.Message}");
           }
       }
+
+          public async Task<IFormFile> GetBlobAsStreamAsync(string url)
+              {
+              using (HttpClient client = new HttpClient())
+                      {
+                          byte[] fileBytes = await client.GetByteArrayAsync(url);
+
+                          var stream = new MemoryStream(fileBytes);
+                          stream.Position = 0;
+
+                          IFormFile formFile = new FormFile(stream, 0, stream.Length, "file", "downloaded_file.jpg")
+                          {
+                              Headers = new HeaderDictionary(),
+                              ContentType = "image/jpeg"
+                          };
+
+                          return formFile;
+                      }
     }
-}
+   }
+
+  }
+//}
 
 
