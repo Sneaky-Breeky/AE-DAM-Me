@@ -362,6 +362,8 @@ export default function UserProjectOverview() {
                     onFinish={handleSearch}
                     style={{
                         display: 'flex',
+                        flexDirection: 'row',
+                        flexWrap: 'wrap',
                         justifyContent: 'center',
                         alignItems: 'center',
                         gap: '10px',
@@ -514,7 +516,7 @@ export default function UserProjectOverview() {
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
-                        alignItems: 'start',
+                        alignItems: 'center',
                         width: '70%',
                         margin: '20px auto',
                         backgroundColor: '#f5f5f5',
