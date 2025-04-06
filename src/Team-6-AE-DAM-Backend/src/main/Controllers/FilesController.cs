@@ -511,8 +511,10 @@ namespace DAMBackend.Controllers
             
             foreach (var file in files)
             {
+                var updatedPath = await _azureBlobService.MoveBlobWithinContainerAsync("palettes",Path.GetFileName(new Uri(file.OriginalPath).LocalPath), "projects");
                 file.ProjectId = pid;
                 file.Palette = false;
+                file.OriginalPath = updatedPath;
                 project.Files.Add(file);
             }
 
