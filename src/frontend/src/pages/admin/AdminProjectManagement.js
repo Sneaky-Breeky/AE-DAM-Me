@@ -187,7 +187,7 @@ export default function ProjectManagement() {
                 }}
             >
 
-                {/* Container with create or delete projects */}
+                {/* Container with create delete and archive projects */}
                 <Box
                     sx={{
                         display: 'flex',
@@ -208,6 +208,7 @@ export default function ProjectManagement() {
                         onClick={() => {
                             setDeleteOpen(false);
                             setArchiveOpen(false);
+                            setExportOpen(false);
                             setCreateOpen(!createOpen);
                         }}
                         sx={{
@@ -220,6 +221,7 @@ export default function ProjectManagement() {
                             borderColor: 'grey.500',
                             borderRadius: '16px',
                             '&:hover': { boxShadow: 3 },
+                            overflow: 'auto'
                         }}
                     >
                         {!createOpen ?
@@ -234,6 +236,7 @@ export default function ProjectManagement() {
                         onClick={() => {
                             setCreateOpen(false);
                             setArchiveOpen(false);
+                            setExportOpen(false);
                             setDeleteOpen(!deleteOpen);
                         }}
                         sx={{
@@ -246,6 +249,7 @@ export default function ProjectManagement() {
                             borderColor: 'grey.500',
                             borderRadius: '16px',
                             '&:hover': { boxShadow: 3 },
+                            overflow: 'auto'
                         }}
                     >
                         {!deleteOpen ?
@@ -260,6 +264,7 @@ export default function ProjectManagement() {
                         onClick={() => {
                             setCreateOpen(false);
                             setDeleteOpen(false);
+                            setExportOpen(false);
                             setArchiveOpen(!archiveOpen);
                         }}
                         sx={{
@@ -272,6 +277,7 @@ export default function ProjectManagement() {
                             borderColor: 'grey.500',
                             borderRadius: '16px',
                             '&:hover': { boxShadow: 3 },
+                            overflow: 'auto'
                         }}
                     >
                         {!archiveOpen ?
@@ -298,6 +304,7 @@ export default function ProjectManagement() {
                             borderColor: 'grey.500',
                             borderRadius: '16px',
                             '&:hover': { boxShadow: 3 },
+                            overflow: 'auto'
                         }}
                     >
                         {!exportOpen ?
@@ -318,7 +325,7 @@ export default function ProjectManagement() {
                         width: '60%',
                         height: "fit-content",
                         margin: '0',
-                        overflow: 'hidden',
+                        overflow: 'auto',
                     }}
                 >
 
@@ -338,7 +345,7 @@ export default function ProjectManagement() {
                                 borderRadius: '10px',
                                 padding: '20px',
                                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                                overflow: 'hidden',
+                                overflow: 'auto',
                             }}
                         >
                             <Title level={4} style={{ textAlign: 'center', marginTop: '0' }}>Create Directory</Title>
@@ -411,11 +418,13 @@ export default function ProjectManagement() {
                                     </Button>
                                 </div>
                             </Form>
+
                             <div style={{
                                 display: "flex",
-                                justifyContent: "space-between"
+                                flexDirection: 'column',
+                                alignItems:'start',
+                                overflow:'auto'
                             }}>
-
 
                                 <Upload {...fileUpload}>
                                     <Button style={{
@@ -431,7 +440,8 @@ export default function ProjectManagement() {
                                 <Button onClick={() => window.open("https://dambeblob.blob.core.windows.net/assets/sample-project-bulk-upload.csv", "_self")} type="link"
                                     style={{
                                         marginTop: "10px",
-                                        padding: "10px 20px",
+                                        padding: "10px",
+                                        paddingLeft: '0px',
                                         color: "#4096ff",
                                         fontWeight: "bold",
                                     }}
@@ -449,7 +459,7 @@ export default function ProjectManagement() {
                                 justifyContent: 'flex-start',
                                 alignItems: 'left',
                                 width: '80%',
-                                height: "70vh",
+                                height: "90vh",
                                 margin: '10%',
                                 marginTop: '0',
                                 backgroundColor: '#f5f5f5',
@@ -525,7 +535,7 @@ export default function ProjectManagement() {
                                 justifyContent: 'flex-start',
                                 alignItems: 'left',
                                 width: '80%',
-                                height: "70vh",
+                                height: "90vh",
                                 margin: '10%',
                                 marginTop: '0',
                                 backgroundColor: '#f5f5f5',
@@ -600,7 +610,7 @@ export default function ProjectManagement() {
                                 justifyContent: 'flex-start',
                                 alignItems: 'left',
                                 width: '80%',
-                                height: "70vh",
+                                height: "90vh",
                                 margin: '10%',
                                 marginTop: '0',
                                 backgroundColor: '#f5f5f5',

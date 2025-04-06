@@ -5,7 +5,7 @@ import { API_BASE_URL } from "./apiURL.js";
 const META_URL = `${API_BASE_URL}/api/metaData`;
 const FILES_URL = `${API_BASE_URL}/api/files`;
 export async function addMetaBasicTag(fid,value) {
-    console.log("i am here");
+    console.log("i am here basic");
     try {
         const response = await fetch(`${META_URL}/basic/${fid}/${value}`, {
             method: "POST",
@@ -30,6 +30,7 @@ export async function addMetaBasicTag(fid,value) {
     }
 }
 export async function addMetaAdvanceTag(fid,requestBody) {
+    console.log("i am here md");
     try {
         const response = await fetch(`${META_URL}/advanced/${fid}`, {
             method: "POST",
