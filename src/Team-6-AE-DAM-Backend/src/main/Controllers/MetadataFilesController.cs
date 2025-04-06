@@ -137,7 +137,7 @@ namespace DAMBackend.Controllers
 
             _context.FileTags.Remove(joinEntry);
             await _context.SaveChangesAsync();
-            
+
             return Ok($"Tag '{value}' removed from file {fid}");
         }
 

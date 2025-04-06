@@ -182,23 +182,26 @@ export default function ProjectManagement() {
             <Box
                 sx={{
                     display: 'flex',
+                    flexWrap: 'wrap',
+                    justifyContent: 'space-evenly',
+                    alignItems: 'anchor-center',
+                    height: '100vh',
                     flexDirection: 'row',
                     flexGrow: 1,
                 }}
             >
 
-                {/* Container with create delete and archive projects */}
+                {/* Container with create delete archive and export projects */}
                 <Box
                     sx={{
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'flex-start',
-                        alignItems: 'left',
+                        justifyContent: 'flex-center',
+                        alignItems: 'center',
                         width: '20%',
+                        minWidth: '200px',
                         height: "fit-content",
-                        margin: '0',
-                        marginLeft: '10%',
-                        marginRight: '0',
+                        marginTop: '0',
                         overflow: 'hidden',
                     }}
                 >
@@ -319,9 +322,9 @@ export default function ProjectManagement() {
                 <Box
                     sx={{
                         display: 'flex',
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
+                        justifyContent: 'center',
                         alignItems: 'center',
+                        minWidth: '300px',
                         width: '60%',
                         height: "fit-content",
                         margin: '0',
@@ -337,9 +340,9 @@ export default function ProjectManagement() {
                                 flexDirection: 'column',
                                 justifyContent: 'flex-start',
                                 alignItems: 'left',
-                                width: '80%',
+                                width: '100%',
                                 height: "fit-content",
-                                margin: '10%',
+                                margin: '5%',
                                 marginTop: '0',
                                 backgroundColor: '#f5f5f5',
                                 borderRadius: '10px',
@@ -459,8 +462,9 @@ export default function ProjectManagement() {
                                 justifyContent: 'flex-start',
                                 alignItems: 'left',
                                 width: '80%',
+                                minWidth: '300px',
                                 height: "75vh",
-                                margin: '10%',
+                                margin: '5%',
                                 marginTop: '0',
                                 backgroundColor: '#f5f5f5',
                                 borderRadius: '10px',
@@ -535,8 +539,9 @@ export default function ProjectManagement() {
                                 justifyContent: 'flex-start',
                                 alignItems: 'left',
                                 width: '80%',
+                                minWidth: '300px',
                                 height: "75vh",
-                                margin: '10%',
+                                margin: '5%',
                                 marginTop: '0',
                                 backgroundColor: '#f5f5f5',
                                 borderRadius: '10px',
@@ -610,8 +615,9 @@ export default function ProjectManagement() {
                                 justifyContent: 'flex-start',
                                 alignItems: 'left',
                                 width: '80%',
+                                minWidth: '300px',
                                 height: "75vh",
-                                margin: '10%',
+                                margin: '5%',
                                 marginTop: '0',
                                 backgroundColor: '#f5f5f5',
                                 borderRadius: '10px',

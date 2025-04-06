@@ -1142,24 +1142,24 @@ export default function UserUpload() {
 
                     <table style={{ width: '100%', borderCollapse: 'collapse', borderBottomWidth: 'thin', borderBottomStyle: 'solid', borderColor: 'LightGray', paddingBottom: '5%' }}>
                         <thead>
-                            <tr style={{ height: '10%' }}>
-                                <th colSpan={2} style={{ width: '100%', textAlign: 'center', fontWeight: '600' }}>
-                                    <span style={{ fontSize: '100%' }}>Metadata</span>
-                                </th>
-                            </tr>
+                        <tr style={{ height: '10%' }}>
+                            <th colSpan={2} style={{ width: '100%', textAlign: 'center', fontWeight: '600' }}>
+                                <span style={{ fontSize: '100%' }}>Metadata</span>
+                            </th>
+                        </tr>
                         </thead>
                         <tbody style={{ borderBottomWidth: 'thin', borderBottomStyle: 'solid', borderColor: 'LightGray', padding: '20%' }}>
-                            {Object.entries(selectProjectMD).map((metadata, index) => (
-                                <tr key={index}>
-                                    <td style={{ width: '15%', textAlign: 'left' }}>
-                                        <Button type='text' size='small' icon={<CloseOutlined />}
+                        {Object.entries(selectProjectMD).map((metadata, index) => (
+                            <tr key={index}>
+                                <td style={{ width: '15%', textAlign: 'left' }}>
+                                    <Button type='text' size='small' icon={<CloseOutlined />}
                                             onClick={() => handleRemoveSelectMD(metadata[0])} />
-                                    </td>
-                                    <td style={{ width: '85%', textAlign: 'left' }}>
-                                        <span style={{ fontSize: '90%' }}>{metadata[0]}</span> : <span style={{ fontSize: '90%', color: 'grey', fontStyle: 'italic' }}>{metadata[1]}</span>
-                                    </td>
-                                </tr>
-                            ))}
+                                </td>
+                                <td style={{ width: '85%', textAlign: 'left' }}>
+                                    <span style={{ fontSize: '90%' }}>{metadata[0]}</span> : <span style={{ fontSize: '90%', color: 'grey', fontStyle: 'italic' }}>{metadata[1]}</span>
+                                </td>
+                            </tr>
+                        ))}
                         </tbody>
                     </table>
 
@@ -1192,7 +1192,7 @@ export default function UserUpload() {
                                 value={currentSelectedExistingMDvalue !== null ? currentSelectedExistingMDvalue : undefined} />
                         </div>
                         <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleSelectExistingMD}
-                            disabled={selectProject === null || currentSelectedExistingMDkey === null || currentSelectedExistingMDvalue === null} >
+                                disabled={selectProject === null || currentSelectedExistingMDkey === null || currentSelectedExistingMDvalue === null} >
                             Add Metadata
                         </Button>
                     </div>
@@ -1216,8 +1216,8 @@ export default function UserUpload() {
                                 value={currentCreatedMDvalue !== null ? currentCreatedMDvalue : undefined} />
                         </div>
                         <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleCreateMD}
-                            disabled={selectProject === null || currentCreatedMDkey === null || currentCreatedMDvalue === null ||
-                                Object.keys(selectProjectMD).includes(currentCreatedMDkey) || existingSelectProjectMD.includes(currentCreatedMDkey)} >
+                                disabled={selectProject === null || currentCreatedMDkey === null || currentCreatedMDvalue === null ||
+                                    Object.keys(selectProjectMD).includes(currentCreatedMDkey) || existingSelectProjectMD.includes(currentCreatedMDkey)} >
                             Create Metadata
                         </Button>
                     </div>
@@ -1228,30 +1228,30 @@ export default function UserUpload() {
                         borderBottomWidth: 'thin', borderBottomStyle: 'solid', borderBottomColor: 'LightGray', paddingBottom: '5%'
                     }}>
                         <thead>
-                            <tr style={{ height: '10%' }}>
-                                <th style={{ width: '100%', textAlign: 'center', fontWeight: '600' }}>
-                                    <span style={{ fontSize: '100%' }}>Tags</span>
-                                </th>
-                            </tr>
+                        <tr style={{ height: '10%' }}>
+                            <th style={{ width: '100%', textAlign: 'center', fontWeight: '600' }}>
+                                <span style={{ fontSize: '100%' }}>Tags</span>
+                            </th>
+                        </tr>
                         </thead>
 
                         <tbody style={{ borderBottomWidth: 'thin', borderBottomStyle: 'solid', borderColor: 'LightGray', padding: '20%' }}>
-                            <tr>
-                                <td>
-                                    <Flex wrap="wrap" style={{ marginTop: '10px' }}>
-                                        {selectProjectTags.map((tag) => (
-                                            <Tag
-                                                style={tagStyle}
-                                                key={tag}
-                                                closable={true}
-                                                onClose={() => handleRemoveSelectTag(tag)}
-                                            >
-                                                {tag}
-                                            </Tag>
-                                        ))}
-                                    </Flex>
-                                </td>
-                            </tr>
+                        <tr>
+                            <td>
+                                <Flex wrap="wrap" style={{ marginTop: '10px' }}>
+                                    {selectProjectTags.map((tag) => (
+                                        <Tag
+                                            style={tagStyle}
+                                            key={tag}
+                                            closable={true}
+                                            onClose={() => handleRemoveSelectTag(tag)}
+                                        >
+                                            {tag}
+                                        </Tag>
+                                    ))}
+                                </Flex>
+                            </td>
+                        </tr>
                         </tbody>
                     </table>
                     <div style={{ borderBottomWidth: 'thin', borderBottomStyle: 'solid', borderColor: 'LightGray', paddingBottom: '5%' }}>
@@ -1275,7 +1275,7 @@ export default function UserUpload() {
                             />
                         </div>
                         <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleSelectExistingTag}
-                            disabled={selectProject === null || currentSelectedExistingTag === null} >
+                                disabled={selectProject === null || currentSelectedExistingTag === null} >
                             Add Tag
                         </Button>
                     </div>
@@ -1291,8 +1291,8 @@ export default function UserUpload() {
                                 value={currentCreatedTag !== null ? currentCreatedTag : undefined} />
                         </div>
                         <Button icon={<PlusOutlined />} color="cyan" variant="solid" onClick={handleCreateTag}
-                            disabled={selectProject === null || currentCreatedTag === null ||
-                                selectProjectTags.includes(currentCreatedTag) || existingSelectProjectTags.includes(currentCreatedTag)} >
+                                disabled={selectProject === null || currentCreatedTag === null ||
+                                    selectProjectTags.includes(currentCreatedTag) || existingSelectProjectTags.includes(currentCreatedTag)} >
                             Create Tag
                         </Button>
                     </div>

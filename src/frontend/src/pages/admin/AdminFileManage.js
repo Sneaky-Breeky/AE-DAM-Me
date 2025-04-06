@@ -228,7 +228,7 @@ export default function AdminFileManage() {
       justifyContent: 'flex-Center',
       alignItems: 'center',
       width: '65%',
-      minWidth: '400px',
+      minWidth: '300px',
       marginTop: '0',
       borderRadius: '10px',
       padding: '0',

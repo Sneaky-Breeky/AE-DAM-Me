@@ -51,6 +51,7 @@ export const removeBasicTag = async (fid, value) => {
 };
 
 export async function addMetaAdvanceTag(fid,requestBody) {
+    console.log("i am here md");
     try {
         const response = await fetch(`${META_URL}/advanced/${fid}`, {
             method: "POST",
@@ -206,27 +207,26 @@ export async function deleteFilesDB(fileIds) {
     }
 }
 
-    export async function uploadFilesToProject(projectId, fileIds) {
-        try {
-            const response = await fetch(`${FILES_URL}/uploadToProject/${projectId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(fileIds),
-            });
+export async function uploadFilesToProject(projectId, fileIds) {
+    try {
+        const response = await fetch(`${FILES_URL}/uploadToProject/${projectId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(fileIds),
+        });
 
-            const result = await response.text();
-            if (!response.ok) {
-                return { error: result };
-            }
-
-            return result;
-        } catch (error) {
-            return { error: error.message };
+        const result = await response.text();
+        if (!response.ok) {
+            return { error: result };
         }
+
+        return result;
+    } catch (error) {
+        return { error: error.message };
     }
-    
+}
 
 
 
