@@ -29,8 +29,28 @@ export async function addMetaBasicTag(fid,value) {
         return { error: "Network error or server unreachable", message: error.message };
     }
 }
+
+export const removeBasicTag = async (fid, value) => {
+    try {
+        const response = await fetch(`${META_URL}/Basic/${fid}/${value}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to delete basic tag: ${value}`);
+        }
+
+        return await response.text();
+    } catch (error) {
+        console.error("Error removing basic tag:", error);
+        return { error: error.message };
+    }
+};
+
 export async function addMetaAdvanceTag(fid,requestBody) {
-    console.log("i am here md");
     try {
         const response = await fetch(`${META_URL}/advanced/${fid}`, {
             method: "POST",
@@ -55,6 +75,27 @@ export async function addMetaAdvanceTag(fid,requestBody) {
         return { error: "Network error or server unreachable", message: error.message };
     }
 }
+
+export const removeAdvancedTag = async (fid, key) => {
+    try {
+        const response = await fetch(`${META_URL}/Advanced/${fid}/${key}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to delete advanced metadata key: ${key}`);
+        }
+
+        return await response.text();
+    } catch (error) {
+        console.error("Error removing advanced tag:", error);
+        return { error: error.message };
+    }
+};
+
 
 export async function assignSuggestedProjectToFile(projectId, fileId) {
     try {
@@ -153,17 +194,39 @@ export async function deleteFilesDB(fileIds) {
             const errorText = await response.text();
             try {
                 const errorData = JSON.parse(errorText);
-                return { error: errorData.message || "Unknown error" };
+                return {error: errorData.message || "Unknown error"};
             } catch {
-                return { error: `HTTP Error ${response.status}: ${errorText}` };
+                return {error: `HTTP Error ${response.status}: ${errorText}`};
             }
         }
         return true;
     } catch (error) {
         console.error("Network or fetch error:", error);
-        return { error: "Network error or server unreachable", message: error.message };
+        return {error: "Network error or server unreachable", message: error.message};
     }
 }
+
+    export async function uploadFilesToProject(projectId, fileIds) {
+        try {
+            const response = await fetch(`${FILES_URL}/uploadToProject/${projectId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(fileIds),
+            });
+
+            const result = await response.text();
+            if (!response.ok) {
+                return { error: result };
+            }
+
+            return result;
+        } catch (error) {
+            return { error: error.message };
+        }
+    }
+    
 
 
 

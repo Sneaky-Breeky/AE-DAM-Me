@@ -129,34 +129,47 @@ namespace DAMBackend.Controllers
             // {
             //     _context.BasicTags.Remove(tag);
             // }
+            var joinEntry = await _context.FileTags
+                .FirstOrDefaultAsync(ft => ft.FileId == fid && ft.TagId == value);
 
+            if (joinEntry == null)
+                return BadRequest("Tag is not associated with this file.");
+
+            _context.FileTags.Remove(joinEntry);
             await _context.SaveChangesAsync();
+            
             return Ok($"Tag '{value}' removed from file {fid}");
         }
 
-        // DELETE: Advanced/{fid}/{key}
-        // Remove a metadata tag from a file
+
         [HttpDelete("Advanced/{fid}/{key}")]
         public async Task<IActionResult> RemoveFileMetaTag(int fid, string key)
         {
-            var file = await _context.Files.FindAsync(fid);
-            if (file == null)
+            try
             {
-                return NotFound("File not found");
+                var file = await _context.Files.FindAsync(fid);
+                if (file == null)
+                {
+                    return NotFound("File not found");
+                }
+
+                var tag = await _context.MetadataTags
+                    .FirstOrDefaultAsync(t => t.FileId == fid && t.Key == key);
+
+                if (tag == null)
+                {
+                    return NotFound("Metadata tag not found");
+                }
+
+                _context.MetadataTags.Remove(tag);
+                await _context.SaveChangesAsync();
+
+                return Ok($"Metadata tag '{key}' removed from file {fid}");
             }
-
-            var tag = await _context.MetadataTags
-                .FirstOrDefaultAsync(t => t.FileId == fid && t.Key == key);
-
-            if (tag == null)
+            catch (Exception ex)
             {
-                return NotFound("Metadata tag not found");
+                return StatusCode(500, $"An error occurred while removing the metadata tag: {ex.Message}");
             }
-
-            _context.MetadataTags.Remove(tag);
-            await _context.SaveChangesAsync();
-
-            return Ok($"Metadata tag '{key}' removed from file {fid}");
         }
         
         // PUT /projectSuggestion/{pid}
