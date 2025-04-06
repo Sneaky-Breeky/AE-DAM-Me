@@ -116,16 +116,16 @@ namespace DAMBackend.Controllers
                 return NotFound("Tag not found");
             }
 
-            if (!file.bTags.Contains(tag))
+            if (file.bTags.Contains(tag))
             {
-                return BadRequest("Tag is not associated with this file.");
+                // return BadRequest("Tag is not associated with this file.");
             }
 
             file.bTags.Remove(tag);
             tag.Files.Remove(file);
 
             // Remove tag from database if it's no longer with a file?
-            // if (!tag.Files.Any())
+            // if (!tag.Files.Any() && )
             // {
             //     _context.BasicTags.Remove(tag);
             // }
