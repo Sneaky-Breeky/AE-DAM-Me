@@ -790,9 +790,9 @@ export default function UserUpload() {
     };
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'row', minHeight: '100vh', padding: '20px', gap: '20px', paddingBottom: '40px' }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', flexDirection: 'row', minHeight: '100vh', padding: '20px', gap: '20px', paddingBottom: '40px' }}>
             {/* Left section (image uploading)*/}
-            <Box sx={{ flex: 3, display: 'flex', flexDirection: 'column', gap: '15px', padding: '20px' }}>
+            <Box sx={{ flex: 3, display: 'flex', flexDirection: 'column', gap: '15px', padding: '20px', minWidth: '300px' }}>
                 <Box sx={{
                     textAlign: 'center',
                     padding: 4,
@@ -966,7 +966,7 @@ export default function UserUpload() {
             </Box>
 
             {/* Right section (metadata) */}
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px', padding: '30px' }}>
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px', padding: '30px', minWidth: '300px' }}>
                 <Box sx={metadataBoxStyle}>
                     <Title level={5}>Project Name:</Title>
                     <Select

@@ -54,7 +54,7 @@ export default function ActivityLog() {
                 <Title level={1}>Activity Log</Title>
             </Box>
 
-            {/* Right container with activity log */}
+            {/* container with activity log */}
             <Box
                 sx={{
                     display: 'flex',
@@ -63,6 +63,7 @@ export default function ActivityLog() {
                     alignItems: 'left',
                     height: '60vh',
                     width: '60%',
+                    minWidth: '300px',
                     margin: '20px auto',
                     backgroundColor: '#f5f5f5',
                     borderRadius: '10px',
