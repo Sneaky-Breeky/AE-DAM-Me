@@ -21,6 +21,7 @@ export default function AdminDashboard() {
       sx={{
         display: 'flex',
         flexDirection: 'column',
+        alignItems:'center',
         height: '100vh',
       }}
     >
@@ -37,20 +38,19 @@ export default function AdminDashboard() {
       <Box
         sx={{
           display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-start',
+          flexWrap: 'wrap',
+          justifyContent: 'space-evenly',
           alignItems: 'center',
           height: '100vh',
           width: '70%',
-          margin: '20px auto',
-          padding: '20px',
-          overflow: 'hidden',
+          gap: '10px',
+          overflow: 'auto',
         }}
       >
 
-        <Row gutter={[16, 16]} justify="center">
+        {/* <Row gutter={[16, 16]} justify="center"> */}
           {pages.map((page) => (
-            <Col key={page.url} span={8} align="center">
+            // <Col key={page.url} span={8} align="center">
               <Box
                 onClick={() => {
                   sessionStorage.setItem('menu', page.menu);
@@ -58,9 +58,11 @@ export default function AdminDashboard() {
                 }}
                 sx={{
                   textAlign: 'center',
-                  width: '80%',
-                  height: '100%',
-                  margin: '5%',
+                  width: '30%',
+                  minWidth: '200px',
+                  height: '32%',
+                  minHeight: '80px',
+                  margin: '1%',
                   backgroundColor: 'grey.300',
                   border: 1,
                   borderColor: 'grey.500',
@@ -72,9 +74,9 @@ export default function AdminDashboard() {
                 <page.icon style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%'}} />
                 <h4 style={{ margin: '0', marginBottom: '10%' }}>{page.title}</h4>
               </Box>
-            </Col>
+            // </Col>
           ))}
-        </Row>
+        {/* </Row> */}
       </Box>
     </Box>
   );
