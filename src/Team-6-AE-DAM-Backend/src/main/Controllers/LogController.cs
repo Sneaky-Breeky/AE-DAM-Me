@@ -54,7 +54,8 @@
                                     logRequest.ProjectId,
                                      logRequest.UserId,
                                      logRequest.TypeOfLog,
-                                     logRequest.LogDate);
+                                     DateTime.Now);
+//                                     logRequest.LogDate);
 
              _context.LogImage.Add(log);
              await _context.SaveChangesAsync();
