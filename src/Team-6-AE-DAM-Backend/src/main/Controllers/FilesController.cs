@@ -278,7 +278,7 @@ namespace DAMBackend.Controllers
                     Location = file.location
                 };
 
-                fileModel = await ExifExtract(updatedPath,fileModel);
+                // fileModel = await ExifExtract(updatedPath,fileModel);
 
                 _context.Files.Add(fileModel);
                 savedFiles.Add(fileModel);
