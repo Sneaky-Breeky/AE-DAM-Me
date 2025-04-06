@@ -37,7 +37,7 @@ const { Meta } = Card;
 export default function UserProjectOverview() {
     // Get user info and define admin flag
     const { user } = useAuth();
-    const isAdmin = user.isAdmin;
+    const isAdmin = user?.role === 'admin';
 
     // Project variables
     const { id } = useParams();
