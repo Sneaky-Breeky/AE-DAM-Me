@@ -273,6 +273,28 @@ namespace DAMBackend.blob
             var segments = parsedUri.AbsolutePath.TrimStart('/').Split('/', 2); // [container, blobPath]
             return (segments[0], segments[1]);
         }
+
+        public async Task<bool> DeleteAsync(string fileUrl)
+        {
+            try
+            {
+                var (container, blobName) = ParseBlobInfoFromUri(fileUrl);
+                var containerClient = _blobServiceClient.GetBlobContainerClient(container);
+                var blobClient = containerClient.GetBlobClient(blobName);
+                return await blobClient.DeleteIfExistsAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting blob {fileUrl}: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteThumbnailAsync(string fileUrl)
+        {
+            return await DeleteAsync(fileUrl); // It’s just another blob, same deletion logic
+        }
+
     }
 
     public enum ContainerType
