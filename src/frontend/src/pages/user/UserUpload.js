@@ -8,7 +8,7 @@ import { addLog, addLogProject } from "../../api/logApi";
 import { API_BASE_URL } from '../../api/apiURL.js';
 import { Palette } from '@mui/icons-material';
 import { fetchProjectsForUser } from '../../api/projectApi';
-import { addMetaAdvanceTag, addMetaBasicTag, assignSuggestedProjectToFile, uploadFilesToProject, removeBasicTag, removeAdvancedTag } from '../../api/fileApi';
+import { addMetaAdvanceTag, addMetaBasicTag, assignSuggestedProjectToFile } from '../../api/fileApi';
 import { getProjectMetaDataKeysUpload, getProjectBasicTags } from '../../api/queryFile';
 import {
     getProjectImageBasicTags,
@@ -162,19 +162,7 @@ export default function UserUpload() {
     useEffect(() => {
         const fetchFileMetaAndTags = async () => {
             if (!selectFile) return;
-
-            if (selectFile.projectId && !selectProject) {
-                const matchedProject = userProjects.find(p => p.id === selectFile.projectId);
-                if (matchedProject) {
-                    setSelectProject(matchedProject);
-
-                    const resultMD = await getProjectMetaDataKeysUpload(matchedProject.id);
-                    const resultTags = await getProjectBasicTags(matchedProject.id);
-
-                    setExistingSelectProjectMD(resultMD || []);
-                    setExistingSelectProjectTags(resultTags || []);
-                }
-            }
+            console.log("the file: ", selectFile);
 
             const metaRes = await getProjectImageMetaDataValuesTags({ pid: selectFile.projectId, fid: selectFile.id });
             const tagRes = await getProjectImageBasicTags({ pid: selectFile.projectId, fid: selectFile.id });
@@ -214,40 +202,6 @@ export default function UserUpload() {
             console.error('Error:', error);
         }
     }
-
-    const handleRemoveExistingTag = async (tag) => {
-        console.log("tag value: ", tag);
-        if (!selectFile || !tag) return;
-
-        console.log("tag value: ", tag);
-        try {
-            await removeBasicTag(selectFile.id, tag);
-            message.success("Tag removed");
-
-            const tags = await getProjectImageBasicTags({ pid: selectFile.projectId, fid: selectFile.id });
-            setExistingFileTags(tags || []);
-        } catch (err) {
-            console.error("Failed to remove basic tag:", err);
-            message.error("Failed to remove tag");
-        }
-    };
-
-
-    const handleRemoveExistingMetadata = async (key) => {
-        console.log("key: ", key);
-        if (!selectFile?.id) return;
-
-        const res = await removeAdvancedTag(selectFile.id, key);
-        if (res?.error) {
-            message.error(`Failed to delete metadata key: ${key}`);
-        } else {
-            message.success(`Metadata "${key}" removed`);
-            setExistingFileMetadata(prev => prev.filter(item => item.key !== key));
-        }
-    };
-
-
-
 
     const handleMetadataTagClose = (removedTag) => {
         const newTags = metadataTags.filter((tag) => tag !== removedTag);
@@ -501,25 +455,14 @@ export default function UserUpload() {
     const [currentCreatedTag, setCurrentCreatedTag] = useState(null);
 
     const handleApplyFileMD = async () => {
-        if (!selectFile) {
-            message.error("Please select a file before submitting.");
-            return;
-        }
-
-        const projectId = selectProject?.id ?? selectFile.projectId;
-
-        if (!projectId) {
-            message.error("No project associated with the selected file.");
-            return;
-        }
-
+        // TODO: using endpoints, apply md and tags to selected file
         console.log(selectFile.id);
         console.log(selectProjectMD);
         console.log(selectProjectTags);
         console.log("on click submit");
 
-        const res = await assignSuggestedProjectToFile(projectId, selectFile.id);
 
+        const res = await assignSuggestedProjectToFile(selectProject.id, selectFile.id);
         if (res.error) {
             message.error(res.error);
         } else {
@@ -527,38 +470,30 @@ export default function UserUpload() {
         }
 
         for (const [key, value] of Object.entries(selectProjectMD)) {
-            const resultMD = await addMetaAdvanceTag(selectFile.id, {
-                key,
-                value,
-                type: !isNaN(value) ? 1 : 0
-            });
+            const resultMD = await addMetaAdvanceTag(selectFile.id, { "key": key, "value": value, "type": (!isNaN(value) ? 1 : 0) });
             console.log(resultMD);
+
         }
 
-        for (const tag of selectProjectTags) {
+        selectProjectTags.map(async (tag) => {
             const resultTag = await addMetaBasicTag(selectFile.id, tag);
             console.log(resultTag);
-        }
+        })
 
         setSelectProjectMD({});
         setSelectProjectTags([]);
         setSelectFile(null);
-    };
+    }
 
     // WHEN PROJECT IS SELECTED AND SELECTED FILE MD NEEDS TO BE SET
-    const handleSelectProjectChange = async (projectId) => {
-        const proj = userProjects.find(proj => proj.id === projectId);
-        if (!proj) return;
+    const handleSelectProjectChange = async (value) => {
+        if (!value) return;
 
+        const proj = userProjects.find(proj => proj.id === value);
         setSelectProject(proj);
 
-        setSelectFile(prev => ({
-            ...prev,
-            projectId: projectId
-        }));
-
-        const resultMD = await getProjectMetaDataKeysUpload(projectId);
-        const resultTags = await getProjectBasicTags(projectId);
+        const resultMD = await getProjectMetaDataKeysUpload(value);
+        const resultTags = await getProjectBasicTags(value);
 
         resultMD && setExistingSelectProjectMD(resultMD);
         resultTags && setExistingSelectProjectTags(resultTags);
@@ -817,48 +752,26 @@ export default function UserUpload() {
             console.error('Error:', error);
         }
     }
-
     const handleUploadFilesToProject = async () => {
-        if (!project) {
-            message.error("Please select a project.");
-            return;
-        }
+        // TODO: add "files" to current "project"'s "files" variable, and other associated info
+        // TODO: update user's activity log that they added files to this certain project
+        console.log("Uploading files:", files);
 
-        const selectedFileObjs = files.filter(f => selectedFiles.has(f.file.name));
-
-        if (selectedFileObjs.length === 0) {
-            message.warning("No files selected to upload.");
-            return;
-        }
-
-        const unsaved = selectedFileObjs.filter(f => !f.id);
-        if (unsaved.length > 0) {
-            message.warning("Some files must be saved to palette first.");
-            return;
-        }
-
-        const mismatched = selectedFileObjs.find(f => f.projectId !== null && f.projectId !== project.id);
-        if (mismatched) {
-            message.warning("One or more selected files are already assigned to a different project.");
-            return;
-        }
-
-        const fileIds = selectedFileObjs.map(f => f.id);
+        console.log("Uploading files:", files);
         setSpinning(true);
+        const filesToSave = files.map(({ file, ...rest }) => ({
+            ...rest,
+            filePath: rest.original,
+            palette: false
+        }));
 
-        const res = await uploadFilesToProject(project.id, fileIds);
-
+        await saveFiles(filesToSave);
+        for (const file of userFiles) {
+            await addLog(user.id, file.id, projectId, 'uploading file to project');
+        }
         setSpinning(false);
-        if (res.error) {
-            message.error("Upload failed: " + res.error);
-            return;
-        }
 
-        for (const fid of fileIds) {
-            await addLog(user.id, fid, project.id, 'uploading file to project');
-        }
 
-        message.success("Files uploaded to project!");
 
         setFiles([]);
         setUserFiles([]);
@@ -868,8 +781,9 @@ export default function UserUpload() {
         setSelectedDate(dayjs().format('YYYY-MM-DD'));
         setLocation(null);
         setUploadSuccess(true);
-    };
+        // addLogProject(user.id, 3, 'upload');
 
+    };
 
     const resetUploadState = () => {
         setUploadSuccess(false);
@@ -1089,19 +1003,12 @@ export default function UserUpload() {
                                 ) : (
                                     <Flex wrap="wrap" style={{ marginTop: '10px' }}>
                                         {existingFileMetadata.map((item, idx) => (
-                                            <Tag
-                                                key={idx}
-                                                closable
-                                                onClose={() => handleRemoveExistingMetadata(item.key)}
-                                                style={tagStyle}
-                                            >
-                                                <b>{item.key}</b>: <i style={{ color: 'gray' }}>{String(item.type ? item.iValue : item.sValue)}</i>
+                                            <Tag key={idx} style={tagStyle}>
+                                                <b>{item.key}</b>: <i style={{ color: 'gray' }}>{String(item.sValue ?? item.iValue)}</i>
                                             </Tag>
                                         ))}
                                     </Flex>
                                 )}
-
-
 
                                 <Title level={5}>Existing File Tags:</Title>
                                 {existingFileTags.length === 0 ? (
@@ -1109,14 +1016,7 @@ export default function UserUpload() {
                                 ) : (
                                     <Flex wrap="wrap" style={{ marginTop: '10px' }}>
                                         {existingFileTags.map((tag, idx) => (
-                                            <Tag
-                                                key={idx}
-                                                closable
-                                                onClose={() => handleRemoveExistingTag(tag)}
-                                                style={tagStyle}
-                                            >
-                                                {tag}
-                                            </Tag>
+                                            <Tag key={idx} style={tagStyle}>{tag}</Tag>
                                         ))}
                                     </Flex>
                                 )}
