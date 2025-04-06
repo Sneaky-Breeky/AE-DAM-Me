@@ -512,6 +512,7 @@ namespace DAMBackend.Controllers
             foreach (var file in files)
             {
                 file.ProjectId = pid;
+                file.Palette = false;
                 project.Files.Add(file);
             }
 
