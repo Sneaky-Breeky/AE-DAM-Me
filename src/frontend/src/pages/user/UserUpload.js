@@ -188,7 +188,7 @@ export default function UserUpload() {
             } else {
                 const data = await response.json();
                 console.log("File Deleted:", data);
-            }            
+            }
 
             console.log("File Deleted : ");
 
@@ -274,79 +274,34 @@ export default function UserUpload() {
         setEditing(true);
     };
 
-    // const getCroppedImg = async (imageSrc, pixelCrop, rotation = 0) => {
-    //     const createImage = (url) =>
-    //         new Promise((resolve, reject) => {
-    //             const image = new window.Image();
-    //             image.crossOrigin = 'anonymous';
-    //             image.onload = () => resolve(image);
-    //             image.onerror = (err) => {
-    //                 console.error('Image load error:', err);
-    //                 reject(err);
-    //             };
-    //             // Add cache-busting parameter
-    //             const cacheBuster = `${url.includes('?') ? '&' : '?'}t=${new Date().getTime()}`;
-    //             image.src = url + cacheBuster;
-    //         });
-
-    //     try {
-    //         const image = await createImage(imageSrc);
-    //         const canvas = document.createElement('canvas');
-    //         const ctx = canvas.getContext('2d');
-
-    //         const safeArea = Math.max(image.width, image.height) * 2;
-    //         canvas.width = safeArea;
-    //         canvas.height = safeArea;
-
-    //         ctx.translate(safeArea / 2, safeArea / 2);
-    //         ctx.rotate((rotation * Math.PI) / 180);
-    //         ctx.translate(-safeArea / 2, -safeArea / 2);
-    //         ctx.drawImage(image, (safeArea - image.width) / 2, (safeArea - image.height) / 2);
-
-    //         const data = ctx.getImageData(pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height);
-
-    //         canvas.width = pixelCrop.width;
-    //         canvas.height = pixelCrop.height;
-
-    //         ctx.putImageData(data, 0, 0);
-
-    //         return canvas.toDataURL('image/jpeg');
-    //     } catch (error) {
-    //         console.error('Error in getCroppedImg:', error);
-    //         throw error;
-    //     }
-    // };
     const getCroppedImg = async (imageSrc, pixelCrop, rotation = 0) => {
         const createImage = (url) =>
             new Promise((resolve, reject) => {
                 const image = new window.Image();
-                image.crossOrigin = 'anonymous';
+                if (!url.startsWith('data:')) {
+                    image.crossOrigin = 'anonymous'; // 只对非 dataURL 设置 crossOrigin
+                }
                 image.onload = () => resolve(image);
                 image.onerror = reject;
-                image.src = url + `?t=${new Date().getTime()}`; // cache busting
+                image.src = url + (url.startsWith('data:') ? '' : `?t=${new Date().getTime()}`); // 只对 URL 添加缓存破解参数
             });
-    
+
         const image = await createImage(imageSrc);
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-    
-        // Set canvas to the cropped area size
+
         canvas.width = pixelCrop.width;
         canvas.height = pixelCrop.height;
-    
-        // Move the origin to the center of the crop area
+
         ctx.translate(-pixelCrop.x, -pixelCrop.y);
-    
-        // Move origin to the center of the image and rotate
         ctx.translate(image.width / 2, image.height / 2);
         ctx.rotate((rotation * Math.PI) / 180);
         ctx.translate(-image.width / 2, -image.height / 2);
-    
+
         ctx.drawImage(image, 0, 0);
-    
+
         return canvas.toDataURL('image/jpeg');
     };
-    
 
 
 
@@ -463,9 +418,9 @@ export default function UserUpload() {
         } else {
             message.success(res);
         }
-        
+
         for (const [key, value] of Object.entries(selectProjectMD)) {
-            const resultMD = await addMetaAdvanceTag(selectFile.id,{"key":key,"value":value,"type":(!isNaN(value) ? 1: 0)});
+            const resultMD = await addMetaAdvanceTag(selectFile.id, { "key": key, "value": value, "type": (!isNaN(value) ? 1 : 0) });
             console.log(resultMD);
 
         }
@@ -925,12 +880,12 @@ export default function UserUpload() {
                 <Box sx={metadataBoxStyle}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-around' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '10px' }}>
-                        <Button type="primary" color={selectFileMode ? "red" : "cyan"} variant={selectFileMode ? "filled" : "solid"} onClick={handleToggleSelectFile} disabled={files.length === 0}>
-                            {selectFileMode ? "Close File" : "Select File"}
-                        </Button>
-                        <Button type="primary" color="cyan" variant="solid" onClick={handleApplyFileMD} disabled={selectFile === null}>
-                            Submit File Metadata
-                        </Button>
+                            <Button type="primary" color={selectFileMode ? "red" : "cyan"} variant={selectFileMode ? "filled" : "solid"} onClick={handleToggleSelectFile} disabled={files.length === 0}>
+                                {selectFileMode ? "Close File" : "Select File"}
+                            </Button>
+                            <Button type="primary" color="cyan" variant="solid" onClick={handleApplyFileMD} disabled={selectFile === null}>
+                                Submit File Metadata
+                            </Button>
                         </div>
                         {selectFile && (
                             <div style={{ marginBottom: '10px' }}>
@@ -959,7 +914,7 @@ export default function UserUpload() {
                                 )}
                             </div>
                         )}
-                </Box>
+                    </Box>
                     <Title level={5}>Project File Metadata: </Title>
                     <Select
                         showSearch

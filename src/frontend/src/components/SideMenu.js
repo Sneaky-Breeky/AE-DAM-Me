@@ -96,10 +96,8 @@ export default function SideMenu({setLoggedIn}) {
         },
       }}
       open
-      slotProps={{
-        root: {
-          keepMounted: true, // Better open performance on mobile.
-        },
+      ModalProps={{
+        keepMounted: true,
       }}
     >
       {content(setLoggedIn)}
@@ -130,10 +128,8 @@ export default function SideMenu({setLoggedIn}) {
           backgroundColor: '#2c2c2c',
         },
       }}
-      slotProps={{
-        root: {
-          keepMounted: true, // Better open performance on mobile.
-        },
+      ModalProps={{
+        keepMounted: true,
       }}
     >
       {content(setLoggedIn)}
