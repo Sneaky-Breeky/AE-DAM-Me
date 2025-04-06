@@ -569,5 +569,20 @@ namespace DAMBackend.Controllers
                 return StatusCode(500, $"Failed to archive project {projectId}.");
             }
         }
+        [HttpDelete("deleteFile/{projectId}/{fileId}")]
+            public async Task<IActionResult> DeleteFileFromProject(int projectId, int fileId)
+            {
+                var file = await _context.Files.FirstOrDefaultAsync(f => f.Id == fileId && f.ProjectId == projectId);
+
+                if (file == null)
+                {
+                    return NotFound("File not found in this project.");
+                }
+
+                _context.Files.Remove(file);
+                await _context.SaveChangesAsync();
+
+                return Ok($"File with ID {fileId} deleted from project {projectId}.");
+            }
     }
 }

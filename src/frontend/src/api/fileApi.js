@@ -111,4 +111,6 @@ export async function downloadFilesZip(files) {
         console.error("Network or fetch error:", error);
         return { error: "Network error or server unreachable", message: error.message };
     }
+
 }
+
