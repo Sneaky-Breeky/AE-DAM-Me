@@ -271,37 +271,62 @@ export default function UserUpload() {
     const handleEditImage = (file, index) => {
         setCurrentFile(file);
         setCurrentIndex(index);
+        setRotation(0);
         setEditing(true);
     };
 
-    const getCroppedImg = async (imageSrc, pixelCrop, rotation = 0) => {
+    const getCroppedImg = async (imageSrc, crop, rotation = 0) => {
         const createImage = (url) =>
             new Promise((resolve, reject) => {
                 const image = new window.Image();
-                if (!url.startsWith('data:')) {
-                    image.crossOrigin = 'anonymous'; // 只对非 dataURL 设置 crossOrigin
-                }
+                image.setAttribute('crossOrigin', 'anonymous'); // Prevent CORS issues
                 image.onload = () => resolve(image);
                 image.onerror = reject;
-                image.src = url + (url.startsWith('data:') ? '' : `?t=${new Date().getTime()}`); // 只对 URL 添加缓存破解参数
+                image.src = url;
             });
 
         const image = await createImage(imageSrc);
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
 
-        canvas.width = pixelCrop.width;
-        canvas.height = pixelCrop.height;
+        const radians = (rotation * Math.PI) / 180;
 
-        ctx.translate(-pixelCrop.x, -pixelCrop.y);
-        ctx.translate(image.width / 2, image.height / 2);
-        ctx.rotate((rotation * Math.PI) / 180);
-        ctx.translate(-image.width / 2, -image.height / 2);
+        // Calculate bounding box of rotated image
+        const rotatedWidth = Math.abs(Math.cos(radians) * image.width) + Math.abs(Math.sin(radians) * image.height);
+        const rotatedHeight = Math.abs(Math.sin(radians) * image.width) + Math.abs(Math.cos(radians) * image.height);
 
-        ctx.drawImage(image, 0, 0);
+        // Create a temp canvas for the rotated image
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCanvas.width = rotatedWidth;
+        tempCanvas.height = rotatedHeight;
+
+        // Rotate image and draw to temp canvas
+        tempCtx.translate(rotatedWidth / 2, rotatedHeight / 2);
+        tempCtx.rotate(radians);
+        tempCtx.drawImage(image, -image.width / 2, -image.height / 2);
+
+        // Crop the image from rotated canvas
+        canvas.width = crop.width;
+        canvas.height = crop.height;
+
+        // Crop from correct position on rotated canvas
+        ctx.drawImage(
+            tempCanvas,
+            crop.x,
+            crop.y,
+            crop.width,
+            crop.height,
+            0,
+            0,
+            crop.width,
+            crop.height
+        );
 
         return canvas.toDataURL('image/jpeg');
     };
+
+
 
 
 
@@ -338,6 +363,7 @@ export default function UserUpload() {
 
             setEditing(false);
             setCurrentFile(null);
+            setRotation(0);
         } catch (error) {
             console.error("Error saving cropped image:", error);
             message.error("Failed to save edited image.");
