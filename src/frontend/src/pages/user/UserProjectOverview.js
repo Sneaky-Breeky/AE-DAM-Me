@@ -173,12 +173,12 @@ export default function UserProjectOverview() {
             const hydratedFiles = await Promise.all(
                 filtered.map(async (file) => {
                     const basicTags = await getProjectImageBasicTags({ pid: id, fid: file.id });
-                    const metadataTags = await getProjectImageMetaDataTags({ pid: id, fid: file.id });
+                    const metadataValues = await getProjectImageMetaDataValuesTags({ pid: id, fid: file.id });
 
                     return {
                         ...file,
                         basicTags: basicTags || [],
-                        metadataTags: metadataTags || [],
+                        metadataValues: metadataValues || [],
                     };
                 })
             );
@@ -205,12 +205,12 @@ export default function UserProjectOverview() {
             const filesWithTags = await Promise.all(
                 files.map(async (file) => {
                     const basicTags = await getProjectImageBasicTags({ pid: id, fid: file.id });
-                    const metadataTags = await getProjectImageMetaDataTags({ pid: id, fid: file.id });
+                    const metadataValues = await getProjectImageMetaDataValuesTags({ pid: id, fid: file.id });
 
                     return {
                         ...file,
                         basicTags: basicTags || [],
-                        metadataTags: metadataTags || [],
+                        metadataValues: metadataValues || [],
                     };
                 })
             );
