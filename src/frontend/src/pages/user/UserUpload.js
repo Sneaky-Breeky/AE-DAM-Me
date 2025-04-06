@@ -8,8 +8,12 @@ import { addLog, addLogProject } from "../../api/logApi";
 import { API_BASE_URL } from '../../api/apiURL.js';
 import { Palette } from '@mui/icons-material';
 import { fetchProjectsForUser } from '../../api/projectApi';
-import { addMetaAdvanceTag, addMetaBasicTag } from '../../api/fileApi';
+import { addMetaAdvanceTag, addMetaBasicTag, assignSuggestedProjectToFile } from '../../api/fileApi';
 import { getProjectMetaDataKeysUpload, getProjectBasicTags } from '../../api/queryFile';
+import {
+    getProjectImageBasicTags,
+    getProjectImageMetaDataValuesTags
+} from "../../api/imageApi";
 import { useEffect } from "react";
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -54,6 +58,8 @@ export default function UserUpload() {
     const [project, setProject] = useState(null);
     const [metadataTagsInput, setMetadataTagsInput] = useState();
     const [metadataTags, setMetadataTags] = useState([]);
+    const [existingFileMetadata, setExistingFileMetadata] = useState([]);
+    const [existingFileTags, setExistingFileTags] = useState([]);
     const [tagApplications, setTagApplications] = useState([]);
     const [location, setLocation] = useState(null);
     const [selectedDate, setSelectedDate] = useState(dayjs().format('YYYY-MM-DD'));
@@ -146,6 +152,24 @@ export default function UserUpload() {
             console.error('Error:', error);
         }
     }
+
+    useEffect(() => {
+        const fetchFileMetaAndTags = async () => {
+            if (!selectFile) return;
+            console.log("the file: ", selectFile);
+
+            const metaRes = await getProjectImageMetaDataValuesTags({ pid: selectFile.projectId, fid: selectFile.id });
+            const tagRes = await getProjectImageBasicTags({ pid: selectFile.projectId, fid: selectFile.id });
+
+            console.log("file metadata: ", metaRes);
+            console.log("file tags: ", tagRes);
+            setExistingFileMetadata(metaRes || []);
+            setExistingFileTags(tagRes || []);
+        };
+
+        fetchFileMetaAndTags();
+    }, [selectFile]);
+
     async function deleteFile(fileId) {
         try {
             const response = await fetch(`${API_BASE_URL}/api/Files/${fileId}`, {
@@ -162,7 +186,7 @@ export default function UserUpload() {
             if (response.status === 204) {
                 console.log("File deleted with no content returned.");
             } else {
-                const data = await response.json();  // only if body exists
+                const data = await response.json();
                 console.log("File Deleted:", data);
             }            
 
@@ -432,8 +456,15 @@ export default function UserUpload() {
         console.log(selectProjectTags);
         console.log("on click submit");
 
+
+        const res = await assignSuggestedProjectToFile(selectProject.id, selectFile.id);
+        if (res.error) {
+            message.error(res.error);
+        } else {
+            message.success(res);
+        }
+        
         for (const [key, value] of Object.entries(selectProjectMD)) {
-            // number value
             const resultMD = await addMetaAdvanceTag(selectFile.id,{"key":key,"value":value,"type":(!isNaN(value) ? 1: 0)});
             console.log(resultMD);
 
@@ -893,13 +924,42 @@ export default function UserUpload() {
 
                 <Box sx={metadataBoxStyle}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-around' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '10px' }}>
                         <Button type="primary" color={selectFileMode ? "red" : "cyan"} variant={selectFileMode ? "filled" : "solid"} onClick={handleToggleSelectFile} disabled={files.length === 0}>
                             {selectFileMode ? "Close File" : "Select File"}
                         </Button>
                         <Button type="primary" color="cyan" variant="solid" onClick={handleApplyFileMD} disabled={selectFile === null}>
                             Submit File Metadata
                         </Button>
-                    </Box>
+                        </div>
+                        {selectFile && (
+                            <div style={{ marginBottom: '10px' }}>
+                                <Title level={5}>Existing File Metadata:</Title>
+                                {existingFileMetadata.length === 0 ? (
+                                    <p style={{ fontSize: '90%', color: 'gray' }}>No metadata found</p>
+                                ) : (
+                                    <Flex wrap="wrap" style={{ marginTop: '10px' }}>
+                                        {existingFileMetadata.map((item, idx) => (
+                                            <Tag key={idx} style={tagStyle}>
+                                                <b>{item.key}</b>: <i style={{ color: 'gray' }}>{String(item.sValue ?? item.iValue)}</i>
+                                            </Tag>
+                                        ))}
+                                    </Flex>
+                                )}
+
+                                <Title level={5}>Existing File Tags:</Title>
+                                {existingFileTags.length === 0 ? (
+                                    <p style={{ fontSize: '90%', color: 'gray' }}>No tags found</p>
+                                ) : (
+                                    <Flex wrap="wrap" style={{ marginTop: '10px' }}>
+                                        {existingFileTags.map((tag, idx) => (
+                                            <Tag key={idx} style={tagStyle}>{tag}</Tag>
+                                        ))}
+                                    </Flex>
+                                )}
+                            </div>
+                        )}
+                </Box>
                     <Title level={5}>Project File Metadata: </Title>
                     <Select
                         showSearch
@@ -914,7 +974,7 @@ export default function UserUpload() {
                         onChange={handleSelectProjectChange}
                         style={{ width: '100%', marginBottom: '5%' }}
                         disabled={selectFile === null}
-                        value={selectProject !== null ? selectProject.id : undefined}
+                        value={selectFile?.projectId ?? undefined}
                     />
 
                     <table style={{ width: '100%', borderCollapse: 'collapse', borderBottomWidth: 'thin', borderBottomStyle: 'solid', borderColor: 'LightGray', paddingBottom: '5%' }}>

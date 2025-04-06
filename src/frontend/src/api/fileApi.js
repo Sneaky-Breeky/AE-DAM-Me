@@ -55,6 +55,27 @@ export async function addMetaAdvanceTag(fid,requestBody) {
     }
 }
 
+export async function assignSuggestedProjectToFile(projectId, fileId) {
+    try {
+        const response = await fetch(`${META_URL}/projectSuggestion/${projectId}/${fileId}`, {
+            method: 'PUT',
+            headers: {
+                'Accept': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to assign suggested project: ${errorText}`);
+        }
+
+        return await response.text();
+    } catch (error) {
+        console.error('Error assigning suggested project to file:', error);
+        return { error: error.message };
+    }
+}
+
 export async function downloadFilesZip(files) {
     try {
         const response = await fetch(`${FILES_URL}/download-zip`, {
