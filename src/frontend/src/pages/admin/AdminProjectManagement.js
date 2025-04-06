@@ -182,23 +182,26 @@ export default function ProjectManagement() {
             <Box
                 sx={{
                     display: 'flex',
+                    flexWrap: 'wrap',
+                    justifyContent: 'center',
+                    alignItems: 'anchor-center',
+                    height: '100vh',
                     flexDirection: 'row',
                     flexGrow: 1,
                 }}
             >
 
-                {/* Container with create delete and archive projects */}
+                {/* Container with create delete archive and export projects */}
                 <Box
                     sx={{
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'flex-start',
-                        alignItems: 'left',
+                        justifyContent: 'flex-center',
+                        alignItems: 'center',
                         width: '20%',
+                        minWidth: '200px',
                         height: "fit-content",
-                        margin: '0',
-                        marginLeft: '10%',
-                        marginRight: '0',
+                        marginTop: '0',
                         overflow: 'hidden',
                     }}
                 >
@@ -323,6 +326,7 @@ export default function ProjectManagement() {
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         width: '60%',
+                        minWidth: '400px',
                         height: "fit-content",
                         margin: '0',
                         overflow: 'auto',
