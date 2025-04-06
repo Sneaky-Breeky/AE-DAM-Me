@@ -214,7 +214,7 @@ export default function ProjectManagement() {
                         sx={{
                             textAlign: 'center',
                             width: '80%',
-                            height: '100%',
+                            height: '50%',
                             margin: '5%',
                             backgroundColor: 'grey.300',
                             border: 1,
@@ -225,10 +225,10 @@ export default function ProjectManagement() {
                         }}
                     >
                         {!createOpen ?
-                            <CreateNewFolderOutlinedIcon style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
-                            : <CloseOutlined style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
+                            <CreateNewFolderOutlinedIcon style={{ marginTop: '5%', marginBottom: '0', fontSize: '400%' }} />
+                            : <CloseOutlined style={{ marginTop: '5%', marginBottom: '0', fontSize: '400%' }} />
                         }
-                        <h4 style={{ margin: '0', marginBottom: '10%' }}>{!createOpen ? "Create Project" : "Close"}</h4>
+                        <h4 style={{ margin: '0', marginBottom: '5%' }}>{!createOpen ? "Create Project" : "Close"}</h4>
                     </Box>
 
                     {/*Delete a project*/}
@@ -253,10 +253,10 @@ export default function ProjectManagement() {
                         }}
                     >
                         {!deleteOpen ?
-                            <FolderDeleteOutlinedIcon style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
-                            : <CloseOutlined style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
+                            <FolderDeleteOutlinedIcon style={{  marginTop: '5%', marginBottom: '0', fontSize: '400%'  }} />
+                            : <CloseOutlined style={{  marginTop: '5%', marginBottom: '0', fontSize: '400%' }} />
                         }
-                        <h4 style={{ margin: '0', marginBottom: '10%' }}>{!deleteOpen ? "Delete Project" : "Close"}</h4>
+                        <h4 style={{ margin: '0', marginBottom: '5%' }}>{!deleteOpen ? "Delete Project" : "Close"}</h4>
                     </Box>
 
                     {/*Archive a project*/}
@@ -281,10 +281,10 @@ export default function ProjectManagement() {
                         }}
                     >
                         {!archiveOpen ?
-                            <Inventory2OutlinedIcon style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
-                            : <CloseOutlined style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
+                            <Inventory2OutlinedIcon style={{  marginTop: '5%', marginBottom: '0', fontSize: '400%'  }} />
+                            : <CloseOutlined style={{  marginTop: '5%', marginBottom: '0', fontSize: '400%'  }} />
                         }
-                        <h4 style={{ margin: '0', marginBottom: '10%' }}>{!archiveOpen ? "Archive Project" : "Close"}</h4>
+                        <h4 style={{ margin: '0', marginBottom: '5%' }}>{!archiveOpen ? "Archive Project" : "Close"}</h4>
                     </Box>
                     {/* Export a project */}
                     <Box
@@ -308,10 +308,10 @@ export default function ProjectManagement() {
                         }}
                     >
                         {!exportOpen ?
-                            <ExportOutlined style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
-                            : <CloseOutlined style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
+                            <ExportOutlined style={{  marginTop: '5%', marginBottom: '0', fontSize: '400%' }} />
+                            : <CloseOutlined style={{  marginTop: '5%', marginBottom: '0', fontSize: '400%'  }} />
                         }
-                        <h4 style={{ margin: '0', marginBottom: '10%' }}>{!exportOpen ? "Export Project" : "Close"}</h4>
+                        <h4 style={{ margin: '0', marginBottom: '5%' }}>{!exportOpen ? "Export Project" : "Close"}</h4>
                     </Box>
 
                 </Box>
@@ -459,7 +459,7 @@ export default function ProjectManagement() {
                                 justifyContent: 'flex-start',
                                 alignItems: 'left',
                                 width: '80%',
-                                height: "90vh",
+                                height: "75vh",
                                 margin: '10%',
                                 marginTop: '0',
                                 backgroundColor: '#f5f5f5',
@@ -535,7 +535,7 @@ export default function ProjectManagement() {
                                 justifyContent: 'flex-start',
                                 alignItems: 'left',
                                 width: '80%',
-                                height: "90vh",
+                                height: "75vh",
                                 margin: '10%',
                                 marginTop: '0',
                                 backgroundColor: '#f5f5f5',
@@ -610,7 +610,7 @@ export default function ProjectManagement() {
                                 justifyContent: 'flex-start',
                                 alignItems: 'left',
                                 width: '80%',
-                                height: "90vh",
+                                height: "75vh",
                                 margin: '10%',
                                 marginTop: '0',
                                 backgroundColor: '#f5f5f5',
