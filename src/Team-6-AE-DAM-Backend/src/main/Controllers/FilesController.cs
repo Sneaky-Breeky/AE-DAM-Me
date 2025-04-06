@@ -32,7 +32,7 @@ namespace DAMBackend.Controllers
         public string ThumbnailPath { get; set; }
         public string OriginalPath { get; set; }
     }
-    
+
     [Route("api/[controller]")]
     [ApiController]
     public class FilesController : ControllerBase
@@ -51,12 +51,13 @@ namespace DAMBackend.Controllers
         public async Task<ActionResult<IEnumerable<FileModel>>> GetFiles(int userId)
         {
             var files = await _context.Files
-                              .Where(f => f.UserId == userId && f.Palette)
-                              .Include(f => f.bTags)
-                              .ToListAsync();
+                .Where(f => f.UserId == userId && f.Palette)
+                .Include(f => f.bTags)
+                .ToListAsync();
             return Ok(files);
         }
-         // GET: api/Files
+
+        // GET: api/Files
         [HttpGet]
         public async Task<ActionResult<IEnumerable<FileModel>>> GetFilesFromPalette()
         {
@@ -122,6 +123,7 @@ namespace DAMBackend.Controllers
             {
                 return BadRequest("You can upload a maximum of 100 files at once.");
             }
+
             Console.WriteLine($"the length of files is: {files.Count}");
             List<UpladedFile> filesLinks = new List<UpladedFile> { };
 
@@ -137,7 +139,7 @@ namespace DAMBackend.Controllers
                 {
                     return BadRequest($"File {file.FileName} has an unsupported file type.");
                 }
-                
+
                 // Validate file size (e.g., 500MB limit)
                 if (file.Length > 500 * 1024 * 1024) // 100MB
                 {
@@ -161,13 +163,13 @@ namespace DAMBackend.Controllers
                 // Save the thumbnail to the thumbnail directory
                 using var streamthumbnail = thumbnail.OpenReadStream();
                 string fileUrlThumbnail = await _azureBlobService.UploadThumbnailAsync(thumbnail, fileNameThumbnail);
-                
+
                 UpladedFile uploadedFile = new UpladedFile
                 {
                     ThumbnailPath = fileUrlThumbnail,
                     OriginalPath = fileUrlOriginal
                 };
-                
+
                 // filesLinks.Add(new {thumbnail = fileUrlThumbnail, origin = fileUrlOriginal});
                 // Console.WriteLine($"bruh: {fileUrlOriginal} {fileUrlThumbnail}");
                 filesLinks.Add(uploadedFile);
@@ -175,7 +177,7 @@ namespace DAMBackend.Controllers
 
             return Ok(filesLinks);
         }
-        
+
 
         [HttpPost]
         public async Task<ActionResult<List<FileModel>>> AddFiles(List<FileDTO> files)
@@ -185,21 +187,24 @@ namespace DAMBackend.Controllers
             {
                 return BadRequest("You can upload a maximum of 100 files at once.");
             }
-            if(files.Count == 0){
+
+            if (files.Count == 0)
+            {
                 return BadRequest("No file to save.");
             }
 
             deleteFilesFromPalette(files);
 
             var savedFiles = new List<FileModel> { };
-            var tagsExists = new List<String>{};
-            var tagsDoNotExists = new List<String>{};
-            var existingTags = new List<TagBasicModel>{};
+            var tagsExists = new List<String> { };
+            var tagsDoNotExists = new List<String> { };
+            var existingTags = new List<TagBasicModel> { };
 
             foreach (var file in files)
             {
                 ProjectModel project = null;
-                if (!file.palette){
+                if (!file.palette)
+                {
                     if (!file.projectId.HasValue)
                     {
                         return BadRequest("Please specify project id for saving files in the project.");
@@ -221,29 +226,36 @@ namespace DAMBackend.Controllers
                 var updatedPath = file.filePath;
                 if (!file.palette)
                 {
-                    updatedPath = await _azureBlobService.MoveBlobWithinContainerAsync("palettes", Path.GetFileName(new Uri(file.filePath).LocalPath), "projects");
+                    updatedPath = await _azureBlobService.MoveBlobWithinContainerAsync("palettes",
+                        Path.GetFileName(new Uri(file.filePath).LocalPath), "projects");
                 }
+
                 var dimensions = FileEngine.GetDimensions(file.filePath);
-                
-                foreach(var _file in files){
-                    foreach(var tag in _file.metadata){
+
+                foreach (var _file in files)
+                {
+                    foreach (var tag in _file.metadata)
+                    {
                         bool exists = await TagExistsAsync(tag);
-                        if(exists){
+                        if (exists)
+                        {
                             tagsExists.Add(tag);
-                        }else{
+                        }
+                        else
+                        {
                             tagsDoNotExists.Add(tag);
                         }
                     }
                 }
-                
+
                 existingTags = await _context.BasicTags
-                .Where(t => tagsExists.Contains(t.Value))
-                .ToListAsync();
-                
+                    .Where(t => tagsExists.Contains(t.Value))
+                    .ToListAsync();
+
                 var newTags = tagsDoNotExists
-                .Where(t => !existingTags.Any(et => et.Value == t))
-                .Select(t => new TagBasicModel { Value = t })
-                .ToHashSet();
+                    .Where(t => !existingTags.Any(et => et.Value == t))
+                    .Select(t => new TagBasicModel { Value = t })
+                    .ToHashSet();
 
                 FileModel fileModel = new FileModel
                 {
@@ -286,10 +298,12 @@ namespace DAMBackend.Controllers
                 _context.Files.Add(fileModel);
                 savedFiles.Add(fileModel);
             }
+
             await _context.SaveChangesAsync();
-            
-            foreach(var file in savedFiles){
-               foreach (var tag in existingTags)
+
+            foreach (var file in savedFiles)
+            {
+                foreach (var tag in existingTags)
                 {
                     _context.FileTags.Add(new FileTag
                     {
@@ -298,7 +312,7 @@ namespace DAMBackend.Controllers
                     });
                 }
             }
-            
+
             await _context.SaveChangesAsync();
             var savedFileIds = savedFiles.Select(f => f.Id).ToList();
 
@@ -309,17 +323,20 @@ namespace DAMBackend.Controllers
 
             return Ok(filesWithTags);
         }
+
         private async Task<bool> TagExistsAsync(string tagValue)
         {
             return await _context.BasicTags.AnyAsync(t => t.Value == tagValue);
         }
 
-        private void deleteFilesFromPalette(List<FileDTO> files){
+        private void deleteFilesFromPalette(List<FileDTO> files)
+        {
             //Delete any old file before inserting when uploading files to Palette.
             var filesToDelete = _context.Files
                 .Where(f => f.UserId == files[0].userId && f.Palette)
                 .ToList();
-            if (filesToDelete.Any()){
+            if (filesToDelete.Any())
+            {
                 // Get all related FileTags
                 var fileIds = filesToDelete.Select(f => f.Id).ToList();
                 var fileTagsToDelete = _context.FileTags.Where(ft => fileIds.Contains(ft.FileId));
@@ -355,173 +372,206 @@ namespace DAMBackend.Controllers
         {
             return _context.Files.Any(e => e.Id == id);
         }
-        
+
         private void ExtractExifMetadata(ImageSharpExif.ExifProfile exifProfile, FileModel fileModel)
-                {
-                    object? latRef = null;
-                    object? lonRef = null;
-
-                    foreach (var tag in exifProfile.Values)
-                    {
-                        if (tag.Tag == ImageSharpExifTag.GPSLatitudeRef)
-                        {
-                            latRef = tag.GetValue();
-                        }
-                        else if (tag.Tag == ImageSharpExifTag.GPSLongitudeRef)
-                        {
-                            lonRef = tag.GetValue();
-                        }
-                        else if (tag.Tag == ImageSharpExifTag.GPSLatitude)
-                        {
-                            fileModel.GPSLat = ConvertDMSToDecimal(tag.GetValue(), latRef?.ToString());
-                        }
-                        else if (tag.Tag == ImageSharpExifTag.GPSLongitude)
-                        {
-                            fileModel.GPSLon = ConvertDMSToDecimal(tag.GetValue(), lonRef?.ToString());
-                        }
-                        else if (tag.Tag == ImageSharpExifTag.GPSAltitude && tag.GetValue() is SixLabors.ImageSharp.Rational altitudeRational)
-                        {
-                            fileModel.GPSAlt = (decimal)altitudeRational.ToDouble();
-                        }
-                        else if (tag.Tag == ImageSharpExifTag.Make)
-                        {
-                            fileModel.Make = tag.GetValue()?.ToString();
-                        }
-                        else if (tag.Tag == ImageSharpExifTag.Model)
-                        {
-                            fileModel.Model = tag.GetValue()?.ToString();
-                        }
-                        else if (tag.Tag == ImageSharpExifTag.Copyright)
-                        {
-                            fileModel.Copyright = tag.GetValue()?.ToString();
-                        }
-                        else if (tag.Tag == ImageSharpExifTag.FocalLength)
-                        {
-                            if (tag.GetValue() is SixLabors.ImageSharp.Rational rational)
-                            {
-                                fileModel.FocalLength = (int)rational.ToDouble();
-                            }
-                        }
-                        else if (tag.Tag == ImageSharpExifTag.FNumber)
-                        {
-                            if (tag.GetValue() is SixLabors.ImageSharp.Rational rational)
-                            {
-                                fileModel.Aperture = (float)rational.ToDouble();
-                            }
-                        }
-                    }
-                }
-
-                private decimal? ConvertDMSToDecimal(object dmsValue, string? reference)
-                {
-                    if (dmsValue is SixLabors.ImageSharp.Rational[] dmsArray && dmsArray.Length == 3)
-                    {
-                        decimal degrees = (decimal)dmsArray[0].ToDouble();
-                        decimal minutes = (decimal)dmsArray[1].ToDouble();
-                        decimal seconds = (decimal)dmsArray[2].ToDouble();
-
-                        decimal decimalDegrees = degrees + (minutes / 60) + (seconds / 3600);
-
-                        if (reference == "S" || reference == "W")
-                        {
-                            decimalDegrees = -decimalDegrees;
-                        }
-
-                        return decimalDegrees;
-                    }
-
-                    return null;
-                }
-    
-    [HttpPost("download-zip")]
-    public async Task<IActionResult> DownloadFilesAsZip([FromBody] List<string> fileNames)
-    {
-        if (fileNames == null || fileNames.Count == 0)
         {
-            return BadRequest("No files specified for download.");
-        }
+            object? latRef = null;
+            object? lonRef = null;
 
-        var containerClient = _azureBlobService.ProjectsContainer;
-        using (var memoryStream = new MemoryStream())
-        {
-            using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+            foreach (var tag in exifProfile.Values)
             {
-                foreach (var fileName in fileNames)
+                if (tag.Tag == ImageSharpExifTag.GPSLatitudeRef)
                 {
-                    var blobClient = containerClient.GetBlobClient(fileName);
-
-                    if (await blobClient.ExistsAsync())
+                    latRef = tag.GetValue();
+                }
+                else if (tag.Tag == ImageSharpExifTag.GPSLongitudeRef)
+                {
+                    lonRef = tag.GetValue();
+                }
+                else if (tag.Tag == ImageSharpExifTag.GPSLatitude)
+                {
+                    fileModel.GPSLat = ConvertDMSToDecimal(tag.GetValue(), latRef?.ToString());
+                }
+                else if (tag.Tag == ImageSharpExifTag.GPSLongitude)
+                {
+                    fileModel.GPSLon = ConvertDMSToDecimal(tag.GetValue(), lonRef?.ToString());
+                }
+                else if (tag.Tag == ImageSharpExifTag.GPSAltitude &&
+                         tag.GetValue() is SixLabors.ImageSharp.Rational altitudeRational)
+                {
+                    fileModel.GPSAlt = (decimal)altitudeRational.ToDouble();
+                }
+                else if (tag.Tag == ImageSharpExifTag.Make)
+                {
+                    fileModel.Make = tag.GetValue()?.ToString();
+                }
+                else if (tag.Tag == ImageSharpExifTag.Model)
+                {
+                    fileModel.Model = tag.GetValue()?.ToString();
+                }
+                else if (tag.Tag == ImageSharpExifTag.Copyright)
+                {
+                    fileModel.Copyright = tag.GetValue()?.ToString();
+                }
+                else if (tag.Tag == ImageSharpExifTag.FocalLength)
+                {
+                    if (tag.GetValue() is SixLabors.ImageSharp.Rational rational)
                     {
-                        var zipEntry = zipArchive.CreateEntry(fileName, System.IO.Compression.CompressionLevel.Fastest);
-                        using (var entryStream = zipEntry.Open())
-                        using (var blobStream = await blobClient.OpenReadAsync())
-                        {
-                            await blobStream.CopyToAsync(entryStream);
-                        }
+                        fileModel.FocalLength = (int)rational.ToDouble();
+                    }
+                }
+                else if (tag.Tag == ImageSharpExifTag.FNumber)
+                {
+                    if (tag.GetValue() is SixLabors.ImageSharp.Rational rational)
+                    {
+                        fileModel.Aperture = (float)rational.ToDouble();
                     }
                 }
             }
-
-            memoryStream.Seek(0, SeekOrigin.Begin);
-            return File(memoryStream.ToArray(), "application/zip", "DownloadedFiles.zip");
-        }
-    }
-    
-    [HttpPost("delete-files")]
-    public async Task<IActionResult> DeleteFiles([FromBody] List<string> fileNames)
-    {
-        if (fileNames == null || fileNames.Count == 0)
-        {
-            return BadRequest("No files specified for deletion.");
         }
 
-        try
+        private decimal? ConvertDMSToDecimal(object dmsValue, string? reference)
         {
-            // Assuming _azureBlobService.ProjectsContainer returns the BlobContainerClient
+            if (dmsValue is SixLabors.ImageSharp.Rational[] dmsArray && dmsArray.Length == 3)
+            {
+                decimal degrees = (decimal)dmsArray[0].ToDouble();
+                decimal minutes = (decimal)dmsArray[1].ToDouble();
+                decimal seconds = (decimal)dmsArray[2].ToDouble();
+
+                decimal decimalDegrees = degrees + (minutes / 60) + (seconds / 3600);
+
+                if (reference == "S" || reference == "W")
+                {
+                    decimalDegrees = -decimalDegrees;
+                }
+
+                return decimalDegrees;
+            }
+
+            return null;
+        }
+
+        [HttpPost("download-zip")]
+        public async Task<IActionResult> DownloadFilesAsZip([FromBody] List<string> fileNames)
+        {
+            if (fileNames == null || fileNames.Count == 0)
+            {
+                return BadRequest("No files specified for download.");
+            }
+
             var containerClient = _azureBlobService.ProjectsContainer;
-
-            foreach (var fileName in fileNames)
+            using (var memoryStream = new MemoryStream())
             {
-                var blobClient = containerClient.GetBlobClient(fileName);
-                // Delete the blob if it exists
-                await blobClient.DeleteIfExistsAsync();
-            }
+                using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                {
+                    foreach (var fileName in fileNames)
+                    {
+                        var blobClient = containerClient.GetBlobClient(fileName);
 
-            return Ok("Files deleted successfully.");
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Error deleting files: {ex.Message}");
-        }
-    }
+                        if (await blobClient.ExistsAsync())
+                        {
+                            var zipEntry = zipArchive.CreateEntry(fileName,
+                                System.IO.Compression.CompressionLevel.Fastest);
+                            using (var entryStream = zipEntry.Open())
+                            using (var blobStream = await blobClient.OpenReadAsync())
+                            {
+                                await blobStream.CopyToAsync(entryStream);
+                            }
+                        }
+                    }
+                }
 
-    [HttpPost("delete-files-db")]
-    public async Task<IActionResult> DeleteFilesDB([FromBody] List<int> fileIds)
-    {
-        if (fileIds == null || fileIds.Count == 0)
-        {
-            return BadRequest("No file IDs provided for deletion.");
-        }
-
-        foreach (var id in fileIds)
-        {
-            var file = await _context.Files.FindAsync(id);
-            if (file != null)
-            {
-                _context.Files.Remove(file);
+                memoryStream.Seek(0, SeekOrigin.Begin);
+                return File(memoryStream.ToArray(), "application/zip", "DownloadedFiles.zip");
             }
         }
+        
+        
+        // POST: api/files/uploadToProject/{pid}
+        
+        // Sample input: [102, 103, 104]
 
-        try
+        [HttpPost("uploadToProject/{pid}")]
+        public async Task<IActionResult> UploadToProject([FromBody] List<int> fids, int pid)
         {
+            var project = _context.Projects
+                .Include(p => p.Files)
+                .FirstOrDefault(p => p.Id == pid);
+
+            if (project == null)
+            {
+                return NotFound("No project found.");
+            }
+
+            var files = await _context.Files.Where(f => fids.Contains(f.Id) && f.Palette).ToListAsync();
+            
+            foreach (var file in files)
+            {
+                file.ProjectId = pid;
+                project.Files.Add(file);
+            }
+
             await _context.SaveChangesAsync();
-            return Ok("Files deleted successfully.");
+
+            return Ok("Files uploaded successfully.");
         }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Error deleting files from database: {ex.Message}");
-        }
+    
+      [HttpPost("delete-files")]
+      public async Task<IActionResult> DeleteFiles([FromBody] List<string> fileNames)
+      {
+          if (fileNames == null || fileNames.Count == 0)
+          {
+              return BadRequest("No files specified for deletion.");
+          }
+
+          try
+          {
+              // Assuming _azureBlobService.ProjectsContainer returns the BlobContainerClient
+              var containerClient = _azureBlobService.ProjectsContainer;
+
+              foreach (var fileName in fileNames)
+              {
+                  var blobClient = containerClient.GetBlobClient(fileName);
+                  // Delete the blob if it exists
+                  await blobClient.DeleteIfExistsAsync();
+              }
+
+              return Ok("Files deleted successfully.");
+          }
+          catch (Exception ex)
+          {
+              return StatusCode(500, $"Error deleting files: {ex.Message}");
+          }
+      }
+
+      [HttpPost("delete-files-db")]
+      public async Task<IActionResult> DeleteFilesDB([FromBody] List<int> fileIds)
+      {
+          if (fileIds == null || fileIds.Count == 0)
+          {
+              return BadRequest("No file IDs provided for deletion.");
+          }
+
+          foreach (var id in fileIds)
+          {
+              var file = await _context.Files.FindAsync(id);
+              if (file != null)
+              {
+                  _context.Files.Remove(file);
+              }
+          }
+
+          try
+          {
+              await _context.SaveChangesAsync();
+              return Ok("Files deleted successfully.");
+          }
+          catch (Exception ex)
+          {
+              return StatusCode(500, $"Error deleting files from database: {ex.Message}");
+          }
+      }
     }
-    }
-    }
+}
+
 
