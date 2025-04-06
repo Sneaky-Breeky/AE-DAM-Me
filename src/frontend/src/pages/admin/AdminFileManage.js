@@ -5,7 +5,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import { Typography, Input, Space, Image, Button, Popconfirm, Form, Tooltip} from 'antd';
 import { SearchOutlined, DeleteOutlined, CloseOutlined, EditOutlined, QuestionCircleOutlined} from '@ant-design/icons';
-import { fetchProjects, putProject, getFilesForProject} from '../../api/projectApi';
+import { fetchProjects, putProject, getFilesForProject,deleteFileFromProject} from '../../api/projectApi';
 import { useAuth } from '../../contexts/AuthContext';
 
 const { Title } = Typography;
@@ -15,8 +15,8 @@ export default function AdminFileManage() {
   const [isPopupFormOpen, setPopupFormOpen] = useState(false);
   const [isEditOpen, setEditOpen] = useState(false);
   const [project, setProject] = useState(null);
-    const [imageList, setImageList] = useState([]);
-    const [imageEdit, setImageEdit] = useState(null);
+  const [imageList, setImageList] = useState([]);
+  const [imageEdit, setImageEdit] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedImages, setSelectedImages] = useState(new Set());
   const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -25,8 +25,6 @@ export default function AdminFileManage() {
 
   const [form] = Form.useForm();
   const { user } = useAuth();
-
-
 
 
     useEffect(() => {
@@ -45,13 +43,14 @@ export default function AdminFileManage() {
     
     
 
-    const deleteSelectedImages = () => {
-        //TODO: CONNECT W BACKEND
-    //setImageList(imageList.filter((_, index) => !selectedImages.has(index)));
-        //     await addLog(user.id,project.id,file.id,"Deleted image from file");
-
-        setSelectedImages(new Set());
-    setIsEditMode(false);
+    const deleteSelectedImages = async () => {
+      console.log(selectedImages);
+      const selectedImagesArray = [...selectedImages];
+      await Promise.all(selectedImagesArray.map(fileId => deleteFileFromProject(project.id, fileId)));
+      const files = await getFilesForProject({ projectId: project.id });
+      setImageList(files || []);
+      setSelectedImages(new Set());
+      setIsEditMode(false);
   };
 
   const toggleEditMode = () => {
