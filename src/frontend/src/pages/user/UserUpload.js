@@ -484,10 +484,10 @@ export default function UserUpload() {
         }
 
         setProject(selectedProject);
-        setFiles(prevFiles => prevFiles.map(file => ({
-            ...file,
-            projectId: selectedProject.id
-        })));
+        // setFiles(prevFiles => prevFiles.map(file => ({
+        //     ...file,
+        //     projectId: selectedProject.id
+        // })));
     };
 
     const [currentSelectedExistingMDkey, setCurrentSelectedExistingMDkey] = useState(null);
@@ -519,6 +519,7 @@ export default function UserUpload() {
         console.log("on click submit");
 
         const res = await assignSuggestedProjectToFile(projectId, selectFile.id);
+        console.log("file's project id: ", selectFile.projectId);
 
         if (res.error) {
             message.error(res.error);
@@ -841,12 +842,26 @@ export default function UserUpload() {
             return;
         }
 
-        const mismatched = selectedFileObjs.find(f => f.projectId !== null && f.projectId !== project.id);
-        if (mismatched) {
-            message.warning("One or more selected files are already assigned to a different project.");
-            return;
-        }
+        const mismatched = selectedFileObjs.find(f =>
+            f.projectId !== undefined &&
+            f.projectId !== null &&
+            f.projectId !== project.id
+        );
 
+        if (mismatched) {
+            Modal.confirm({
+                title: "Some files are assigned to a different project",
+                content: "Do you want to continue uploading them to this project?",
+                okText: "Yes, continue",
+                cancelText: "Cancel",
+                onOk: () => proceedUpload(selectedFileObjs),
+            });
+        } else {
+            await proceedUpload(selectedFileObjs);
+        }
+    };
+
+    const proceedUpload = async (selectedFileObjs) => {
         const fileIds = selectedFileObjs.map(f => f.id);
         setSpinning(true);
 
