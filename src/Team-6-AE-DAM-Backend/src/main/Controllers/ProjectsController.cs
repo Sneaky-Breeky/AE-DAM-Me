@@ -86,6 +86,7 @@ namespace DAMBackend.Controllers
             var projects = await _context.UserProjectRelations
                 .Where(upr => upr.UserId == userId)
                 .Select(upr => upr.Project)
+                .Where(p => EF.Functions.Like(p.Status, "active"))
                 .ToListAsync();
 
             return Ok(new { data = projects });
