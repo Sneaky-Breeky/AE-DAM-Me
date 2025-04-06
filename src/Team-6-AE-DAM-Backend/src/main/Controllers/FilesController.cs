@@ -23,7 +23,7 @@ using ImageSharpExif = SixLabors.ImageSharp.Metadata.Profiles.Exif;
 using ImageSharpExifTag = SixLabors.ImageSharp.Metadata.Profiles.Exif.ExifTag;
 using DAMBackend.SubmissionEngineEnv;
 using System.IO.Compression;
-
+using ImageSharpImage = SixLabors.ImageSharp.Image;
 
 namespace DAMBackend.Controllers
 {
@@ -310,9 +310,9 @@ namespace DAMBackend.Controllers
         }
          private async Task<FileModel> ExifExtract(string updatedPath, FileModel fileModel)
                 {
-                var imageFile = GetBlobAsStreamAsync(updatedPath);
+                var imageFile = await GetBlobAsStreamAsync(updatedPath);
                     using (var stream = imageFile.OpenReadStream())
-                         using (var image = Image.Load(stream))
+                         using (var image = ImageSharpImage.Load(stream))
                          {
                            fileModel.PixelWidth = image.Width;
                            fileModel.PixelHeight = image.Height;
@@ -325,7 +325,7 @@ namespace DAMBackend.Controllers
                             }
               }
               return fileModel;
-                }
+}
 
         private async Task<bool> TagExistsAsync(string tagValue)
         {
@@ -579,18 +579,25 @@ namespace DAMBackend.Controllers
 
           public async Task<IFormFile> GetBlobAsStreamAsync(string url)
               {
-                 using (HttpClient client = new HttpClient())
-                         {
-                             byte[] imageBytes = await client.GetByteArrayAsync(url);
+              using (HttpClient client = new HttpClient())
+                      {
+                          byte[] fileBytes = await client.GetByteArrayAsync(url);
 
-                             var memoryStream = new MemoryStream(imageBytes);
-                             memoryStream.Position = 0;
+                          var stream = new MemoryStream(fileBytes);
+                          stream.Position = 0;
 
-                             return memoryStream;
-                         }
-                     }
-              }
+                          IFormFile formFile = new FormFile(stream, 0, stream.Length, "file", "downloaded_file.jpg")
+                          {
+                              Headers = new HeaderDictionary(),
+                              ContentType = "image/jpeg"
+                          };
+
+                          return formFile;
+                      }
     }
+   }
+
+  }
 //}
 
 
