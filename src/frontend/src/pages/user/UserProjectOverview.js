@@ -363,6 +363,7 @@ export default function UserProjectOverview() {
                     onFinish={handleSearch}
                     style={{
                         display: 'flex',
+                        flexDirection: 'row',
                         flexWrap: 'wrap',
                         justifyContent: 'center',
                         alignItems: 'center',
