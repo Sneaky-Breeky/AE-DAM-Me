@@ -140,6 +140,8 @@ export default function UserDashboard() {
                 display: 'flex',
                 flexDirection: 'column',
                 height: '100vh',
+                padding: '20px auto', 
+                overflow: 'auto'
             }}
         >
 
@@ -157,9 +159,9 @@ export default function UserDashboard() {
             {/* Search stuff*/}
             <Box
                 sx={{
-                    flexGrow: 1,
+                    display: 'flex',
+                    justifyContent: 'space-around',
                     backgroundColor: 'gray.50',
-                    padding: 1,
                 }}
             >
                 <Form
@@ -167,6 +169,7 @@ export default function UserDashboard() {
                     onFinish={handleSearch}
                     style={{
                         display: 'flex',
+                        flexWrap: 'wrap', 
                         justifyContent: 'center',
                         alignItems: 'center',
                         gap: '10px',
@@ -210,6 +213,10 @@ export default function UserDashboard() {
             <Box
                 sx={{
                     display: 'flex',
+                    flexDirection: 'row',
+                    flexWrap: 'wrap',
+                    justifyContent: 'center',
+                    alignItems: 'anchor-center',
                     flexGrow: 1,
                 }}
             >
@@ -217,13 +224,15 @@ export default function UserDashboard() {
                 <Box
                     sx={{
                         display: 'flex',
-                        flexDirection: 'column',
+                        lexDirection: 'column',
+                        flexWrap: 'wrap',
                         justifyContent: 'space-evenly',
                         alignItems: 'center',
                         gap: 2,
                         width: '20%',
                         minWidth: '150px',
-                        padding: 2,
+                        height: '60vh',
+                        margin: '10px auto',
                     }}
                 >
 
@@ -236,6 +245,7 @@ export default function UserDashboard() {
                             textAlign: 'center',
                             width: 200,
                             height: 160,
+                            margin: '10%',
                             backgroundColor: 'grey.300',
                             border: 1,
                             borderColor: 'grey.500',
@@ -256,6 +266,7 @@ export default function UserDashboard() {
                             textAlign: 'center',
                             width: 200,
                             height: 160,
+                            margin: '10%',
                             backgroundColor: 'grey.300',
                             border: 1,
                             borderColor: 'grey.500',
@@ -281,8 +292,8 @@ export default function UserDashboard() {
                         justifyContent: 'flex-start',
                         alignItems: 'center',
                         height: '60vh',
-                        width: '70%',
-                        margin: '20px auto',
+                        width: '65%',
+                        margin: '10px auto',
                         backgroundColor: '#f5f5f5',
                         borderRadius: '10px',
                         padding: '20px',

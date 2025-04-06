@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
-import { Typography, Button, Popover, Radio, Form, Input, message, Popconfirm } from 'antd';
-import { PlusOutlined, EditOutlined, CloseOutlined, DeleteOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { Typography, Button, Popover, Radio, Form, Input, message, Popconfirm, Spin } from 'antd';
+import { PlusOutlined, EditOutlined, CloseOutlined, DeleteOutlined, QuestionCircleOutlined, SearchOutlined } from '@ant-design/icons';
 import { fetchUsers, addUser, deleteUser, updateUser } from '../../api/authApi.js';
 import {addLog} from "../../api/logApi";
 import {useAuth} from "../../contexts/AuthContext";
@@ -37,7 +37,7 @@ function PopupForm({ visible, onClose, refreshUsers }) {
         flexDirection: 'column',
         justifyContent: 'flex-start',
         alignItems: 'left',
-        width: '80%',
+        width: '70%',
         height: '70%',
         margin: '20px auto',
         backgroundColor: '#f5f5f5',
@@ -163,6 +163,8 @@ function PopupForm({ visible, onClose, refreshUsers }) {
 }
 
 export default function AdminUserManage() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
   const [editForm] = Form.useForm();
   const [isPopupFormOpen, setPopupFormOpen] = useState(false);
   const [userList, setUserList] = useState([]);
@@ -172,15 +174,19 @@ export default function AdminUserManage() {
 
   const fetchUsersList = async () => {
     try {
+      setLoading(true);
       const users = await fetchUsers();
       if (Array.isArray(users)) {
+        setLoading(false);
         setUserList(users);
       } else {
         console.error("Expected an array but got:", users);
+        setLoading(false);
         setUserList([]);
       }
     } catch (error) {
       console.error("Error fetching users:", error);
+      setLoading(false);
       setUserList([]);
     }
   };
@@ -266,6 +272,27 @@ export default function AdminUserManage() {
         <Title level={1}>User Management</Title>
       </Box>
 
+      <Box
+        sx={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'flex-start',
+            alignItems: 'left',
+            padding: '20px',
+            paddingBottom: 0,
+            margin: '10px auto',
+            marginBottom: '0',
+        }}>
+        <Input
+          placeholder="Search for a project.."
+          prefix={<SearchOutlined />}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ width: '300px' }}
+          disabled={loading}
+        />
+      </Box>
+
 
       <Box
         sx={{
@@ -276,6 +303,7 @@ export default function AdminUserManage() {
           height: '100vh',
           width: '80%',
           margin: '20px auto',
+          marginTop: '0',
           borderRadius: '10px',
           overflow: 'auto',
         }}
@@ -325,7 +353,7 @@ export default function AdminUserManage() {
             justifyContent: 'flex-start',
             alignItems: 'left',
             width: '60%',
-            minWidth: '400px',
+            minWidth: '300px',
             height: '75vh',
             margin: '20px auto',
             backgroundColor: '#f5f5f5',
@@ -335,7 +363,13 @@ export default function AdminUserManage() {
             overflow: 'auto',
           }}
         >
-          <div style={{ overflowY: 'auto', width: '100%', height: '100%' }}>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '20px' }}>
+                <Spin size="large" />
+                <p>Loading users...</p>
+            </div>
+          ) :
+          (<div style={{ overflowY: 'auto', width: '100%', height: '100%' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ height: '50px' }}>
@@ -346,7 +380,11 @@ export default function AdminUserManage() {
                 </tr>
               </thead>
               <tbody>
-                {userList.map((user, idx) => (
+                {userList.filter((u) =>
+                      u.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      u.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      u.id.toString().includes(searchQuery)
+                  ).map((user, idx) => (
                   <tr key={user.email || idx} style={{ height: '50px' }}>
                     <td style={{ fontSize: '12px', borderBottom: '1px solid black' }}>
                       <span>{user.id}</span> - <span style={{ color: 'grey', fontStyle: 'italic' }}>{`${user.firstName} ${user.lastName}`}</span>
@@ -463,7 +501,7 @@ export default function AdminUserManage() {
               </tbody>
             </table>
 
-          </div>
+          </div>)}
 
           {/* REMOVE LATER 
           <div style={{

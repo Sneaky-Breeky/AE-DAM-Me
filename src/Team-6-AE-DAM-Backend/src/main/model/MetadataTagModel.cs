@@ -35,7 +35,7 @@ File and Fileid assigned to know which file is referenced
         [JsonIgnore]
         public FileModel File { get; set; }
 
-        public string sValue { get; set; }
+        public string? sValue { get; set; }
 
         public int iValue {get; set;}
 

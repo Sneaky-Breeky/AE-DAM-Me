@@ -7,7 +7,7 @@ import { fetchLog } from "../../api/logApi";
 import { useAuth } from "./../../contexts/AuthContext"
 
 const { Title } = Typography;
-const logs = await fetchLog(18);
+
 export default function ActivityLog() {
     const { user, isAdmin } = useAuth();
     const [logs, setLogs] = useState([]);
@@ -16,6 +16,9 @@ export default function ActivityLog() {
 
     useEffect(() => {
         async function loadLogs() {
+            const logs = await fetchLog(user.id);
+            console.log("here");
+            console.log(logs);
             if (user && user.id) {
                 setLoading(true);
                 const result = await fetchLog(user.id);
@@ -54,7 +57,7 @@ export default function ActivityLog() {
                 <Title level={1}>Activity Log</Title>
             </Box>
 
-            {/* Right container with activity log */}
+            {/* container with activity log */}
             <Box
                 sx={{
                     display: 'flex',
@@ -63,6 +66,7 @@ export default function ActivityLog() {
                     alignItems: 'left',
                     height: '60vh',
                     width: '60%',
+                    minWidth: '300px',
                     margin: '20px auto',
                     backgroundColor: '#f5f5f5',
                     borderRadius: '10px',
