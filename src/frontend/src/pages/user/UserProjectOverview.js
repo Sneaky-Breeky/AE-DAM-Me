@@ -520,7 +520,7 @@ export default function UserProjectOverview() {
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
-                        alignItems: 'start',
+                        alignItems: 'center',
                         width: '70%',
                         minWidth: '300px',
                         margin: '20px auto',

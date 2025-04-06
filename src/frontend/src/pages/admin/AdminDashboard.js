@@ -41,9 +41,8 @@ export default function AdminDashboard() {
           flexWrap: 'wrap',
           justifyContent: 'space-evenly',
           alignItems: 'center',
-          height: '100vh',
-          width: '70%',
-          gap: '10px',
+          height: '70vh',
+          width: '80%',
           overflow: 'auto',
         }}
       >
@@ -58,9 +57,9 @@ export default function AdminDashboard() {
                 }}
                 sx={{
                   textAlign: 'center',
-                  width: '30%',
+                  width: 250,
                   minWidth: '200px',
-                  height: '32%',
+                  height: 150,
                   minHeight: '80px',
                   margin: '1%',
                   backgroundColor: 'grey.300',
@@ -71,7 +70,7 @@ export default function AdminDashboard() {
                   overflow: 'auto'
                 }}
               >
-                <page.icon style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%'}} />
+                <page.icon style={{ marginTop: '8%', fontSize: '80px'}} />
                 <h4 style={{ margin: '0', marginBottom: '10%' }}>{page.title}</h4>
               </Box>
             // </Col>
