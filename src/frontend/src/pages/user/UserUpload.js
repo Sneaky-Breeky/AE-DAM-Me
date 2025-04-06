@@ -543,6 +543,10 @@ export default function UserUpload() {
         setSelectProjectMD({});
         setSelectProjectTags([]);
         setSelectFile(null);
+
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
     };
 
     // WHEN PROJECT IS SELECTED AND SELECTED FILE MD NEEDS TO BE SET
@@ -868,6 +872,11 @@ export default function UserUpload() {
         setSelectedDate(dayjs().format('YYYY-MM-DD'));
         setLocation(null);
         setUploadSuccess(true);
+
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+        
     };
     
     
