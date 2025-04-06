@@ -238,8 +238,6 @@ namespace DAMBackend.Controllers
             });
         }
 
-        
-
         [HttpPost]
         public async Task<ActionResult<List<FileModel>>> AddFiles(List<FileDTO> files)
         {
@@ -257,8 +255,6 @@ namespace DAMBackend.Controllers
             var existingFiles = findExistingFiles(files);
             var existingFilePaths = existingFiles.Select(f => f.OriginalPath);
             var newFiles = files.Where(file => !existingFilePaths.Contains(file.filePath));
-
-
            
             var savedFiles = new List<FileModel> { };
 
@@ -320,7 +316,7 @@ namespace DAMBackend.Controllers
                     Location = file.location
                 };
 
-                // fileModel = await ExifExtract(updatedPath,fileModel);
+                fileModel = await ExifExtract(updatedPath,fileModel);
 
                 _context.Files.Add(fileModel);
 
@@ -643,16 +639,16 @@ namespace DAMBackend.Controllers
             return Ok("Files uploaded successfully.");
         }
     
-      [HttpPost("delete-files")]
-      public async Task<IActionResult> DeleteFiles([FromBody] List<string> fileNames)
-      {
-          if (fileNames == null || fileNames.Count == 0)
-          {
-              return BadRequest("No files specified for deletion.");
-          }
+        [HttpPost("delete-files")]
+        public async Task<IActionResult> DeleteFiles([FromBody] List<string> fileNames)
+        {
+            if (fileNames == null || fileNames.Count == 0)
+            {
+                return BadRequest("No files specified for deletion.");
+            }
 
-          try
-          {
+            try
+            {
               // Assuming _azureBlobService.ProjectsContainer returns the BlobContainerClient
               var containerClient = _azureBlobService.ProjectsContainer;
 

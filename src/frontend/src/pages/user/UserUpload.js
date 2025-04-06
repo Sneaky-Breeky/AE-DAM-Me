@@ -271,16 +271,19 @@ export default function UserUpload() {
         // Check if any files are selected
         const totalFiles = files.length + selectedFiles.length;
 
+        
         if (totalFiles > MAX_FILES) {
             message.error(`You can only upload up to ${MAX_FILES} images. You tried adding ${totalFiles}.`);
             return;
         }
-
+        
         const formData = new FormData();
-
+        
         selectedFiles.forEach(file => {
             formData.append('files', file);
         });
+
+        // console.log("dump formData", formData);
 
         try {
             setSpinning(true);
