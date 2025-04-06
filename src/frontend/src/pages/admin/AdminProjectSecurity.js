@@ -81,7 +81,7 @@ function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, all
                 justifyContent: 'flex-start',
                 alignItems: 'left',
                 width: '80%',
-                height: '100%',
+                height: '60vh',
                 marginTop: '0',
                 backgroundColor: '#f5f5f5',
                 borderRadius: '10px',
@@ -338,15 +338,14 @@ export default function AdminProjectSecurity() {
             <Box
                 sx={{
                     display: 'flex',
-                    flexDirection: 'row',
-                    justifyContent: 'flex-start',
-                    alignItems: 'left',
+                    flexWrap: 'wrap',
+                    justifyContent: 'center',
+                    alignItems: 'anchor-center',
                     height: '100vh',
                     width: '80%',
                     margin: '20px auto',
                     marginTop: '0',
                     borderRadius: '10px',
-
                     overflow: 'auto',
                 }}
             >
@@ -358,11 +357,13 @@ export default function AdminProjectSecurity() {
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'flex-start',
-                        alignItems: 'left',
-                        width: '50%',
+                        alignItems: 'center',
+                        width: '45%',
+                        minWidth: '400px',
                         margin: '20px auto',
                         marginTop: '0',
                         borderRadius: '10px',
+                        padding: '20px',
                     }}
                 >
 
@@ -373,13 +374,12 @@ export default function AdminProjectSecurity() {
                             justifyContent: 'flex-start',
                             alignItems: 'left',
                             width: '100%',
-                            height: '100%',
-                            margin: '20px auto',
+                            height: '60vh',
+                            marginTop:'0',
                             backgroundColor: '#f5f5f5',
                             borderRadius: '10px',
                             padding: '20px',
                             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                            overflow: 'auto',
                         }}
                     >
 
@@ -493,8 +493,8 @@ export default function AdminProjectSecurity() {
                         justifyContent: 'flex-start',
                         alignItems: 'center',
                         width: '40%',
+                        minWidth: '400px',
                         padding: '20px',
-                        margin: '20px auto',
                         marginTop: '0',
                         paddingBottom: '10',
                     }}
