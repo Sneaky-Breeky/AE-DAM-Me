@@ -7,7 +7,7 @@ import { fetchLog } from "../../api/logApi";
 import { useAuth } from "./../../contexts/AuthContext"
 
 const { Title } = Typography;
-const logs = await fetchLog(18);
+
 export default function ActivityLog() {
     const { user, isAdmin } = useAuth();
     const [logs, setLogs] = useState([]);
@@ -16,6 +16,9 @@ export default function ActivityLog() {
 
     useEffect(() => {
         async function loadLogs() {
+            const logs = await fetchLog(user.id);
+            console.log("here");
+            console.log(logs);
             if (user && user.id) {
                 setLoading(true);
                 const result = await fetchLog(user.id);
