@@ -545,17 +545,15 @@ export default function UserProjectOverview() {
 
                 {/* Download and Admin-only Delete Images */}
                 <Box sx={{ display: 'flex', alignItems: 'start', justifyContent: 'left', margin: '20px auto', gap: '10px', width: '70%' }}>
-                    {isAdmin && (
-                        <Button
-                            onClick={toggleEditMode}
-                            color="primary"
-                            type="primary"
-                            ghost={isEditMode}
-                            icon={<EditOutlined />}
-                        >
-                            {isEditMode ? "Cancel Selection Mode" : "Select from Gallery"}
-                        </Button>
-                    )}
+                    <Button
+                        onClick={toggleEditMode}
+                        color="primary"
+                        type="primary"
+                        ghost={isEditMode}
+                        icon={<EditOutlined />}
+                    >
+                        {isEditMode ? "Cancel Selection Mode" : "Select from Gallery"}
+                    </Button>
                     {/* Download button */}
                     {isEditMode && selectedImages.size > 0 && (
                         <Popconfirm
