@@ -69,7 +69,13 @@
 
              var mTags = await _context.MetadataTags
                  .Where(mt => mt.FileId == fid) 
-                 .Select(mt => new { mt.Key, mt.sValue, mt.iValue })
+                 .Select(mt => new 
+                 {
+                     Key = mt.Key,
+                     sValue = mt.sValue ?? string.Empty,
+                     iValue = mt.iValue,
+                     type = mt.type
+                 })
                  .ToListAsync();
 
              return Ok(mTags);
