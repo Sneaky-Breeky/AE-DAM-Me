@@ -91,9 +91,9 @@ export async function downloadFilesZip(files) {
             const errorText = await response.text();
             try {
                 const errorData = JSON.parse(errorText);
-                return { error: errorData.message || "Unknown error" };
+                return {error: errorData.message || "Unknown error"};
             } catch {
-                return { error: `HTTP Error ${response.status}: ${errorText}` };
+                return {error: `HTTP Error ${response.status}: ${errorText}`};
             }
         }
         const blob = await response.blob(); // Convert response to binary (blob)
@@ -110,8 +110,60 @@ export async function downloadFilesZip(files) {
         return true;
     } catch (error) {
         console.error("Network or fetch error:", error);
+        return {error: "Network error or server unreachable", message: error.message};
+    }
+}
+export async function deleteFiles(filesNAME) {
+    try {
+        const response = await fetch(`${FILES_URL}/delete-files`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(filesNAME)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            try {
+                const errorData = JSON.parse(errorText);
+                return { error: errorData.message || "Unknown error" };
+            } catch {
+                return { error: `HTTP Error ${response.status}: ${errorText}` };
+            }
+        }
+        return true;
+    } catch (error) {
+        console.error("Network or fetch error:", error);
         return { error: "Network error or server unreachable", message: error.message };
     }
-
 }
+
+export async function deleteFilesDB(fileIds) {
+    try {
+        const response = await fetch(`${FILES_URL}/delete-files-db`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(fileIds)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            try {
+                const errorData = JSON.parse(errorText);
+                return { error: errorData.message || "Unknown error" };
+            } catch {
+                return { error: `HTTP Error ${response.status}: ${errorText}` };
+            }
+        }
+        return true;
+    } catch (error) {
+        console.error("Network or fetch error:", error);
+        return { error: "Network error or server unreachable", message: error.message };
+    }
+}
+
+
 

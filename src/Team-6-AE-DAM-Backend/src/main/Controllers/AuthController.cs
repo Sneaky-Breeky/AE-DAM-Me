@@ -33,6 +33,12 @@ namespace backend.auth
             {
                 return Unauthorized(new { error = "Invalid email or password" });
             }
+            
+            // Only allow login if the user is active.
+            if (!user.Status)
+            {
+                return Unauthorized(new { error = "User is inactive. Please contact support." });
+            }
 
             // Return useful user details after successful login
             return Ok(new 
