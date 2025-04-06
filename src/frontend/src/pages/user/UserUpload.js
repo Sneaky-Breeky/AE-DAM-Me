@@ -123,8 +123,9 @@ export default function UserUpload() {
                 handleProjectChange(data[0].projectId);
                 handleDateChange(data[0].dateTimeOriginal);
                 setLocation(data[0].location || "");
-                setSelectedDate(data[0].dateTimeOriginal.split("T")[0])
+                setSelectedDate(data[0].dateTimeOriginal.split("T")[0]);
             }
+
             const paletteFiles = data.map((file, index) => (
                 {
                     id: file.id,
@@ -137,6 +138,7 @@ export default function UserUpload() {
                     userId: file.userId,
                     file: { name: file.name },
                 }));
+
             paletteFiles.forEach(file => {
                 if (file.metadata.length) {
                     setTagApplications(prev => [
@@ -144,8 +146,12 @@ export default function UserUpload() {
                     ]);
                 }
             });
+
             console.log("User Palette Details : ", paletteFiles);
+
+            // Update userFiles but don't clear the current view
             setFiles((prevFiles) => [...paletteFiles]);
+
             setUserFiles((prevUserFiles) => [...paletteFiles]);
 
         } catch (error) {
@@ -225,6 +231,7 @@ export default function UserUpload() {
         }
 
         const formData = new FormData();
+
         selectedFiles.forEach(file => {
             formData.append('files', file);
         });
@@ -247,16 +254,18 @@ export default function UserUpload() {
 
             console.log("dump", uploadedFileUrls);
 
-            const newFiles = selectedFiles.map((file, index) => ({
-                file: { name: getFileName(uploadedFileUrls[index].originalPath) },
-                preview: uploadedFileUrls[index].thumbnailPath || URL.createObjectURL(file),
-                original: uploadedFileUrls[index].originalPath,
-                metadata: [],
-                date: selectedDate || null,
-                location: location || "",
-                projectId: project ? project.id : null,
-                userId: user.id
-            }));
+            const newFiles = selectedFiles.map((file, index) => {
+                return {
+                    file: { name: getFileName(uploadedFileUrls[index].originalPath) },
+                    preview: uploadedFileUrls[index].thumbnailPath || URL.createObjectURL(file),
+                    original: uploadedFileUrls[index].originalPath,
+                    metadata: [],
+                    date: selectedDate || null,
+                    location: location || "",
+                    projectId: project ? project.id : null,
+                    userId: user.id
+                }
+            });
 
             setFiles((prevFiles) => [...prevFiles, ...newFiles]);
             setUserFiles((prevUserFiles) => [...prevUserFiles, ...newFiles]);
@@ -323,13 +332,12 @@ export default function UserUpload() {
             crop.height
         );
 
-        return canvas.toDataURL('image/jpeg');
+        return new Promise((resolve) => {
+            canvas.toBlob(blob => {
+                resolve(blob);
+            }, 'image/jpeg');
+        });
     };
-
-
-
-
-
 
     const onCropComplete = useCallback((croppedArea, croppedPixels) => {
         setCroppedAreaPixels(croppedPixels);
@@ -337,36 +345,52 @@ export default function UserUpload() {
 
     const saveEditedImage = async () => {
         try {
-            const croppedImgUrl = await getCroppedImg(currentFile.original, croppedAreaPixels, rotation);
-            console.log("Cropped URL generated:", croppedImgUrl);
+            const blob = await getCroppedImg(currentFile.original, croppedAreaPixels, rotation);
 
-            const updatedFiles = files.map(f => {
-                if (f.file.name === currentFile.file.name) {
-                    console.log("Matching file found, updating preview");
-                    return {
-                        ...f,
-                        preview: croppedImgUrl,
-                        original: croppedImgUrl,
-                        edited: true
-                    };
-                }
-                return f;
+            // Convert blob to File (important for formData naming)
+            const fileName = currentFile.file.name || 'cropped_image.jpg';
+            const croppedFile = new File([blob], fileName, { type: 'image/jpeg' });
+
+            // Upload with FormData
+            const formData = new FormData();
+            formData.append('files', croppedFile);
+
+            setSpinning(true);
+            const response = await fetch(`${API_BASE_URL}/api/files/upload`, {
+                method: 'POST',
+                body: formData,
             });
-            console.log("Files before update:", files);
-            console.log("Files after update:", updatedFiles);
+            setSpinning(false);
+
+            if (!response.ok) {
+                throw new Error('Failed to upload cropped image.');
+            }
+
+            const uploaded = await response.json();
+            const uploadedPreview = uploaded[0].thumbnailPath || uploaded[0].originalPath;
+
+            // Replace file in state
+            const updatedFiles = files.map(f =>
+                f.file.name === currentFile.file.name
+                    ? {
+                        ...f,
+                        preview: uploadedPreview,
+                        original: uploaded[0].originalPath,
+                        edited: true
+                    }
+                    : f
+            );
 
             setFiles(updatedFiles);
-            setUserFiles(prev => prev.map(f =>
-                f.file.name === currentFile.file.name ?
-                    { ...f, preview: croppedImgUrl, original: croppedImgUrl, edited: true } : f
-            ));
-
+            setUserFiles(updatedFiles);
             setEditing(false);
             setCurrentFile(null);
             setRotation(0);
+
+            message.success("Edited image saved and uploaded!");
         } catch (error) {
             console.error("Error saving cropped image:", error);
-            message.error("Failed to save edited image.");
+            message.error("Failed to upload edited image.");
         }
     };
 
@@ -639,14 +663,72 @@ export default function UserUpload() {
     const handleUploadFilesToPalette = async () => {
         console.log("Uploading files to palette:", files);
         setSpinning(true);
-        const filesToSave = files.map(({ file, ...rest }) => ({
-            ...rest,
-            filePath: rest.original,
-            palette: true
-        }));
-        await saveFiles(filesToSave);
-        await getUserPalette();
-        setSpinning(false);
+
+        try {
+            // Create a copy of the current files to maintain after the palette update
+            const currentFiles = [...files];
+
+            const filesToSave = files.map(({ file, ...rest }) => ({
+                ...rest,
+                filePath: rest.original,
+                palette: true
+            }));
+
+            await saveFiles(filesToSave);
+
+            // After saving to palette, get the updated palette but keep current files visible
+            const paletteData = await getUserPaletteData();
+
+            // Instead of replacing files completely, merge palette data with current files
+            // This ensures we don't lose the current view
+            if (paletteData && paletteData.length > 0) {
+                const paletteFiles = paletteData.map((file, index) => ({
+                    id: file.id,
+                    preview: file.thumbnailPath || file.viewPath,
+                    original: file.originalPath,
+                    metadata: file.bTags.length > 0 ? file.bTags.map(item => item.value) : [],
+                    date: file.dateTimeOriginal.split("T")[0],
+                    location: file.location || "",
+                    projectId: file.projectId,
+                    userId: file.userId,
+                    file: { name: file.name },
+                }));
+
+                // Update userFiles with the palette data
+                setUserFiles(paletteFiles);
+
+                // Keep the current files displayed in the UI
+                setFiles(paletteFiles);
+            }
+
+            message.success("Files saved to palette successfully!");
+        } catch (error) {
+            console.error("Error saving to palette:", error);
+            message.error("Failed to save files to palette");
+        } finally {
+            setSpinning(false);
+        }
+    };
+
+    // Helper function to get palette data without modifying state
+    async function getUserPaletteData() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/Files/${user.id}/palette`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'text/plain'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching palette data:', error);
+            return [];
+        }
     }
     const saveFiles = async (filesToSave) => {
         try {
