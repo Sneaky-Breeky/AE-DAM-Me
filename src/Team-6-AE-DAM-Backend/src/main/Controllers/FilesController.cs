@@ -328,12 +328,16 @@ namespace DAMBackend.Controllers
         {
             return await _context.BasicTags.AnyAsync(t => t.Value == tagValue);
         }
-
+        
         private void deleteFilesFromPalette(List<FileDTO> files)
         {
-            //Delete any old file before inserting when uploading files to Palette.
+            var dtoFilePaths = files
+                    .Where(file => file.palette) 
+                    .Select(file => file.filePath)
+                    .ToList(); 
+
             var filesToDelete = _context.Files
-                .Where(f => f.UserId == files[0].userId && f.Palette)
+                .Where(f => f.UserId == files[0].userId && f.Palette && dtoFilePaths.Contains(f.OriginalPath))
                 .ToList();
             if (filesToDelete.Any())
             {
