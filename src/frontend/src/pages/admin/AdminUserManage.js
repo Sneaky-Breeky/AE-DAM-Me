@@ -44,8 +44,8 @@ function PopupForm({ visible, onClose, refreshUsers }) {
         borderRadius: '10px',
         padding: '20px',
         paddingTop: '10px',
+        marginLeft: '0',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        overflow: 'auto'
       }}
     >
       <Form
@@ -270,19 +270,54 @@ export default function AdminUserManage() {
       <Box
         sx={{
           display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'flex-start',
-          alignItems: 'left',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          alignItems: 'anchor-center',
           height: '100vh',
           width: '80%',
           margin: '20px auto',
           borderRadius: '10px',
-
           overflow: 'auto',
         }}
       >
 
-        {/* left container with users */}
+        {/* left container with new users */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-start',
+            alignItems: 'center',
+            maxWidth: '400px',
+            padding: '20px',
+          }}
+        >
+          <Box
+            onClick={() => { setPopupFormOpen(isPopupFormOpen ? false : true) }
+            }
+            sx={{
+              textAlign: 'center',
+              width: 150,
+              height: 80,
+              border: 1,
+              borderRadius: '16px',
+              '&:hover': { boxShadow: 3 },
+            }}
+          >
+            {isPopupFormOpen ?
+              <CloseOutlined style={{ marginTop: '10px', fontSize: '30px' }} />
+              : <PlusOutlined style={{ marginTop: '10px', fontSize: '30px' }} />}
+            {isPopupFormOpen ?
+              <h5 style={{ margin: '15px' }}>Close</h5>
+              : <h5 style={{ margin: '15px' }}>Add User</h5>}
+          </Box>
+
+          {/* {isPopupFormOpen && <PopupForm />} */}
+          {isPopupFormOpen && <PopupForm visible={isPopupFormOpen} onClose={() => setPopupFormOpen(false)} refreshUsers={fetchUsersList} />}
+
+        </Box>
+
+        {/* right container with users */}
         <Box
           sx={{
             display: 'flex',
@@ -290,6 +325,8 @@ export default function AdminUserManage() {
             justifyContent: 'flex-start',
             alignItems: 'left',
             width: '60%',
+            minWidth: '400px',
+            height: '75vh',
             margin: '20px auto',
             backgroundColor: '#f5f5f5',
             borderRadius: '10px',
@@ -446,42 +483,7 @@ export default function AdminUserManage() {
 
         </Box>
 
-        {/* right container with new users */}
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'flex-start',
-            alignItems: 'center',
-            width: '30%',
-            padding: '20px',
-
-          }}
-        >
-          <Box
-            onClick={() => { setPopupFormOpen(isPopupFormOpen ? false : true) }
-            }
-            sx={{
-              textAlign: 'center',
-              width: 150,
-              height: 80,
-              border: 1,
-              borderRadius: '16px',
-              '&:hover': { boxShadow: 3 },
-            }}
-          >
-            {isPopupFormOpen ?
-              <CloseOutlined style={{ marginTop: '10px', fontSize: '30px' }} />
-              : <PlusOutlined style={{ marginTop: '10px', fontSize: '30px' }} />}
-            {isPopupFormOpen ?
-              <h5 style={{ margin: '15px' }}>Close</h5>
-              : <h5 style={{ margin: '15px' }}>Add User</h5>}
-          </Box>
-
-          {/* {isPopupFormOpen && <PopupForm />} */}
-          {isPopupFormOpen && <PopupForm visible={isPopupFormOpen} onClose={() => setPopupFormOpen(false)} refreshUsers={fetchUsersList} />}
-
-        </Box>
+        
       </Box>
 
     </Box >

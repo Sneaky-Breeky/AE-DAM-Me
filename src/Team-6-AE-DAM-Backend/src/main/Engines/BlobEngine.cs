@@ -1,9 +1,7 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using DAMBackend.Models;
-using Google.Protobuf.Reflection;
 using Microsoft.EntityFrameworkCore;
-
 
 namespace DAMBackend.blob
 {
@@ -256,6 +254,18 @@ namespace DAMBackend.blob
                 return false;
             }
         }
+
+        public async Task<bool> DeleteProjectFileAsync(string fileName)
+        {
+            var blobClient = _projectsContainer.GetBlobClient(fileName);
+            return await blobClient.DeleteIfExistsAsync();
+        }
+        public async Task<bool> DeletePaletteFileAsync(string fileName)
+        {
+            var blobClient = _palettesContainer.GetBlobClient(fileName);
+            return await blobClient.DeleteIfExistsAsync();
+        }
+
 
         private (string containerName, string blobName) ParseBlobInfoFromUri(string uri)
         {

@@ -475,3 +475,29 @@ export async function exportProject(projectId) {
         return [];
     }
 }
+export async function deleteFileFromProject(projectId, fileId) {
+    try {
+        const response = await fetch(`${PROJECTS_URL}/deleteFile/${projectId}/${fileId}`, {
+            method: "DELETE",
+            headers: {
+                "Accept": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            try {
+                const errorData = JSON.parse(errorText);
+                return { error: errorData.message || "Unknown error" };
+            } catch {
+                return { error: `HTTP Error ${response.status}: ${errorText}` };
+            }
+        }
+
+        const result = await response.text();
+        return { success: true, message: result };
+    } catch (error) {
+        console.error("Network or fetch error:", error);
+        return { error: "Network error or server unreachable", message: error.message };
+    }
+}

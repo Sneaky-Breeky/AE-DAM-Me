@@ -515,6 +515,63 @@ namespace DAMBackend.Controllers
 
             return Ok("Files uploaded successfully.");
         }
+    
+      [HttpPost("delete-files")]
+      public async Task<IActionResult> DeleteFiles([FromBody] List<string> fileNames)
+      {
+          if (fileNames == null || fileNames.Count == 0)
+          {
+              return BadRequest("No files specified for deletion.");
+          }
+
+          try
+          {
+              // Assuming _azureBlobService.ProjectsContainer returns the BlobContainerClient
+              var containerClient = _azureBlobService.ProjectsContainer;
+
+              foreach (var fileName in fileNames)
+              {
+                  var blobClient = containerClient.GetBlobClient(fileName);
+                  // Delete the blob if it exists
+                  await blobClient.DeleteIfExistsAsync();
+              }
+
+              return Ok("Files deleted successfully.");
+          }
+          catch (Exception ex)
+          {
+              return StatusCode(500, $"Error deleting files: {ex.Message}");
+          }
+      }
+
+      [HttpPost("delete-files-db")]
+      public async Task<IActionResult> DeleteFilesDB([FromBody] List<int> fileIds)
+      {
+          if (fileIds == null || fileIds.Count == 0)
+          {
+              return BadRequest("No file IDs provided for deletion.");
+          }
+
+          foreach (var id in fileIds)
+          {
+              var file = await _context.Files.FindAsync(id);
+              if (file != null)
+              {
+                  _context.Files.Remove(file);
+              }
+          }
+
+          try
+          {
+              await _context.SaveChangesAsync();
+              return Ok("Files deleted successfully.");
+          }
+          catch (Exception ex)
+          {
+              return StatusCode(500, $"Error deleting files from database: {ex.Message}");
+          }
+      }
     }
 }
+
 

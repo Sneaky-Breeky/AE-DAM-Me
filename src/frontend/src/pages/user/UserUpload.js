@@ -8,8 +8,12 @@ import { addLog, addLogProject } from "../../api/logApi";
 import { API_BASE_URL } from '../../api/apiURL.js';
 import { Palette } from '@mui/icons-material';
 import { fetchProjectsForUser } from '../../api/projectApi';
-import { addMetaAdvanceTag, addMetaBasicTag } from '../../api/fileApi';
+import { addMetaAdvanceTag, addMetaBasicTag, assignSuggestedProjectToFile } from '../../api/fileApi';
 import { getProjectMetaDataKeysUpload, getProjectBasicTags } from '../../api/queryFile';
+import {
+    getProjectImageBasicTags,
+    getProjectImageMetaDataValuesTags
+} from "../../api/imageApi";
 import { useEffect } from "react";
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -54,6 +58,8 @@ export default function UserUpload() {
     const [project, setProject] = useState(null);
     const [metadataTagsInput, setMetadataTagsInput] = useState();
     const [metadataTags, setMetadataTags] = useState([]);
+    const [existingFileMetadata, setExistingFileMetadata] = useState([]);
+    const [existingFileTags, setExistingFileTags] = useState([]);
     const [tagApplications, setTagApplications] = useState([]);
     const [location, setLocation] = useState(null);
     const [selectedDate, setSelectedDate] = useState(dayjs().format('YYYY-MM-DD'));
@@ -117,8 +123,9 @@ export default function UserUpload() {
                 handleProjectChange(data[0].projectId);
                 handleDateChange(data[0].dateTimeOriginal);
                 setLocation(data[0].location || "");
-                setSelectedDate(data[0].dateTimeOriginal.split("T")[0])
+                setSelectedDate(data[0].dateTimeOriginal.split("T")[0]);
             }
+
             const paletteFiles = data.map((file, index) => (
                 {
                     id: file.id,
@@ -131,6 +138,7 @@ export default function UserUpload() {
                     userId: file.userId,
                     file: { name: file.name },
                 }));
+
             paletteFiles.forEach(file => {
                 if (file.metadata.length) {
                     setTagApplications(prev => [
@@ -138,14 +146,36 @@ export default function UserUpload() {
                     ]);
                 }
             });
+
             console.log("User Palette Details : ", paletteFiles);
+
+            // Update userFiles but don't clear the current view
             setFiles((prevFiles) => [...paletteFiles]);
+
             setUserFiles((prevUserFiles) => [...paletteFiles]);
 
         } catch (error) {
             console.error('Error:', error);
         }
     }
+
+    useEffect(() => {
+        const fetchFileMetaAndTags = async () => {
+            if (!selectFile) return;
+            console.log("the file: ", selectFile);
+
+            const metaRes = await getProjectImageMetaDataValuesTags({ pid: selectFile.projectId, fid: selectFile.id });
+            const tagRes = await getProjectImageBasicTags({ pid: selectFile.projectId, fid: selectFile.id });
+
+            console.log("file metadata: ", metaRes);
+            console.log("file tags: ", tagRes);
+            setExistingFileMetadata(metaRes || []);
+            setExistingFileTags(tagRes || []);
+        };
+
+        fetchFileMetaAndTags();
+    }, [selectFile]);
+
     async function deleteFile(fileId) {
         try {
             const response = await fetch(`${API_BASE_URL}/api/Files/${fileId}`, {
@@ -162,9 +192,9 @@ export default function UserUpload() {
             if (response.status === 204) {
                 console.log("File deleted with no content returned.");
             } else {
-                const data = await response.json();  // only if body exists
+                const data = await response.json();
                 console.log("File Deleted:", data);
-            }            
+            }
 
             console.log("File Deleted : ");
 
@@ -201,6 +231,7 @@ export default function UserUpload() {
         }
 
         const formData = new FormData();
+
         selectedFiles.forEach(file => {
             formData.append('files', file);
         });
@@ -223,16 +254,18 @@ export default function UserUpload() {
 
             console.log("dump", uploadedFileUrls);
 
-            const newFiles = selectedFiles.map((file, index) => ({
-                file: { name: getFileName(uploadedFileUrls[index].originalPath) },
-                preview: uploadedFileUrls[index].thumbnailPath || URL.createObjectURL(file),
-                original: uploadedFileUrls[index].originalPath,
-                metadata: [],
-                date: selectedDate || null,
-                location: location || "",
-                projectId: project ? project.id : null,
-                userId: user.id
-            }));
+            const newFiles = selectedFiles.map((file, index) => {
+                return {
+                    file: { name: getFileName(uploadedFileUrls[index].originalPath) },
+                    preview: uploadedFileUrls[index].thumbnailPath || URL.createObjectURL(file),
+                    original: uploadedFileUrls[index].originalPath,
+                    metadata: [],
+                    date: selectedDate || null,
+                    location: location || "",
+                    projectId: project ? project.id : null,
+                    userId: user.id
+                }
+            });
 
             setFiles((prevFiles) => [...prevFiles, ...newFiles]);
             setUserFiles((prevUserFiles) => [...prevUserFiles, ...newFiles]);
@@ -247,85 +280,64 @@ export default function UserUpload() {
     const handleEditImage = (file, index) => {
         setCurrentFile(file);
         setCurrentIndex(index);
+        setRotation(0);
         setEditing(true);
     };
 
-    // const getCroppedImg = async (imageSrc, pixelCrop, rotation = 0) => {
-    //     const createImage = (url) =>
-    //         new Promise((resolve, reject) => {
-    //             const image = new window.Image();
-    //             image.crossOrigin = 'anonymous';
-    //             image.onload = () => resolve(image);
-    //             image.onerror = (err) => {
-    //                 console.error('Image load error:', err);
-    //                 reject(err);
-    //             };
-    //             // Add cache-busting parameter
-    //             const cacheBuster = `${url.includes('?') ? '&' : '?'}t=${new Date().getTime()}`;
-    //             image.src = url + cacheBuster;
-    //         });
-
-    //     try {
-    //         const image = await createImage(imageSrc);
-    //         const canvas = document.createElement('canvas');
-    //         const ctx = canvas.getContext('2d');
-
-    //         const safeArea = Math.max(image.width, image.height) * 2;
-    //         canvas.width = safeArea;
-    //         canvas.height = safeArea;
-
-    //         ctx.translate(safeArea / 2, safeArea / 2);
-    //         ctx.rotate((rotation * Math.PI) / 180);
-    //         ctx.translate(-safeArea / 2, -safeArea / 2);
-    //         ctx.drawImage(image, (safeArea - image.width) / 2, (safeArea - image.height) / 2);
-
-    //         const data = ctx.getImageData(pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height);
-
-    //         canvas.width = pixelCrop.width;
-    //         canvas.height = pixelCrop.height;
-
-    //         ctx.putImageData(data, 0, 0);
-
-    //         return canvas.toDataURL('image/jpeg');
-    //     } catch (error) {
-    //         console.error('Error in getCroppedImg:', error);
-    //         throw error;
-    //     }
-    // };
-    const getCroppedImg = async (imageSrc, pixelCrop, rotation = 0) => {
+    const getCroppedImg = async (imageSrc, crop, rotation = 0) => {
         const createImage = (url) =>
             new Promise((resolve, reject) => {
                 const image = new window.Image();
-                image.crossOrigin = 'anonymous';
+                image.setAttribute('crossOrigin', 'anonymous'); // Prevent CORS issues
                 image.onload = () => resolve(image);
                 image.onerror = reject;
-                image.src = url + `?t=${new Date().getTime()}`; // cache busting
+                image.src = url;
             });
-    
+
         const image = await createImage(imageSrc);
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-    
-        // Set canvas to the cropped area size
-        canvas.width = pixelCrop.width;
-        canvas.height = pixelCrop.height;
-    
-        // Move the origin to the center of the crop area
-        ctx.translate(-pixelCrop.x, -pixelCrop.y);
-    
-        // Move origin to the center of the image and rotate
-        ctx.translate(image.width / 2, image.height / 2);
-        ctx.rotate((rotation * Math.PI) / 180);
-        ctx.translate(-image.width / 2, -image.height / 2);
-    
-        ctx.drawImage(image, 0, 0);
-    
-        return canvas.toDataURL('image/jpeg');
+
+        const radians = (rotation * Math.PI) / 180;
+
+        // Calculate bounding box of rotated image
+        const rotatedWidth = Math.abs(Math.cos(radians) * image.width) + Math.abs(Math.sin(radians) * image.height);
+        const rotatedHeight = Math.abs(Math.sin(radians) * image.width) + Math.abs(Math.cos(radians) * image.height);
+
+        // Create a temp canvas for the rotated image
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCanvas.width = rotatedWidth;
+        tempCanvas.height = rotatedHeight;
+
+        // Rotate image and draw to temp canvas
+        tempCtx.translate(rotatedWidth / 2, rotatedHeight / 2);
+        tempCtx.rotate(radians);
+        tempCtx.drawImage(image, -image.width / 2, -image.height / 2);
+
+        // Crop the image from rotated canvas
+        canvas.width = crop.width;
+        canvas.height = crop.height;
+
+        // Crop from correct position on rotated canvas
+        ctx.drawImage(
+            tempCanvas,
+            crop.x,
+            crop.y,
+            crop.width,
+            crop.height,
+            0,
+            0,
+            crop.width,
+            crop.height
+        );
+
+        return new Promise((resolve) => {
+            canvas.toBlob(blob => {
+                resolve(blob);
+            }, 'image/jpeg');
+        });
     };
-    
-
-
-
 
     const onCropComplete = useCallback((croppedArea, croppedPixels) => {
         setCroppedAreaPixels(croppedPixels);
@@ -333,35 +345,52 @@ export default function UserUpload() {
 
     const saveEditedImage = async () => {
         try {
-            const croppedImgUrl = await getCroppedImg(currentFile.original, croppedAreaPixels, rotation);
-            console.log("Cropped URL generated:", croppedImgUrl);
+            const blob = await getCroppedImg(currentFile.original, croppedAreaPixels, rotation);
 
-            const updatedFiles = files.map(f => {
-                if (f.file.name === currentFile.file.name) {
-                    console.log("Matching file found, updating preview");
-                    return {
-                        ...f,
-                        preview: croppedImgUrl,
-                        original: croppedImgUrl,
-                        edited: true
-                    };
-                }
-                return f;
+            // Convert blob to File (important for formData naming)
+            const fileName = currentFile.file.name || 'cropped_image.jpg';
+            const croppedFile = new File([blob], fileName, { type: 'image/jpeg' });
+
+            // Upload with FormData
+            const formData = new FormData();
+            formData.append('files', croppedFile);
+
+            setSpinning(true);
+            const response = await fetch(`${API_BASE_URL}/api/files/upload`, {
+                method: 'POST',
+                body: formData,
             });
-            console.log("Files before update:", files);
-            console.log("Files after update:", updatedFiles);
+            setSpinning(false);
+
+            if (!response.ok) {
+                throw new Error('Failed to upload cropped image.');
+            }
+
+            const uploaded = await response.json();
+            const uploadedPreview = uploaded[0].thumbnailPath || uploaded[0].originalPath;
+
+            // Replace file in state
+            const updatedFiles = files.map(f =>
+                f.file.name === currentFile.file.name
+                    ? {
+                        ...f,
+                        preview: uploadedPreview,
+                        original: uploaded[0].originalPath,
+                        edited: true
+                    }
+                    : f
+            );
 
             setFiles(updatedFiles);
-            setUserFiles(prev => prev.map(f =>
-                f.file.name === currentFile.file.name ?
-                    { ...f, preview: croppedImgUrl, original: croppedImgUrl, edited: true } : f
-            ));
-
+            setUserFiles(updatedFiles);
             setEditing(false);
             setCurrentFile(null);
+            setRotation(0);
+
+            message.success("Edited image saved and uploaded!");
         } catch (error) {
             console.error("Error saving cropped image:", error);
-            message.error("Failed to save edited image.");
+            message.error("Failed to upload edited image.");
         }
     };
 
@@ -432,9 +461,16 @@ export default function UserUpload() {
         console.log(selectProjectTags);
         console.log("on click submit");
 
+
+        const res = await assignSuggestedProjectToFile(selectProject.id, selectFile.id);
+        if (res.error) {
+            message.error(res.error);
+        } else {
+            message.success(res);
+        }
+
         for (const [key, value] of Object.entries(selectProjectMD)) {
-            // number value
-            const resultMD = await addMetaAdvanceTag(selectFile.id,{"key":key,"value":value,"type":(!isNaN(value) ? 1: 0)});
+            const resultMD = await addMetaAdvanceTag(selectFile.id, { "key": key, "value": value, "type": (!isNaN(value) ? 1 : 0) });
             console.log(resultMD);
 
         }
@@ -627,14 +663,72 @@ export default function UserUpload() {
     const handleUploadFilesToPalette = async () => {
         console.log("Uploading files to palette:", files);
         setSpinning(true);
-        const filesToSave = files.map(({ file, ...rest }) => ({
-            ...rest,
-            filePath: rest.original,
-            palette: true
-        }));
-        await saveFiles(filesToSave);
-        await getUserPalette();
-        setSpinning(false);
+
+        try {
+            // Create a copy of the current files to maintain after the palette update
+            const currentFiles = [...files];
+
+            const filesToSave = files.map(({ file, ...rest }) => ({
+                ...rest,
+                filePath: rest.original,
+                palette: true
+            }));
+
+            await saveFiles(filesToSave);
+
+            // After saving to palette, get the updated palette but keep current files visible
+            const paletteData = await getUserPaletteData();
+
+            // Instead of replacing files completely, merge palette data with current files
+            // This ensures we don't lose the current view
+            if (paletteData && paletteData.length > 0) {
+                const paletteFiles = paletteData.map((file, index) => ({
+                    id: file.id,
+                    preview: file.thumbnailPath || file.viewPath,
+                    original: file.originalPath,
+                    metadata: file.bTags.length > 0 ? file.bTags.map(item => item.value) : [],
+                    date: file.dateTimeOriginal.split("T")[0],
+                    location: file.location || "",
+                    projectId: file.projectId,
+                    userId: file.userId,
+                    file: { name: file.name },
+                }));
+
+                // Update userFiles with the palette data
+                setUserFiles(paletteFiles);
+
+                // Keep the current files displayed in the UI
+                setFiles(paletteFiles);
+            }
+
+            message.success("Files saved to palette successfully!");
+        } catch (error) {
+            console.error("Error saving to palette:", error);
+            message.error("Failed to save files to palette");
+        } finally {
+            setSpinning(false);
+        }
+    };
+
+    // Helper function to get palette data without modifying state
+    async function getUserPaletteData() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/Files/${user.id}/palette`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'text/plain'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching palette data:', error);
+            return [];
+        }
     }
     const saveFiles = async (filesToSave) => {
         try {
@@ -893,12 +987,41 @@ export default function UserUpload() {
 
                 <Box sx={metadataBoxStyle}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-around' }}>
-                        <Button type="primary" color={selectFileMode ? "red" : "cyan"} variant={selectFileMode ? "filled" : "solid"} onClick={handleToggleSelectFile} disabled={files.length === 0}>
-                            {selectFileMode ? "Close File" : "Select File"}
-                        </Button>
-                        <Button type="primary" color="cyan" variant="solid" onClick={handleApplyFileMD} disabled={selectFile === null}>
-                            Submit File Metadata
-                        </Button>
+                        <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '10px' }}>
+                            <Button type="primary" color={selectFileMode ? "red" : "cyan"} variant={selectFileMode ? "filled" : "solid"} onClick={handleToggleSelectFile} disabled={files.length === 0}>
+                                {selectFileMode ? "Close File" : "Select File"}
+                            </Button>
+                            <Button type="primary" color="cyan" variant="solid" onClick={handleApplyFileMD} disabled={selectFile === null}>
+                                Submit File Metadata
+                            </Button>
+                        </div>
+                        {selectFile && (
+                            <div style={{ marginBottom: '10px' }}>
+                                <Title level={5}>Existing File Metadata:</Title>
+                                {existingFileMetadata.length === 0 ? (
+                                    <p style={{ fontSize: '90%', color: 'gray' }}>No metadata found</p>
+                                ) : (
+                                    <Flex wrap="wrap" style={{ marginTop: '10px' }}>
+                                        {existingFileMetadata.map((item, idx) => (
+                                            <Tag key={idx} style={tagStyle}>
+                                                <b>{item.key}</b>: <i style={{ color: 'gray' }}>{String(item.sValue ?? item.iValue)}</i>
+                                            </Tag>
+                                        ))}
+                                    </Flex>
+                                )}
+
+                                <Title level={5}>Existing File Tags:</Title>
+                                {existingFileTags.length === 0 ? (
+                                    <p style={{ fontSize: '90%', color: 'gray' }}>No tags found</p>
+                                ) : (
+                                    <Flex wrap="wrap" style={{ marginTop: '10px' }}>
+                                        {existingFileTags.map((tag, idx) => (
+                                            <Tag key={idx} style={tagStyle}>{tag}</Tag>
+                                        ))}
+                                    </Flex>
+                                )}
+                            </div>
+                        )}
                     </Box>
                     <Title level={5}>Project File Metadata: </Title>
                     <Select
@@ -914,7 +1037,7 @@ export default function UserUpload() {
                         onChange={handleSelectProjectChange}
                         style={{ width: '100%', marginBottom: '5%' }}
                         disabled={selectFile === null}
-                        value={selectProject !== null ? selectProject.id : undefined}
+                        value={selectFile?.projectId ?? undefined}
                     />
 
                     <table style={{ width: '100%', borderCollapse: 'collapse', borderBottomWidth: 'thin', borderBottomStyle: 'solid', borderColor: 'LightGray', paddingBottom: '5%' }}>

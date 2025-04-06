@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -569,5 +569,29 @@ namespace DAMBackend.Controllers
                 return StatusCode(500, $"Failed to archive project {projectId}.");
             }
         }
+        [HttpDelete("deleteFile/{projectId}/{fileId}")]
+            public async Task<IActionResult> DeleteFileFromProject(int projectId, int fileId)
+            {
+                var fileTags = _context.FileTags.Where(ft => ft.FileId == fileId);
+            
+                // Remove the FileTag entries
+                _context.FileTags.RemoveRange(fileTags);
+                
+                // Save changes to the database
+                await _context.SaveChangesAsync();
+                
+                var file = await _context.Files.FirstOrDefaultAsync(f => f.Id == fileId && f.ProjectId == projectId);
+
+                if (file == null)
+                {
+                    return NotFound("File not found in this project.");
+                }
+                await _azureBlobService.DeleteProjectFileAsync(file.OriginalPath);
+
+                _context.Files.Remove(file);
+                await _context.SaveChangesAsync();
+
+                return Ok($"File with ID {fileId} deleted from project {projectId}.");
+            }
     }
 }
