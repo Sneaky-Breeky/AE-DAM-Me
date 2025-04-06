@@ -351,7 +351,6 @@ export default function UserProjectOverview() {
                     flexGrow: 1,
                     padding: 1,
                     width: '70%',
-                    minWidth: '300px',
                     margin: '20px auto',
                     backgroundColor: '#f5f5f5',
                     borderRadius: '10px',
@@ -373,7 +372,6 @@ export default function UserProjectOverview() {
                 >
                     <Box
                         display="flex"
-                        flexWrap="wrap"
                         alignItems="center"
                         justifyContent="center"
                         gap={2}
@@ -395,16 +393,12 @@ export default function UserProjectOverview() {
 
                     <Box
                         display="flex"
-                        flexDirection="row"
-                        flexWrap="wrap"
                         alignItems="center"
                         gap={2}
                         mb={2}
                         justifyContent="center"
-                        width="100%"
                     >
                         <span style={{ fontWeight: 'bold', fontSize: '20px' }}>Filter Metadata:</span>
-                        <div style={{display: 'flex', flexWrap: 'wrap', justifyContent: 'space-evenly'}}>
                         <Form.Item>
                             <Select
                                 showSearch
@@ -420,6 +414,7 @@ export default function UserProjectOverview() {
                                 onChange={setSelectedFileMDKey}
                                 style={{ width: '100%', marginBottom: '5%' }}
                                 value={selectedFileMDKey !== null ? selectedFileMDKey : undefined}
+                                dropdownStyle={{ minWidth: '150px' }}
                             />
                         </Form.Item>
 
@@ -461,7 +456,6 @@ export default function UserProjectOverview() {
                                 value={fileMDValue}
                             />
                         </Form.Item>
-                        </div>
                     </Box>
 
                     <Box
@@ -487,6 +481,7 @@ export default function UserProjectOverview() {
                                 onChange={setSelectedFileTag}
                                 style={{ width: '100%', marginBottom: '5%', overflow: 'auto' }}
                                 value={selectedFileTag !== null ? selectedFileTag : undefined}
+                                dropdownStyle={{ minWidth: '150px' }}
                             />
                         </Form.Item>
                     </Box>
@@ -523,7 +518,6 @@ export default function UserProjectOverview() {
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         width: '70%',
-                        minWidth: '300px',
                         margin: '20px auto',
                         backgroundColor: '#f5f5f5',
                         borderRadius: '10px',
@@ -531,7 +525,7 @@ export default function UserProjectOverview() {
                         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
                     }}
                 >
-                    <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%', gap: '10px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
                         <div><strong>Location: </strong><span>{project.location}</span></div>
                         <div><strong>Start Date: </strong><span>{dayjs(project.startDate).format('MMM DD, YYYY')}</span></div>
                         <div><strong>State: </strong><span>{project.status}</span></div>
@@ -555,17 +549,15 @@ export default function UserProjectOverview() {
 
                 {/* Download and Admin-only Delete Images */}
                 <Box sx={{ display: 'flex', alignItems: 'start', justifyContent: 'left', margin: '20px auto', gap: '10px', width: '70%' }}>
-                    {isAdmin && (
-                        <Button
-                            onClick={toggleEditMode}
-                            color="primary"
-                            type="primary"
-                            ghost={isEditMode}
-                            icon={<EditOutlined />}
-                        >
-                            {isEditMode ? "Cancel Selection Mode" : "Select from Gallery"}
-                        </Button>
-                    )}
+                    <Button
+                        onClick={toggleEditMode}
+                        color="primary"
+                        type="primary"
+                        ghost={isEditMode}
+                        icon={<EditOutlined />}
+                    >
+                        {isEditMode ? "Cancel Selection Mode" : "Select from Gallery"}
+                    </Button>
                     {/* Download button */}
                     {isEditMode && selectedImages.size > 0 && (
                         <Popconfirm

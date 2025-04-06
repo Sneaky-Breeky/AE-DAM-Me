@@ -324,7 +324,7 @@ namespace DAMBackend.Controllers
 
 
         // DELETE: api/damprojects/{id}
-        // manually delete files
+        // remove images from the blob
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProject(int id)
         {
