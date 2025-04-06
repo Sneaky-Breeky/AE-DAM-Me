@@ -5,7 +5,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import { Typography, Input, Space, Image, Button, Popconfirm, Form, Tooltip} from 'antd';
 import { SearchOutlined, DeleteOutlined, CloseOutlined, EditOutlined, QuestionCircleOutlined} from '@ant-design/icons';
-import { fetchProjects, putProject, getFilesForProject} from '../../api/projectApi';
+import { fetchProjects, putProject, getFilesForProject,deleteFileFromProject} from '../../api/projectApi';
 import { useAuth } from '../../contexts/AuthContext';
 
 const { Title } = Typography;
@@ -15,8 +15,8 @@ export default function AdminFileManage() {
   const [isPopupFormOpen, setPopupFormOpen] = useState(false);
   const [isEditOpen, setEditOpen] = useState(false);
   const [project, setProject] = useState(null);
-    const [imageList, setImageList] = useState([]);
-    const [imageEdit, setImageEdit] = useState(null);
+  const [imageList, setImageList] = useState([]);
+  const [imageEdit, setImageEdit] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedImages, setSelectedImages] = useState(new Set());
   const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -25,8 +25,6 @@ export default function AdminFileManage() {
 
   const [form] = Form.useForm();
   const { user } = useAuth();
-
-
 
 
     useEffect(() => {
@@ -45,13 +43,14 @@ export default function AdminFileManage() {
     
     
 
-    const deleteSelectedImages = () => {
-        //TODO: CONNECT W BACKEND
-    //setImageList(imageList.filter((_, index) => !selectedImages.has(index)));
-        //     await addLog(user.id,project.id,file.id,"Deleted image from file");
-
-        setSelectedImages(new Set());
-    setIsEditMode(false);
+    const deleteSelectedImages = async () => {
+      console.log(selectedImages);
+      const selectedImagesArray = [...selectedImages];
+      await Promise.all(selectedImagesArray.map(fileId => deleteFileFromProject(project.id, fileId)));
+      const files = await getFilesForProject({ projectId: project.id });
+      setImageList(files || []);
+      setSelectedImages(new Set());
+      setIsEditMode(false);
   };
 
   const toggleEditMode = () => {
@@ -115,15 +114,35 @@ export default function AdminFileManage() {
       >
         <Title level={1}>File Metadata Management</Title>
       </Box>
+
+      <Box
+        sx={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'flex-start',
+            alignItems: 'left',
+            padding: '20px',
+            paddingBottom: 0,
+            margin: '10px auto',
+            marginBottom: '0',
+        }}>
+        <Input
+          placeholder="Search for a project.."
+          prefix={<SearchOutlined />}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ width: '90%' }}
+        />
+      </Box>
        
 <Box
   sx={{
     display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'left',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'anchor-center',
     height: '100vh',
-    width: '90%',
+    width: '80%',
     margin: '20px auto',
     marginTop: '0',
     borderRadius: '10px',
@@ -138,20 +157,16 @@ export default function AdminFileManage() {
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'flex-start',
-      alignItems: 'left',
+      alignItems: 'center',
       width: '35%',
+      minWidth: '300px',
       margin: '20px auto',
+      marginLeft: '0',
       marginRight: '0',
+      marginTop: '0',
       borderRadius: '10px',
     }}
   >
-    <Input
-      placeholder="Search for a project.."
-      prefix={<SearchOutlined />}
-      value={searchQuery}
-      onChange={(e) => setSearchQuery(e.target.value)}
-      style={{ width: '90%' }}
-    />
 
     <Box
       sx={{
@@ -160,9 +175,8 @@ export default function AdminFileManage() {
         justifyContent: 'flex-start',
         alignItems: 'left',
         width: '80%',
-        height: '100%',
-        margin: '20px auto',
-        marginLeft: '0',
+        height: '60vh',
+        marginTop: '0',
         backgroundColor: '#f5f5f5',
         borderRadius: '10px',
         padding: '20px',
@@ -214,8 +228,7 @@ export default function AdminFileManage() {
       justifyContent: 'flex-Center',
       alignItems: 'center',
       width: '65%',
-      height: '95%',
-      margin: '20px auto',
+      minWidth: '400px',
       marginTop: '0',
       borderRadius: '10px',
       padding: '0',
@@ -231,7 +244,7 @@ export default function AdminFileManage() {
           justifyContent: 'flex-start',
           alignItems: 'left',
           width: '80%',
-          height: '100%',
+          height: '60vh',
           backgroundColor: '#f5f5f5',
           borderRadius: '10px',
           margin: '20px auto',
@@ -246,6 +259,11 @@ export default function AdminFileManage() {
       >
 
       <div style={{overflowY: 'auto', width: '100%', height: '100%'}}>
+      <Button color="default" variant="text" size={"default"} icon={<CloseOutlined/>}
+          onClick={(e) => {
+            setEditOpen(false);
+            setPopupFormOpen(false);
+          }}/>
         <table style={{width: '100%', borderCollapse: 'collapse'}}>
             <tr style={{paddingTop: '0'}}>
                 <th colspan="3" style={{height: '40px', textAlign: 'center', padding: '0px'}} ><h3 style={{ margin:'0'}}>Current Files</h3></th>
@@ -331,17 +349,6 @@ export default function AdminFileManage() {
             ))}
         </Space>
           )}
-
-        
-
-        <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-start'}}>
-        <Button color="default" variant="text" size={"default"} icon={<CloseOutlined/>}
-          onClick={(e) => {
-            setEditOpen(false);
-            setPopupFormOpen(false);
-          }}/>
-          
-        </div>
       </div>
     </Box>
     }

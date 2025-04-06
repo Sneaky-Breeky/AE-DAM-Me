@@ -168,13 +168,33 @@ padding: 4,
 >
 <Title level={1}>Metadata Management</Title>
 </Box>
+<Box
+sx={{
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'left',
+    padding: '20px',
+    paddingBottom: 0,
+    margin: '10px auto',
+    marginBottom: '0',
+}}>
+<Input
+placeholder="Search for a project.."
+prefix={<SearchOutlined />}
+value={searchQuery}
+onChange={(e) => setSearchQuery(e.target.value)}
+style={{ width: '300px' }}
+disabled={loading}
+/>
+</Box>
 
 <Box
 sx={{
 display: 'flex',
-flexDirection: 'row',
-justifyContent: 'space-between',
-alignItems: 'left',
+flexWrap: 'wrap',
+justifyContent: 'center',
+alignItems: 'anchor-center',
 height: '100vh',
 width: '80%',
 margin: '20px auto',
@@ -193,19 +213,12 @@ flexDirection: 'column',
 justifyContent: 'flex-start',
 alignItems: 'left',
 width: '50%',
+minWidth: '400px',
 margin: '20px auto',
-marginRight: '0',
+marginTop: '0',
 borderRadius: '10px',
 }}
 >
-<Input
-placeholder="Search for a project.."
-prefix={<SearchOutlined />}
-value={searchQuery}
-onChange={(e) => setSearchQuery(e.target.value)}
-style={{ width: '300px' }}
-disabled={loading}
-/>
 
 <Box
 sx={{
@@ -214,14 +227,13 @@ sx={{
     justifyContent: 'flex-start',
     alignItems: 'left',
     width: '80%',
-    height: '100%',
+    height: '60vh',
     margin: '20px auto',
-    marginLeft: '0',
+    marginTop: '0',
     backgroundColor: '#f5f5f5',
     borderRadius: '10px',
     padding: '20px',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-    overflow: 'auto',
 }}
 >
 
@@ -273,7 +285,8 @@ flexDirection: 'column',
 justifyContent: 'flex-Center',
 alignItems: 'center',
 width: '50%',
-height: '95%',
+minWidth: '400px',
+height: 'fit content',
 margin: '20px auto',
 marginTop: '0',
 borderRadius: '10px',
@@ -294,11 +307,10 @@ editNameOpen, setEditNameOpen, editLocOpen, setEditLocOpen, editDateOpen, setEdi
         justifyContent: 'flex-start',
         alignItems: 'left',
         width: '80%',
-        height: '100%',
+        height: 'fit content',
         backgroundColor: '#f5f5f5',
         borderRadius: '10px',
         margin: '20px auto',
-        marginLeft: '0',
         marginTop: '0',
         padding: '20px',
         paddingTop: '10px',

@@ -48,7 +48,8 @@ function AppContent({ loggedIn, setLoggedIn }) {
       {loggedIn && !isLoginPage && <SideMenu setLoggedIn={setLoggedIn} />}
 
       <Box sx={{ flexGrow: 1 }}>
-        <AppNavbar />
+        {/* <AppNavbar /> */}
+        
         <Routes>
           <Route path="/login" element={<Login setLoggedIn={setLoggedIn} />} />
           <Route path="*" element={<Navigate to={isLoggedIn() ? (isAdmin() ? "/admin/dashboard" : "/user/dashboard") : "/login"} />} />

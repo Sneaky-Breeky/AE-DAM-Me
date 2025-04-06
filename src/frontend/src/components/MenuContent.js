@@ -44,7 +44,7 @@ const GetDirectoryPrefix = (isAdmin) => (isAdmin ? '/admin/' : '/user/');
 
 export default function MenuContent({setLoggedIn}) {
   const { isAdmin, logout } = useAuth();
-  const menuItems = isAdmin & sessionStorage.getItem('adminUser') === "true" ? adminPages : userPages;
+  const menuItems = isAdmin & sessionStorage.getItem('adminUser') === "false" ? adminPages : userPages;
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   
@@ -53,10 +53,9 @@ export default function MenuContent({setLoggedIn}) {
       sessionStorage.setItem('menu', 0);
     }
 
-    console.log("adminUser is");
-    
-    console.log(typeof(sessionStorage.getItem('adminUser')));
-      //setAdminUser(sessionStorage.getItem('adminUser'));
+    if (sessionStorage.getItem('adminUser') === null) {
+      sessionStorage.setItem('adminUser', "false");
+    }
   }, []);
 
   const handleLogout = () => {
@@ -73,7 +72,7 @@ export default function MenuContent({setLoggedIn}) {
             <ListItemButton selected={index === parseInt(sessionStorage.getItem('menu'))}
               onClick={() => {
                 sessionStorage.setItem('menu', index);
-                navigate(GetDirectoryPrefix(isAdmin & sessionStorage.getItem('adminUser') === "true") + item.url)
+                navigate(GetDirectoryPrefix(isAdmin & sessionStorage.getItem('adminUser') === "false") + item.url)
               }}
             >
               <ListItemIcon sx={{ color: 'white' }} >{item.icon}</ListItemIcon>
@@ -89,7 +88,7 @@ export default function MenuContent({setLoggedIn}) {
               <ListItemButton onClick={() => {
                 sessionStorage.setItem('adminUser', sessionStorage.getItem('adminUser') === "true" ? "false" : "true");
                 sessionStorage.setItem('menu', 0);
-                navigate(GetDirectoryPrefix(isAdmin & sessionStorage.getItem('adminUser') === "true") + 'dashboard')
+                navigate(GetDirectoryPrefix(isAdmin & sessionStorage.getItem('adminUser') === "false") + 'dashboard')
               }}>
                 <ListItemIcon sx={{ color: 'white' }}>{sessionStorage.getItem('adminUser') === "false" ? <SupervisedUserCircleIcon /> : <AccountCircleIcon />}</ListItemIcon>
                 <ListItemText primary={sessionStorage.getItem('adminUser') === "false" ? 'Admin Operations' : 'User Operations'} sx={{ color: 'white' }} />

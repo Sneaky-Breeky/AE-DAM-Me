@@ -28,7 +28,7 @@ export default function AdminDashboard() {
       <Box
         sx={{
           textAlign: 'center',
-          padding: 4,
+          margin: 4,
         }}
       >
         <Title level={1}>Dashboard</Title>
@@ -40,7 +40,7 @@ export default function AdminDashboard() {
           flexDirection: 'column',
           justifyContent: 'flex-start',
           alignItems: 'center',
-          height: '60vh',
+          height: '100vh',
           width: '70%',
           margin: '20px auto',
           padding: '20px',
@@ -58,17 +58,19 @@ export default function AdminDashboard() {
                 }}
                 sx={{
                   textAlign: 'center',
-                  width: 250,
-                  height: 200,
+                  width: '80%',
+                  height: '100%',
+                  margin: '5%',
                   backgroundColor: 'grey.300',
                   border: 1,
                   borderColor: 'grey.500',
                   borderRadius: '16px',
                   '&:hover': { boxShadow: 3 },
+                  overflow: 'auto'
                 }}
               >
-                <page.icon style={{ marginTop: '30px', fontSize: '80px' }} />
-                <h4>{page.title}</h4>
+                <page.icon style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%'}} />
+                <h4 style={{ margin: '0', marginBottom: '10%' }}>{page.title}</h4>
               </Box>
             </Col>
           ))}
