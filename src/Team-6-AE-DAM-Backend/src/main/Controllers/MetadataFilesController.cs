@@ -158,6 +158,30 @@ namespace DAMBackend.Controllers
 
             return Ok($"Metadata tag '{key}' removed from file {fid}");
         }
+        
+        // PUT /projectSuggestion/{pid}
+        [HttpPut("projectSuggestion/{pid}/{fid}")]
+        public async Task<IActionResult> AssignProjectForSuggestion(int pid, int fid)
+        {
+            var file = await _context.Files.FindAsync(fid);
+            if (file == null)
+            {
+                return NotFound("File not found");
+            }
+
+            var project = await _context.Projects.FindAsync(pid);
+
+            if (project == null)
+            {
+                return NotFound("Project not found");
+            }
+            
+            file.ProjectId = pid;
+            await _context.SaveChangesAsync();
+            
+            return Ok("Suggestion assigned");
+            
+        }
 
         // PUT: Advanced/{fid}/{key}/{newValue}
         // Edit a metadata tag's value or type

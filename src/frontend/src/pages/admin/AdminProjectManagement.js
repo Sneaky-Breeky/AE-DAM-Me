@@ -11,7 +11,9 @@ import { giveUserAccess } from '../../api/userApi';
 import { API_BASE_URL } from "../../api/apiURL.js";
 import { UploadOutlined } from '@ant-design/icons';
 import {addLog} from "../../api/logApi";
+import { useAuth } from '../../contexts/AuthContext';
 const { Title } = Typography;
+
 
 const tagStyle = {
     backgroundColor: '#dbdbdb'
@@ -44,6 +46,8 @@ export default function ProjectManagement() {
             }
         }
     }
+    const { user } = useAuth();
+
 
 
     // Fetch projects
@@ -83,14 +87,10 @@ export default function ProjectManagement() {
             files: [],
             users: []
         };
-
         try {
             const result = await postProject(projectData);
+            await addLog(user.id, null, result.id, 'added a new project');
             setProject(result);
-            if (project != null) {
-                await addLog(10, null, project.id, 'added a new project');
-                }
-            // change the userID
 
             if (result.error) {
                 throw new Error(result.error);
@@ -118,6 +118,7 @@ export default function ProjectManagement() {
     const handleDeleteProject = async (p) => {
         try {
             const result = await deleteProject(p.id);
+            await addLog(user.id, null, p.id, 'deleted a project');
 
             if (result.error) {
                 throw new Error(result.error);
@@ -134,6 +135,7 @@ export default function ProjectManagement() {
     const handleArchiveProject = async (p) => {
         try {
             const response = await archiveProject(p.id);
+            await addLog(user.id, null, p.id, 'archived a project');
 
             if (response.error) {
                 throw new Error("Archive error", response.error);
@@ -147,6 +149,7 @@ export default function ProjectManagement() {
         }
     };
     const handleProjectExport = async (p) => {
+        await addLog(user.id, null, p.id, 'exported a project');
         const archiveFileUrl = await exportProject(p.id);
         const a = document.createElement("a");
         a.href = archiveFileUrl;
@@ -184,7 +187,7 @@ export default function ProjectManagement() {
                 }}
             >
 
-                {/* Container with create or delete projects */}
+                {/* Container with create delete and archive projects */}
                 <Box
                     sx={{
                         display: 'flex',
@@ -205,25 +208,27 @@ export default function ProjectManagement() {
                         onClick={() => {
                             setDeleteOpen(false);
                             setArchiveOpen(false);
+                            setExportOpen(false);
                             setCreateOpen(!createOpen);
                         }}
                         sx={{
                             textAlign: 'center',
                             width: '80%',
-                            height: '100%',
+                            height: '50%',
                             margin: '5%',
                             backgroundColor: 'grey.300',
                             border: 1,
                             borderColor: 'grey.500',
                             borderRadius: '16px',
                             '&:hover': { boxShadow: 3 },
+                            overflow: 'auto'
                         }}
                     >
                         {!createOpen ?
-                            <CreateNewFolderOutlinedIcon style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
-                            : <CloseOutlined style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
+                            <CreateNewFolderOutlinedIcon style={{ marginTop: '5%', marginBottom: '0', fontSize: '400%' }} />
+                            : <CloseOutlined style={{ marginTop: '5%', marginBottom: '0', fontSize: '400%' }} />
                         }
-                        <h4 style={{ margin: '0', marginBottom: '10%' }}>{!createOpen ? "Create Project" : "Close"}</h4>
+                        <h4 style={{ margin: '0', marginBottom: '5%' }}>{!createOpen ? "Create Project" : "Close"}</h4>
                     </Box>
 
                     {/*Delete a project*/}
@@ -231,6 +236,7 @@ export default function ProjectManagement() {
                         onClick={() => {
                             setCreateOpen(false);
                             setArchiveOpen(false);
+                            setExportOpen(false);
                             setDeleteOpen(!deleteOpen);
                         }}
                         sx={{
@@ -243,13 +249,14 @@ export default function ProjectManagement() {
                             borderColor: 'grey.500',
                             borderRadius: '16px',
                             '&:hover': { boxShadow: 3 },
+                            overflow: 'auto'
                         }}
                     >
                         {!deleteOpen ?
-                            <FolderDeleteOutlinedIcon style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
-                            : <CloseOutlined style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
+                            <FolderDeleteOutlinedIcon style={{  marginTop: '5%', marginBottom: '0', fontSize: '400%'  }} />
+                            : <CloseOutlined style={{  marginTop: '5%', marginBottom: '0', fontSize: '400%' }} />
                         }
-                        <h4 style={{ margin: '0', marginBottom: '10%' }}>{!deleteOpen ? "Delete Project" : "Close"}</h4>
+                        <h4 style={{ margin: '0', marginBottom: '5%' }}>{!deleteOpen ? "Delete Project" : "Close"}</h4>
                     </Box>
 
                     {/*Archive a project*/}
@@ -257,6 +264,7 @@ export default function ProjectManagement() {
                         onClick={() => {
                             setCreateOpen(false);
                             setDeleteOpen(false);
+                            setExportOpen(false);
                             setArchiveOpen(!archiveOpen);
                         }}
                         sx={{
@@ -269,13 +277,14 @@ export default function ProjectManagement() {
                             borderColor: 'grey.500',
                             borderRadius: '16px',
                             '&:hover': { boxShadow: 3 },
+                            overflow: 'auto'
                         }}
                     >
                         {!archiveOpen ?
-                            <Inventory2OutlinedIcon style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
-                            : <CloseOutlined style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
+                            <Inventory2OutlinedIcon style={{  marginTop: '5%', marginBottom: '0', fontSize: '400%'  }} />
+                            : <CloseOutlined style={{  marginTop: '5%', marginBottom: '0', fontSize: '400%'  }} />
                         }
-                        <h4 style={{ margin: '0', marginBottom: '10%' }}>{!archiveOpen ? "Archive Project" : "Close"}</h4>
+                        <h4 style={{ margin: '0', marginBottom: '5%' }}>{!archiveOpen ? "Archive Project" : "Close"}</h4>
                     </Box>
                     {/* Export a project */}
                     <Box
@@ -295,13 +304,14 @@ export default function ProjectManagement() {
                             borderColor: 'grey.500',
                             borderRadius: '16px',
                             '&:hover': { boxShadow: 3 },
+                            overflow: 'auto'
                         }}
                     >
                         {!exportOpen ?
-                            <ExportOutlined style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
-                            : <CloseOutlined style={{ marginTop: '10%', marginBottom: '0', fontSize: '500%' }} />
+                            <ExportOutlined style={{  marginTop: '5%', marginBottom: '0', fontSize: '400%' }} />
+                            : <CloseOutlined style={{  marginTop: '5%', marginBottom: '0', fontSize: '400%'  }} />
                         }
-                        <h4 style={{ margin: '0', marginBottom: '10%' }}>{!exportOpen ? "Export Project" : "Close"}</h4>
+                        <h4 style={{ margin: '0', marginBottom: '5%' }}>{!exportOpen ? "Export Project" : "Close"}</h4>
                     </Box>
 
                 </Box>
@@ -315,7 +325,7 @@ export default function ProjectManagement() {
                         width: '60%',
                         height: "fit-content",
                         margin: '0',
-                        overflow: 'hidden',
+                        overflow: 'auto',
                     }}
                 >
 
@@ -335,7 +345,7 @@ export default function ProjectManagement() {
                                 borderRadius: '10px',
                                 padding: '20px',
                                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                                overflow: 'hidden',
+                                overflow: 'auto',
                             }}
                         >
                             <Title level={4} style={{ textAlign: 'center', marginTop: '0' }}>Create Directory</Title>
@@ -408,11 +418,13 @@ export default function ProjectManagement() {
                                     </Button>
                                 </div>
                             </Form>
+
                             <div style={{
                                 display: "flex",
-                                justifyContent: "space-between"
+                                flexDirection: 'column',
+                                alignItems:'start',
+                                overflow:'auto'
                             }}>
-
 
                                 <Upload {...fileUpload}>
                                     <Button style={{
@@ -428,7 +440,8 @@ export default function ProjectManagement() {
                                 <Button onClick={() => window.open("https://dambeblob.blob.core.windows.net/assets/sample-project-bulk-upload.csv", "_self")} type="link"
                                     style={{
                                         marginTop: "10px",
-                                        padding: "10px 20px",
+                                        padding: "10px",
+                                        paddingLeft: '0px',
                                         color: "#4096ff",
                                         fontWeight: "bold",
                                     }}
@@ -446,7 +459,7 @@ export default function ProjectManagement() {
                                 justifyContent: 'flex-start',
                                 alignItems: 'left',
                                 width: '80%',
-                                height: "70vh",
+                                height: "75vh",
                                 margin: '10%',
                                 marginTop: '0',
                                 backgroundColor: '#f5f5f5',
@@ -522,7 +535,7 @@ export default function ProjectManagement() {
                                 justifyContent: 'flex-start',
                                 alignItems: 'left',
                                 width: '80%',
-                                height: "70vh",
+                                height: "75vh",
                                 margin: '10%',
                                 marginTop: '0',
                                 backgroundColor: '#f5f5f5',
@@ -597,7 +610,7 @@ export default function ProjectManagement() {
                                 justifyContent: 'flex-start',
                                 alignItems: 'left',
                                 width: '80%',
-                                height: "70vh",
+                                height: "75vh",
                                 margin: '10%',
                                 marginTop: '0',
                                 backgroundColor: '#f5f5f5',

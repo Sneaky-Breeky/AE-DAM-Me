@@ -42,6 +42,26 @@ export async function getProjectImageMetaDataTags ({pid,fid}){
         return null;
     }
 }
+export async function getProjectImageMetaDataValuesTags ({pid,fid}){
+    try {
+        const url = `${IMAGE_URL}/metaDataTagsValuesForImage/${pid}/${fid}`
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching basic tags:', error);
+        return null;
+    }
+}
 async function getFilesByDate({StartDate, EndDate}) {
     const sD = StartDate ? new Date(StartDate).toISOString() : '0001-01-01T00:00:00Z';
     const eD = EndDate ? new Date(EndDate).toISOString() : '0001-01-01T00:00:00Z';

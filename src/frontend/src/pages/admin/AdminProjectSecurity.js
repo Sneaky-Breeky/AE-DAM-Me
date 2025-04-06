@@ -5,8 +5,6 @@ import {SearchOutlined, EditOutlined, CloseOutlined} from '@ant-design/icons';
 import {fetchProjects, fetchUsersForProject, putProject} from '../../api/projectApi';
 import {fetchUsers} from '../../api/authApi';
 import {giveUserAccess, removeAllUserAccess} from "../../api/userApi";
-import {addLog} from "../../api/logApi";
-import {useAuth} from "../../contexts/AuthContext";
 
 
 const {Title} = Typography;
@@ -83,7 +81,7 @@ function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, all
                 justifyContent: 'flex-start',
                 alignItems: 'left',
                 width: '80%',
-                height: '100%',
+                height: '60vh',
                 marginTop: '0',
                 backgroundColor: '#f5f5f5',
                 borderRadius: '10px',
@@ -107,41 +105,41 @@ function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, all
                 </table>
 
                 <div onClick={(e) => e.stopPropagation()}>
-            <table style={{width: '100%', borderCollapse: 'collapse'}}>
-                <tr style={{height: '50px'}}>
-                    <td style={{fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black'}}>
-                        <Checkbox checked={adminChecked}
-                                  onChange={toggleAdminChecked}>
-                            Admins Only
-                        </Checkbox>
-                    </td>
-                </tr>
-                <tr style={{height: '50px'}}>
-                    <td style={{fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black'}}>
-                        <Checkbox checked={allChecked && !adminChecked}
-                                  onChange={
-                                      toggleAllChecked}>
-                            Everyone
-                        </Checkbox>
-                    </td>
-                </tr>
-                {listUsers.map((user) => (
-                    <tr style={{height: '50px'}}>
-                        <td style={{fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black'}}>
-                            <Checkbox
-                                checked={Array.isArray(fetchedUsersForAProject) &&
-                                    fetchedUsersForAProject.some((u) => u.id === user.id)}
-                                onChange={(e) => toggleUserChecked(e, user)}
-                            >
-                                <span>{user.id}</span> - <span style={{ color: 'grey', fontStyle: 'italic' }}>{`${user.firstName} ${user.lastName}`}</span>
-                            </Checkbox>
+                    <table style={{width: '100%', borderCollapse: 'collapse'}}>
+                        <tr style={{height: '50px'}}>
+                            <td style={{fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black'}}>
+                                <Checkbox checked={adminChecked}
+                                          onChange={toggleAdminChecked}>
+                                    Admins Only
+                                </Checkbox>
+                            </td>
+                        </tr>
+                        <tr style={{height: '50px'}}>
+                            <td style={{fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black'}}>
+                                <Checkbox checked={allChecked && !adminChecked}
+                                          onChange={
+                                              toggleAllChecked}>
+                                    Everyone
+                                </Checkbox>
+                            </td>
+                        </tr>
+                        {listUsers.map((user) => (
+                            <tr style={{height: '50px'}}>
+                                <td style={{fontSize: '12px', textAlign: 'left', borderBottom: '1px solid black'}}>
+                                    <Checkbox
+                                        checked={Array.isArray(fetchedUsersForAProject) &&
+                                            fetchedUsersForAProject.some((u) => u.id === user.id)}
+                                        onChange={(e) => toggleUserChecked(e, user)}
+                                    >
+                                        <span>{user.id}</span> - <span style={{ color: 'grey', fontStyle: 'italic' }}>{`${user.firstName} ${user.lastName}`}</span>
+                                    </Checkbox>
 
 
-                        </td>
-                    </tr>
-                ))}
-            </table>
-        </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </table>
+                </div>
 
                 <div style={{
                     display: 'flex',
@@ -185,6 +183,7 @@ function popupForm(project, setPopupFormOpen, adminChecked, setAdminChecked, all
 }
 
 export default function AdminProjectSecurity() {
+
     const [searchQuery, setSearchQuery] = useState('');
     const [isPopupFormOpen, setPopupFormOpen] = useState(false);
     const [project, setProject] = useState(null);
@@ -196,7 +195,6 @@ export default function AdminProjectSecurity() {
     const [selectedChecked, setSelectedChecked] = useState(false);
     const [listUsers, setListUsers] = useState([]);
     const [originalUsersForProject, setOriginalUsersForProject] = useState([]);
-    const { user } = useAuth();
 
 // Fetch users
     const getUsers = async () => {
@@ -273,18 +271,15 @@ export default function AdminProjectSecurity() {
                 projectId: project.id,
                 updatedProjectData: updatedProjectData
             });
-            await addLog(user.id, null, project.id, 'updated tag for project');
+            
+            if (updateResult.error) {
+                throw new Error(updateResult.error);
+            }
 
-            // const updateResult = await putProject(project.id, updatedProjectData);
-
-//             if (updateResult.error) {
-//                 throw new Error(updateResult.error);
-//             }
-
-//             await removeAllUserAccess(project.id);
-//             for (const user of usersToGrantAccess) {
-//                 await giveUserAccess(user.id, project.id);
-//             }
+            await removeAllUserAccess(project.id);
+            for (const user of usersToGrantAccess) {
+                await giveUserAccess(user.id, project.id);
+            }
 
             setOriginalUsersForProject(usersToGrantAccess);
             await getProjects();
@@ -343,15 +338,14 @@ export default function AdminProjectSecurity() {
             <Box
                 sx={{
                     display: 'flex',
-                    flexDirection: 'row',
-                    justifyContent: 'flex-start',
-                    alignItems: 'left',
+                    flexWrap: 'wrap',
+                    justifyContent: 'center',
+                    alignItems: 'anchor-center',
                     height: '100vh',
                     width: '80%',
                     margin: '20px auto',
                     marginTop: '0',
                     borderRadius: '10px',
-
                     overflow: 'auto',
                 }}
             >
@@ -363,11 +357,13 @@ export default function AdminProjectSecurity() {
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'flex-start',
-                        alignItems: 'left',
-                        width: '50%',
+                        alignItems: 'center',
+                        width: '45%',
+                        minWidth: '400px',
                         margin: '20px auto',
                         marginTop: '0',
                         borderRadius: '10px',
+                        padding: '20px',
                     }}
                 >
 
@@ -378,13 +374,12 @@ export default function AdminProjectSecurity() {
                             justifyContent: 'flex-start',
                             alignItems: 'left',
                             width: '100%',
-                            height: '100%',
-                            margin: '20px auto',
+                            height: '60vh',
+                            marginTop:'0',
                             backgroundColor: '#f5f5f5',
                             borderRadius: '10px',
                             padding: '20px',
                             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                            overflow: 'auto',
                         }}
                     >
 
@@ -498,8 +493,8 @@ export default function AdminProjectSecurity() {
                         justifyContent: 'flex-start',
                         alignItems: 'center',
                         width: '40%',
+                        minWidth: '400px',
                         padding: '20px',
-                        margin: '20px auto',
                         marginTop: '0',
                         paddingBottom: '10',
                     }}

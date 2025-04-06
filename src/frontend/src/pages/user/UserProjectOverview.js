@@ -15,46 +15,55 @@ import {
     ZoomOutOutlined,
     EditOutlined,
     QuestionCircleOutlined,
-    CheckCircleOutlined
+    CheckCircleOutlined,
+    DeleteOutlined
 } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
-import {fetchProject, getFilesForProject} from '../../api/projectApi';
-import {downloadFilesZip} from '../../api/fileApi';
+import {fetchProject, getFilesForProject, fetchTagsForProject} from '../../api/projectApi';
+import {deleteFiles, deleteFilesDB, downloadFilesZip} from '../../api/fileApi';
 import dayjs from 'dayjs';
 import {getProjectBasicTags, getProjectMetaDataTags, searchProjectFiles} from "../../api/queryFile";
-import {getProjectImageBasicTags, getProjectImageMetaDataTags} from "../../api/imageApi";
+import {
+    getProjectImageBasicTags,
+    getProjectImageMetaDataTags,
+    getProjectImageMetaDataValuesTags
+} from "../../api/imageApi";
+import { useAuth } from '../../contexts/AuthContext';
 
 const { RangePicker } = DatePicker;
 const { Title } = Typography;
 const { Meta } = Card;
 
 export default function UserProjectOverview() {
-    //project variables
+    // Get user info and define admin flag
+    const { user } = useAuth();
+    const isAdmin = user?.role === 'admin';
+
+    // Project variables
     const { id } = useParams();
     const [project, setProject] = useState(null);
     const [projectMetaTags, setProjectMetaTags] = useState([]);
-    
-    //project's files' metadata variables
+
+    // Project's files' metadata variables
     const [allFileMetaTags, setAllFileMetaTags] = useState([]);
     const [selectedFileMDKey, setSelectedFileMDKey] = useState([]);
     const [fileMDValue, setFileMDValue] = useState([]);
     const [selectedOperator, setSelectedOperator] = useState(null);
     const [operatorDisabled, setOperatorDisabled] = useState(false);
 
-    //project's files' tags
+    // Project's files' tags
     const [allFileTags, setAllFileTags] = useState([]);
     const [selectedFileTag, setSelectedFileTag] = useState([]);
-    
-    
-    //image variables
+
+    // Image variables
     const [imageList, setImageList] = useState([]);
     const [selectedImages, setSelectedImages] = useState(new Set());
 
-    //other variables
+    // Other variables
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedDateRange, setSelectedDateRange] = useState([]);
     const [selectedStatus, setSelectedStatus] = useState("");
-    const [current, setCurrent] = React.useState(0);
+    const [current, setCurrent] = useState(0);
     const [isEditMode, setIsEditMode] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -62,8 +71,11 @@ export default function UserProjectOverview() {
         async function fetchProjectAndFiles() {
             try {
                 const projectData = await fetchProject(id);
-                const projectFilesMetadataData = await getProjectMetaDataTags({ pid: id });
+                const projectFilesMetadataData = await getProjectMetaDataTags(id);
                 const projectFilesTagsData = await getProjectBasicTags(id);
+                const projectMetadata = await fetchTagsForProject(id);
+                setProjectMetaTags(projectMetadata || []);
+
                 setAllFileMetaTags(Array.isArray(projectFilesMetadataData) ? projectFilesMetadataData : []);
                 setAllFileTags(Array.isArray(projectFilesTagsData) ? projectFilesTagsData : []);
 
@@ -75,18 +87,19 @@ export default function UserProjectOverview() {
 
                 const files = await getFilesForProject({ projectId: id });
 
-                const filesWithTags = await Promise.all(files.map(async (file) => {
-                    const basicTags = await getProjectImageBasicTags({ pid: id, fid: file.id });
-                    const metadataTags = await getProjectImageMetaDataTags({ pid: id, fid: file.id });
+                const filesWithTags = await Promise.all(
+                    files.map(async (file) => {
+                        const basicTags = await getProjectImageBasicTags({ pid: id, fid: file.id });
+                        const metadataValues = await getProjectImageMetaDataValuesTags({ pid: id, fid: file.id });
 
-                    return {
-                        ...file,
-                        basicTags: basicTags || [],
-                        metadataTags: metadataTags || [],
-                    };
-                }));
+                        return {
+                            ...file,
+                            basicTags: basicTags || [],
+                            metadataValues: metadataValues || [],
+                        };
+                    })
+                );
 
-                //setProjectMetaTags(metaTags || []);
                 setProject(projectData);
                 setImageList(filesWithTags);
             } catch (err) {
@@ -101,8 +114,6 @@ export default function UserProjectOverview() {
         }
     }, [id]);
 
-
-
     if (project === null) {
         return <p>Loading project...</p>;
     }
@@ -110,7 +121,7 @@ export default function UserProjectOverview() {
     const handleSearch = async () => {
         const metadataFields = [selectedFileMDKey, selectedOperator, fileMDValue];
         const metadataFilledCount = metadataFields.filter(val => {
-            if (Array.isArray(val)) return val.length > 0; // treat [] as no input 
+            if (Array.isArray(val)) return val.length > 0;
             return Boolean(val);
         }).length;
 
@@ -147,7 +158,6 @@ export default function UserProjectOverview() {
             MetadataTags: metadataFilters
         };
 
-
         try {
             const result = await searchProjectFiles(id, filterPayload);
             let filtered = result;
@@ -180,10 +190,6 @@ export default function UserProjectOverview() {
         }
     };
 
-
-
-
-
     const handleClearFilters = async () => {
         setSearchQuery('');
         setSelectedDateRange(null);
@@ -196,16 +202,18 @@ export default function UserProjectOverview() {
 
         try {
             const files = await getFilesForProject({ projectId: id });
-            const filesWithTags = await Promise.all(files.map(async (file) => {
-                const basicTags = await getProjectImageBasicTags({ pid: id, fid: file.id });
-                const metadataTags = await getProjectImageMetaDataTags({ pid: id, fid: file.id });
+            const filesWithTags = await Promise.all(
+                files.map(async (file) => {
+                    const basicTags = await getProjectImageBasicTags({ pid: id, fid: file.id });
+                    const metadataTags = await getProjectImageMetaDataTags({ pid: id, fid: file.id });
 
-                return {
-                    ...file,
-                    basicTags: basicTags || [],
-                    metadataTags: metadataTags || [],
-                };
-            }));
+                    return {
+                        ...file,
+                        basicTags: basicTags || [],
+                        metadataTags: metadataTags || [],
+                    };
+                })
+            );
 
             setImageList(filesWithTags);
         } catch (err) {
@@ -214,42 +222,39 @@ export default function UserProjectOverview() {
         }
     };
 
-    
-
     const onDownload = () => {
         const url = imageList[current].originalPath;
         const suffix = url.slice(url.lastIndexOf('.'));
         const filename = Date.now() + suffix;
-        downloadFile(url,filename)
+        downloadFile(url, filename);
     };
 
-    const downloadFile = (url,filename) => {
+    const downloadFile = (url, filename) => {
         const a = document.createElement("a");
         a.href = url;
-        a.download =  filename; // Name of the downloaded file
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        window.URL.revokeObjectURL(url); 
-    }
+        window.URL.revokeObjectURL(url);
+    };
 
     const toggleEditMode = () => {
         setIsEditMode((prev) => !prev);
         setSelectedImages(new Set());
     };
 
-    const toggleSelectImage = (file) => {                       
+    const toggleSelectImage = (file) => {
         if (!isEditMode) return;
         addFile(file.id);
     };
+
     const addFile = (fileId) => {
         setSelectedImages((prevSelected) => {
-            const newSelected = new Set(prevSelected); // Append new image ID
-            newSelected.has(fileId);
+            const newSelected = new Set(prevSelected);
             if (newSelected.has(fileId)) {
                 newSelected.delete(fileId);
-            }
-            else {
+            } else {
                 newSelected.add(fileId);
             }
             return newSelected;
@@ -257,16 +262,40 @@ export default function UserProjectOverview() {
     };
 
     const downloadSelectedImages = async () => {
-        console.log(selectedImages);
-        
-        const filesToBeDownloaded = imageList.filter((_, index) => selectedImages.has(_.id));
-        const filesNameList = Array.from(filesToBeDownloaded).map(file => file.name);
+        const filesToBeDownloaded = imageList.filter((file) => selectedImages.has(file.id));
+        console.log(filesToBeDownloaded);
+        const filesNameList = filesToBeDownloaded.map(file => file.name);
         setLoading(true);
         await downloadFilesZip(filesNameList);
         setLoading(false);
         setSelectedImages(new Set());
         setIsEditMode(false);
-      };
+    };
+
+    // New: Delete selected images (only for admin)
+    const handleDeleteSelectedImages = async () => {
+        // Get the selected images from the imageList
+        const filesToBeDeleted = imageList.filter(file => selectedImages.has(file.id));
+        // Extract the file names for deletion from blob storage
+        const filesNameList = filesToBeDeleted.map(file => file.name);
+        // Extract the file IDs for deletion from your database
+        const filesIdList = filesToBeDeleted.map(file => file.id);
+        setLoading(true);
+        // Communicate  backend to delete the files from blob storage
+        // Assume deleteFiles is your backend method that accepts an array of filenames
+        await deleteFiles(filesNameList);
+        // Then communicate backend to delete the file entries from your database
+        // Assume deleteFilesDB is your backend method that accepts an array of file IDs
+        await deleteFilesDB(filesIdList);
+        // Update the local state: remove deleted images from imageList
+        const remainingImages = imageList.filter(file => !selectedImages.has(file.id));
+        setImageList(remainingImages);
+
+        setLoading(false);
+        setSelectedImages(new Set());
+        setIsEditMode(false);
+        message.success("Selected images deleted successfully!");
+    };
 
     return (
         <Box
@@ -316,22 +345,18 @@ export default function UserProjectOverview() {
                 <Title level={1} style={{ margin: '0 auto', textAlign: 'center' }}>Project Overview</Title>
             </Box>
 
-
-
-
-            {/* Search stuff*/}
+            {/* Search section */}
             <Box
                 sx={{
                     flexGrow: 1,
                     padding: 1,
-                    width:'70%',
+                    width: '70%',
                     margin: '20px auto',
                     backgroundColor: '#f5f5f5',
                     borderRadius: '10px',
                     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
                 }}
             >
-                
                 <Form
                     layout="inline"
                     onFinish={handleSearch}
@@ -350,8 +375,7 @@ export default function UserProjectOverview() {
                         gap={2}
                         mb={2}
                     >
-                    <span style={{ fontWeight: 'bold', fontSize: '20px' }}>Filter Date:</span>
-
+                        <span style={{ fontWeight: 'bold', fontSize: '20px' }}>Filter Date:</span>
                         <Form.Item>
                             <RangePicker
                                 maxDate={dayjs()}
@@ -365,7 +389,6 @@ export default function UserProjectOverview() {
                         </Form.Item>
                     </Box>
 
-                    
                     <Box
                         display="flex"
                         alignItems="center"
@@ -373,54 +396,48 @@ export default function UserProjectOverview() {
                         mb={2}
                         justifyContent="center"
                     >
+                        <span style={{ fontWeight: 'bold', fontSize: '20px' }}>Filter Metadata:</span>
+                        <Form.Item>
+                            <Select
+                                showSearch
+                                placeholder="Metadata key"
+                                allowClear
+                                filterOption={(input, option) =>
+                                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                                }
+                                options={allFileMetaTags.map((md) => ({
+                                    value: md,
+                                    label: md,
+                                }))}
+                                onChange={setSelectedFileMDKey}
+                                style={{ width: '100%', marginBottom: '5%' }}
+                                value={selectedFileMDKey !== null ? selectedFileMDKey : undefined}
+                            />
+                        </Form.Item>
 
-                    <span style={{ fontWeight: 'bold', fontSize: '20px' }}>Filter Metadata:</span>
-                    <Form.Item>
-                        <Select
-                            showSearch
-                            placeholder="Metadata key"
-                            allowClear
-                            filterOption={(input, option) =>
-                                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                            }
-                            options={allFileMetaTags.map((md) => ({
-                                value: md,
-                                label: md,
-                            }))}
-                            onChange={setSelectedFileMDKey}
-                            style={{ width:'100%', marginBottom:'5%'}}
-                            //disabled={selectProject === null}
-                            value={selectedFileMDKey !== null ? selectedFileMDKey : undefined}
-                        />
-                    </Form.Item>
-                    
-
-                    <Form.Item>
-                        <Select
-                            placeholder="?"
-                            //style={{ width: 60 }}
-                            style={{ width:'100%', marginBottom:'5%', overflow:'auto'}}
-                            allowClear
-                            disabled={operatorDisabled}
-                            options={[
-                                { value: '>', label: '>' },
-                                { value: '<', label: '<' },
-                                { value: '=', label: '=' },
-                                { value: '<=', label: '≤' },
-                                { value: '>=', label: '≥' },
-                            ]}
-                            onChange={(value) => setSelectedOperator(value)}
-                            value={selectedOperator}
-                        />
-                    </Form.Item>
+                        <Form.Item>
+                            <Select
+                                placeholder="?"
+                                style={{ width: '100%', marginBottom: '5%', overflow: 'auto' }}
+                                allowClear
+                                disabled={operatorDisabled}
+                                options={[
+                                    { value: '>', label: '>' },
+                                    { value: '<', label: '<' },
+                                    { value: '=', label: '=' },
+                                    { value: '<=', label: '≤' },
+                                    { value: '>=', label: '≥' },
+                                ]}
+                                onChange={(value) => setSelectedOperator(value)}
+                                value={selectedOperator}
+                            />
+                        </Form.Item>
 
                         <Form.Item>
                             <Input
                                 onChange={(e) => {
                                     const value = e.target.value;
                                     setFileMDValue(value);
-
-                                    // if string is in metadata value input, automatically have '=' in operator field and disable it
                                     if (value === '') {
                                         setOperatorDisabled(false);
                                         setSelectedOperator(null);
@@ -431,134 +448,147 @@ export default function UserProjectOverview() {
                                         setOperatorDisabled(false);
                                     }
                                 }}
-                                style={{ width:'100%', marginBottom:'5%', overflow:'auto' }}
+                                style={{ width: '100%', marginBottom: '5%', overflow: 'auto' }}
                                 placeholder="Metadata value"
                                 value={fileMDValue}
                             />
                         </Form.Item>
-
                     </Box>
-
-
 
                     <Box
-                            display="flex"
-                            alignItems="center"
-                            gap={2}
-                            mb={2}
-                            justifyContent="center"
-                        >
-                    <span style={{ fontWeight: 'bold', fontSize: '20px' }}>Filter Tags:</span>
-                    <Form.Item>
-                        <Select
-                            showSearch
-                            placeholder="Tag"
-                            allowClear
-                            filterOption={(input, option) =>
-                                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                            }
-                            options={allFileTags.map((md) => ({
-                                value: md,
-                                label: md,
-                            }))}
-                            onChange={setSelectedFileTag}
-                            style={{ width:'100%', marginBottom:'5%', overflow:'auto'}}
-                            //disabled={selectProject === null}
-                            value={selectedFileTag !== null ? selectedFileTag : undefined}
-                        />
-                    </Form.Item>
+                        display="flex"
+                        alignItems="center"
+                        gap={2}
+                        mb={2}
+                        justifyContent="center"
+                    >
+                        <span style={{ fontWeight: 'bold', fontSize: '20px' }}>Filter Tags:</span>
+                        <Form.Item>
+                            <Select
+                                showSearch
+                                placeholder="Tag"
+                                allowClear
+                                filterOption={(input, option) =>
+                                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                                }
+                                options={allFileTags.map((md) => ({
+                                    value: md,
+                                    label: md,
+                                }))}
+                                onChange={setSelectedFileTag}
+                                style={{ width: '100%', marginBottom: '5%', overflow: 'auto' }}
+                                value={selectedFileTag !== null ? selectedFileTag : undefined}
+                            />
+                        </Form.Item>
                     </Box>
 
+                    <Box
+                        display="flex"
+                        alignItems="center"
+                        gap={2}
+                        mb={2}
+                        justifyContent="center"
+                    >
+                        <Form.Item>
+                            <Button type="primary" htmlType="submit" color="cyan" variant="solid">
+                                Search
+                            </Button>
+                        </Form.Item>
 
-                <Box
-                    display="flex"
-                    alignItems="center"
-                    gap={2}
-                    mb={2}
-                    justifyContent="center"
-                >
-                    <Form.Item>
-                        <Button type="primary" htmlType="submit" color="cyan" variant="solid">
-                            Search
-                        </Button>
-                    </Form.Item>
-
-                    <Form.Item>
-                        <Button type="default" onClick={handleClearFilters} danger>
-                            Clear Filters
-                        </Button>
-                    </Form.Item>
-                    
-                </Box>
-            </Form>
-
-        </Box>
-        
-        
+                        <Form.Item>
+                            <Button type="default" onClick={handleClearFilters} danger>
+                                Clear Filters
+                            </Button>
+                        </Form.Item>
+                    </Box>
+                </Form>
+            </Box>
 
             {/* Main content */}
             <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
                 {/* Project Metadata */}
-                <Box sx={{ 
-                    display: 'flex',
-                    flexDirection: 'column', 
-                    justifyContent: 'space-between',
-                    alignItems: 'start',
-                    width:'70%',
-                    margin: '20px auto',
-                    backgroundColor: '#f5f5f5',
-                    borderRadius: '10px',
-                    padding: '20px',
-                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
-                        <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width:'100%'}}>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        alignItems: 'start',
+                        width: '70%',
+                        margin: '20px auto',
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '10px',
+                        padding: '20px',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                    }}
+                >
+                    <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
                         <div><strong>Location: </strong><span>{project.location}</span></div>
                         <div><strong>Start Date: </strong><span>{dayjs(project.startDate).format('MMM DD, YYYY')}</span></div>
                         <div><strong>State: </strong><span>{project.status}</span></div>
                         <div><strong>Phase: </strong><span>{project.phase}</span></div>
-                        </div>
-                    <div style={{ margin: '20px auto', marginBottom: '0', width: '100%' }}>
-                        <strong>Metadata: </strong>
+                    </div>
+                    <div style={{ margin: '20px auto', marginBottom: '0', width: '100%', display: 'flex', alignItems: 'center' }}>
+                        <strong style={{ marginRight: '10px' }}>Metadata:</strong>
                         {projectMetaTags.length > 0 ? (
-                            projectMetaTags.map((tag, idx) => (
-                                <span key={idx} style={{ marginRight: '8px', color: 'grey', fontStyle: 'italic' }}>
-                {tag}
-            </span>
-                            ))
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px' }}>
+                                {projectMetaTags.map((tag, idx) => (
+                                    <span key={idx} style={{ fontSize: '16px' }}>
+                    <span style={{ fontWeight: '500' }}>{tag.key}</span>: <span style={{ color: 'grey', fontStyle: 'italic' }}>{tag.sValue || tag.iValue}</span>
+                  </span>
+                                ))}
+                            </div>
                         ) : (
                             <span style={{ color: 'grey', fontStyle: 'italic' }}>No metadata</span>
                         )}
                     </div>
                 </Box>
-                {/* Download Images */}
-                <Box sx={{ display: 'flex', alignItems: 'start', justifyContent: 'left', margin: '20px auto', gap: '10px', width:'70%', }}>
-                <Button
-                    onClick={toggleEditMode}
-                    color="primary" 
-                    type="primary"
-                    ghost={isEditMode}
-                    icon={<EditOutlined />}
-                >
-                    {isEditMode ? "Cancel Selection Mode" : "Select from Gallery"}
-                </Button>
-                {/* Download button */}
-                {isEditMode && selectedImages.size > 0 && (
-                    <Popconfirm
-                        title="Download Images"
-                        description="Are you sure you want to download the selected images?"
-                        onConfirm={downloadSelectedImages}
-                        icon={<QuestionCircleOutlined style={{ color: 'gray' }} />}
-                        okText="Yes"
-                        cancelText="No"
+
+                {/* Download and Admin-only Delete Images */}
+                <Box sx={{ display: 'flex', alignItems: 'start', justifyContent: 'left', margin: '20px auto', gap: '10px', width: '70%' }}>
+                    <Button
+                        onClick={toggleEditMode}
+                        color="primary"
+                        type="primary"
+                        ghost={isEditMode}
+                        icon={<EditOutlined />}
                     >
-                        <Button color="primary" variant="filled" icon={<DownloadOutlined />}>
-                            Download
-                        </Button>
-                    </Popconfirm>
-                )}
+                        {isEditMode ? "Cancel Selection Mode" : "Select from Gallery"}
+                    </Button>
+                    {/* Download button */}
+                    {isEditMode && selectedImages.size > 0 && (
+                        <Popconfirm
+                            title="Download Images"
+                            description="Are you sure you want to download the selected images?"
+                            onConfirm={downloadSelectedImages}
+                            icon={<QuestionCircleOutlined style={{ color: 'gray' }} />}
+                            okText="Yes"
+                            cancelText="No"
+                        >
+                            <Button color="primary" variant="filled" icon={<DownloadOutlined />}>
+                                Download
+                            </Button>
+                        </Popconfirm>
+                    )}
+                    {/* Admin-only Delete button */}
+                    {isEditMode && selectedImages.size > 0 && isAdmin && (
+                        <Popconfirm
+                            title="Delete Images"
+                            description="Are you sure you want to delete the selected images?"
+                            onConfirm={handleDeleteSelectedImages}
+                            icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+                            okText="Yes"
+                            cancelText="No"
+                        >
+                            <Button danger icon={<DeleteOutlined />}>
+                                Delete
+                            </Button>
+                        </Popconfirm>
+                    )}
                 </Box>
-                {/* Image gallery*/}
+
+                {/* Image gallery */}
                 <Box sx={{ display: 'flex', justifyContent: 'center', padding: 2 }}>
-                {isEditMode ? (
+                    {isEditMode ? (
                         <Space wrap size={16} style={{ justifyContent: 'center' }}>
                             {imageList.map((file) => (
                                 <div
@@ -567,7 +597,7 @@ export default function UserProjectOverview() {
                                 >
                                     <Image
                                         key={file.id}
-                                        src={file.thumbnailPath || file.viewPath || file.originalPath}t
+                                        src={file.thumbnailPath || file.viewPath || file.originalPath}
                                         width={200}
                                         preview={false}
                                         style={{
@@ -591,7 +621,7 @@ export default function UserProjectOverview() {
                                                 fontSize: '16px',
                                             }}
                                         />
-                                    ):(
+                                    ) : (
                                         <CheckCircleOutlined
                                             onClick={() => toggleSelectImage(file)}
                                             style={{
@@ -609,7 +639,6 @@ export default function UserProjectOverview() {
                                     )}
                                 </div>
                             ))}
-
                         </Space>
                     ) : (
                         <Image.PreviewGroup
@@ -637,17 +666,26 @@ export default function UserProjectOverview() {
                                 <Space wrap size={16} style={{ justifyContent: 'center' }}>
                                     {imageList.map((file) => (
                                         <Tooltip
-                                            key={file.Id}
+                                            key={file.id}
                                             title={
                                                 <>
                                                     <div><strong>Basic Tags:</strong> {file.basicTags?.join(', ') || 'None'}</div>
-                                                    <div><strong>Metadata Tags:</strong> {file.mTags?.map(t => t.value).join(', ') || 'None'}</div>
+                                                    <div><strong>Metadata Tags:</strong>
+                                                        {file.metadataValues?.length > 0
+                                                            ? file.metadataValues.map((tag, i) => (
+                                                                <div key={i} style={{ marginLeft: '8px' }}>
+                                                                    <span style={{ color: '#888' }}>{tag.key}: </span>
+                                                                    <span>{tag.sValue || tag.iValue}</span>
+                                                                </div>
+                                                            ))
+                                                            : <span style={{ marginLeft: '8px' }}>None</span>
+                                                        }
+                                                    </div>
                                                 </>
                                             }
                                         >
-                                           
                                             <Image
-                                                src={file.thumbnailPath || file.originalPath  || file.viewPath}
+                                                src={file.thumbnailPath || file.originalPath || file.viewPath}
                                                 width={200}
                                                 preview={true}
                                                 style={{
@@ -656,13 +694,10 @@ export default function UserProjectOverview() {
                                                     objectFit: 'cover',
                                                 }}
                                             />
-                                            
                                         </Tooltip>
-                                        
                                     ))}
                                 </Space>
                             )}
-
                         </Image.PreviewGroup>
                     )}
                 </Box>

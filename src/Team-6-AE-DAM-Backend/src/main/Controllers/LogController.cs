@@ -31,17 +31,11 @@
                      .Where(l => l.UserId == userId)
                      .ToListAsync();
 
-                 foreach (var log in logs)
-                 {
-                     Console.WriteLine($"LogId: {log.LogId}, LogDate: {log.LogDate}, UserId: {log.UserId}");
-                 }
                  return Ok(logs);
 
              }
              catch (Exception ex)
              {
-                 Console.WriteLine($"An error occurred while retrieving logs: {ex.Message}");
-                 Console.WriteLine($"StackTrace: {ex.StackTrace}");
                  return BadRequest(ex.Message);
              }
 
@@ -60,7 +54,8 @@
                                     logRequest.ProjectId,
                                      logRequest.UserId,
                                      logRequest.TypeOfLog,
-                                     logRequest.Date);
+                                     DateTime.Now);
+//                                     logRequest.LogDate);
 
              _context.LogImage.Add(log);
              await _context.SaveChangesAsync();
@@ -75,7 +70,7 @@
          public int ProjectId { get; set; }
          public int UserId { get; set; }
          public string TypeOfLog { get; set; }
-         public DateTime Date { get; set; }
+         public DateTime LogDate { get; set; }
      }
  }
 

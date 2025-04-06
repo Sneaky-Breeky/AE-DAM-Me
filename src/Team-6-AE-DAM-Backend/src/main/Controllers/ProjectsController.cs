@@ -304,7 +304,7 @@ namespace DAMBackend.Controllers
             foreach (var tagToUpdate in tagsToUpdate)
             {
                 var existingTag = currentProject.Tags.First(t => t.Key == tagToUpdate.Key);
-                // mukund be better
+                
                 existingTag.sValue = tagToUpdate.sValue;
                 existingTag.iValue = tagToUpdate.iValue;
             }
@@ -324,7 +324,7 @@ namespace DAMBackend.Controllers
 
 
         // DELETE: api/damprojects/{id}
-        // manually delete files
+        // remove images from the blob
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProject(int id)
         {
@@ -414,24 +414,24 @@ namespace DAMBackend.Controllers
         }
 
 
-        // // DELETE: api/damprojects/{key}/{pId}
-        // [HttpDelete("{key}/{pId}")]
-        // public async Task<IActionResult> DeleteProject(string key, int pId)
-        // {
-        //     var tag = await _context.ProjectTags
-        //         .Where(pt => pt.Key == key && pt.ProjectId == pId)
-        //         .FirstOrDefaultAsync();
-        //
-        //     if (tag == null)
-        //     {
-        //         return NotFound();
-        //     }
-        //
-        //     _context.ProjectTags.Remove(tag);
-        //     await _context.SaveChangesAsync();
-        //
-        //     return NoContent();
-        // }
+        // DELETE: api/damprojects/{key}/{pId}
+        [HttpDelete("{key}/{pId}")]
+        public async Task<IActionResult> DeleteProjectTag(string key, int pId)
+        {
+            var tag = await _context.ProjectTags
+                .Where(pt => pt.Key == key && pt.ProjectId == pId)
+                .FirstOrDefaultAsync();
+        
+            if (tag == null)
+            {
+                return NotFound();
+            }
+        
+            _context.ProjectTags.Remove(tag);
+            await _context.SaveChangesAsync();
+        
+            return NoContent();
+        }
 
         
         
@@ -569,5 +569,29 @@ namespace DAMBackend.Controllers
                 return StatusCode(500, $"Failed to archive project {projectId}.");
             }
         }
+        [HttpDelete("deleteFile/{projectId}/{fileId}")]
+            public async Task<IActionResult> DeleteFileFromProject(int projectId, int fileId)
+            {
+                var fileTags = _context.FileTags.Where(ft => ft.FileId == fileId);
+            
+                // Remove the FileTag entries
+                _context.FileTags.RemoveRange(fileTags);
+                
+                // Save changes to the database
+                await _context.SaveChangesAsync();
+                
+                var file = await _context.Files.FirstOrDefaultAsync(f => f.Id == fileId && f.ProjectId == projectId);
+
+                if (file == null)
+                {
+                    return NotFound("File not found in this project.");
+                }
+                await _azureBlobService.DeleteProjectFileAsync(file.OriginalPath);
+
+                _context.Files.Remove(file);
+                await _context.SaveChangesAsync();
+
+                return Ok($"File with ID {fileId} deleted from project {projectId}.");
+            }
     }
 }

@@ -5,7 +5,7 @@ import { SearchOutlined, CalendarOutlined, StarFilled, StarOutlined } from '@ant
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext'
 import {addFavorite, removeFavorite, fetchProjects, fetchFavoriteProjects} from '../../api/projectApi';
-import {fetchProjectsByDateRange} from '../../api/queryFile';
+import {fetchProjectsByDateRange, getProjectBasicTags} from '../../api/queryFile';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
@@ -62,11 +62,24 @@ export default function UserProjectDir() {
 
             if (searchQuery.trim() !== '') {
                 const lowerQuery = searchQuery.toLowerCase();
-                filtered = filtered.filter(project =>
-                    project.name.toLowerCase().includes(lowerQuery) ||
-                    project.id.toString().includes(lowerQuery) ||
-                    project.location.toLowerCase().includes(lowerQuery)
+
+                filtered = await Promise.all(
+                    response.map(async (project) => {
+                        const match =
+                            project.name.toLowerCase().includes(lowerQuery) ||
+                            project.id.toString().includes(lowerQuery) ||
+                            project.location.toLowerCase().includes(lowerQuery);
+
+                        const tags = await getProjectBasicTags(project.id);
+                        const tagMatch = tags?.some(tag =>
+                            tag.toLowerCase().includes(lowerQuery)
+                        );
+
+                        return match || tagMatch ? project : null;
+                    })
                 );
+
+                filtered = filtered.filter(Boolean);
             }
 
             if (selectedStatus) {
