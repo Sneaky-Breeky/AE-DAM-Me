@@ -511,7 +511,7 @@ namespace DAMBackend.Controllers
         public async Task<ActionResult<IEnumerable<FileModel>>> GetProjectFiles(int pid)
         {
             var files = await _context.Files
-                .Where(f => f.ProjectId == pid)
+                .Where(f => f.ProjectId == pid && !f.Palette)
                 .Include(f => f.bTags)  // Include basic tags
                 .Include(f => f.mTags)  // Include metadata tags
                 .ToListAsync();

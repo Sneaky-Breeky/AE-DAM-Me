@@ -206,12 +206,13 @@
          // Helper for finding files with associated basictags
          private async Task<IQueryable<FileModel>> GetFilesBasicTagQuery(List<string> searchTags, ProjectModel project)
          {
-             var files = _context.Files.Where(f => !f.Palette);
+             var files = _context.Files.Where(f => f.ProjectId == project.Id && !f.Palette);
 
              foreach (var tag in searchTags)
              {
-                 files = files.Where(f => _context.FileTags
-                     .Any(ft => ft.TagId == tag && ft.FileId == f.Id));
+                 // files = files.Where(f => _context.FileTags
+                 //     .Any(ft => ft.TagId == tag && ft.FileId == f.Id));
+                 files = files.Where(f => f.bTags.Any(bt => bt.Value == tag));
              }
 
              // files = files.DistinctBy(f => f.Id);
@@ -333,6 +334,16 @@
              {
                  return BadRequest("No files match the criteria.");
              }
+             
+             if (request.MetadataTags == null || request.MetadataTags.Count == 0)
+             {
+                 var basicFiltered = await files.ToListAsync();
+                 if (!basicFiltered.Any())
+                     return BadRequest("No files match the criteria.");
+        
+                 return Ok(basicFiltered);
+             }
+             
 
 
              // Metadata tags associated with the project
