@@ -311,7 +311,7 @@ namespace DAMBackend.Controllers
                     Extension = Path.GetExtension(new Uri(file.filePath).LocalPath),
                     Description = "",
                     ThumbnailPath = file.thumbnailPath,
-                    ViewPath = updatedPath,
+                    ViewPath = file.viewPath,
                     OriginalPath = updatedPath,
                     DateTimeOriginal = file.date,
 //                    User = user,

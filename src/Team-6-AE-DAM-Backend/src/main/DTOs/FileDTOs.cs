@@ -28,6 +28,7 @@ public class FileDTO
         public string? copyright { get; set; }
 
         public string? thumbnailPath { get; set; }
+        public string? viewPath { get; set; }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public ImageResolution resolution { get; set; }

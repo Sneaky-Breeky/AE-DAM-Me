@@ -334,7 +334,8 @@ export default function UserUpload() {
                     model : uploadedFiles[index].model,
                     pixelHeight : uploadedFiles[index].pixelHeight,
                     pixelWidth: uploadedFiles[index].pixelWidth,
-                    thumbnailPath : uploadedFiles[index].thumbnailPath
+                    thumbnailPath : uploadedFiles[index].thumbnailPath,
+                    viewPath : uploadedFiles[index].viewPath
                 }
             });
             console.log(newFiles);
