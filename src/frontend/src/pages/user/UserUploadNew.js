@@ -293,20 +293,16 @@ export default function UserUpload() {
                 body: formData,
             });
 
+
             setSpinning(false);
 
             if (!response.ok) {
                 throw new Error('Failed to upload files.');
             }
+
             const uploadedFileUrls = await response.json();
-            const response2 = await fetch(`${API_BASE_URL}/api/filesNew/saveToPalette/${user.id}`, {
-                method: 'POST',
-                body: formData,
-            });
-            const responseFiles = await response2.json();
 
-
-            console.log("dump", responseFiles);
+            console.log("dump", uploadedFileUrls);
 
             const newFiles = selectedFiles.map((file, index) => {
                 return {

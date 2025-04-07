@@ -31,6 +31,20 @@ namespace DAMBackend.Controllers
     {
         public string ThumbnailPath { get; set; }
         public string OriginalPath { get; set; }
+
+        public decimal? GPSLat { get; set; }
+                public decimal? GPSLon { get; set; }
+                public decimal? GPSAlt { get; set; }
+
+                public  int PixelWidth { get; set; }
+                public  int PixelHeight { get; set; }
+                public string? Make { get; set; }
+                public string? Model { get; set; }
+                public int? FocalLength { get; set; }
+                public float? Aperture { get; set; }
+                public string? Copyright { get; set; }
+
+        // Exif data
     }
 
     [Route("api/[controller]")]
@@ -133,7 +147,7 @@ namespace DAMBackend.Controllers
                 // Validate file extension (e.g., allow only images and videos)
                 var allowedExtensionsphoto = new[] { ".jpg", ".jpeg", ".png", ".raw", ".arw" };
                 var allowedExtensionsvideo = new[] { ".mp4" };
-                // to be supported: .tiff, .jpg, .gif, .mov 
+                // to be supported: .tiff, .jpg, .gif, .mov
                 var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
                 if (!allowedExtensionsphoto.Contains(fileExtension) && !allowedExtensionsvideo.Contains(fileExtension))
                 {
@@ -164,15 +178,12 @@ namespace DAMBackend.Controllers
                 using var streamthumbnail = thumbnail.OpenReadStream();
                 string fileUrlThumbnail = await _azureBlobService.UploadThumbnailAsync(thumbnail, fileNameThumbnail);
 
-                UpladedFile uploadedFile = new UpladedFile
-                {
-                    ThumbnailPath = fileUrlThumbnail,
-                    OriginalPath = fileUrlOriginal
-                };
+                var fileModel = ProcessImageToExif(file);
+                fileModel.ThumbnailPath = fileUrlThumbnail;
+                fileModel.OriginalPath = fileUrlOriginal;
+//
 
-                // filesLinks.Add(new {thumbnail = fileUrlThumbnail, origin = fileUrlOriginal});
-                // Console.WriteLine($"bruh: {fileUrlOriginal} {fileUrlThumbnail}");
-                filesLinks.Add(uploadedFile);
+                filesLinks.Add(fileModel);
             }
 
             return Ok(filesLinks);
@@ -255,12 +266,12 @@ namespace DAMBackend.Controllers
             var existingFiles = findExistingFiles(files);
             var existingFilePaths = existingFiles.Select(f => f.OriginalPath);
             var newFiles = files.Where(file => !existingFilePaths.Contains(file.filePath));
-           
+
             var savedFiles = new List<FileModel> { };
 
             foreach (var file in newFiles)
             {
-                 
+
                 var tagsExists = new List<String> { };
                 var tagsDoNotExists = new List<String> { };
                 var existingTags = new List<TagBasicModel> { };
@@ -316,12 +327,12 @@ namespace DAMBackend.Controllers
                     Location = file.location
                 };
 
-                fileModel = await ExifExtract(updatedPath,fileModel);
+
 
                 _context.Files.Add(fileModel);
 
                 await _context.SaveChangesAsync();
-                
+
                 foreach (var tag in existingTags)
                 {
                     _context.FileTags.Add(new FileTag
@@ -347,7 +358,7 @@ namespace DAMBackend.Controllers
                 foreach (var tag in fileDto.metadata)
                 {
                     bool exists =  await TagExistsAsync(tag);
-                    
+
                     if (exists && !existingFile.bTags.Any(t => t.Value == tag))
                     {
                         tagsExists.Add(tag);
@@ -374,11 +385,11 @@ namespace DAMBackend.Controllers
                 existingFile.ProjectId = fileDto.projectId;
 
                 await _context.SaveChangesAsync();
-              
+
                 _context.BasicTags.AddRange(newTags);
 
                 await _context.SaveChangesAsync();
-                
+
                 foreach (var tag in existingTags)
                 {
                     _context.FileTags.Add(new FileTag
@@ -399,7 +410,7 @@ namespace DAMBackend.Controllers
 
                 savedFiles.Add(existingFile);
             }
-            
+
             var savedFileIds = savedFiles.Select(f => f.Id).ToList();
 
             var filesWithTags = await _context.Files
@@ -409,36 +420,19 @@ namespace DAMBackend.Controllers
 
             return Ok(filesWithTags);
         }
-         private async Task<FileModel> ExifExtract(string updatedPath, FileModel fileModel)
-                {
-                var imageFile = await GetBlobAsStreamAsync(updatedPath);
-                    using (var stream = imageFile.OpenReadStream())
-                         using (var image = ImageSharpImage.Load(stream))
-                         {
-                           fileModel.PixelWidth = image.Width;
-                           fileModel.PixelHeight = image.Height;
-                           fileModel.Palette = true;
 
-                           var exifProfile = image.Metadata.ExifProfile;
-                           if (exifProfile != null)
-                            {
-                             fileModel = ExtractExifMetadata(exifProfile, fileModel);
-                            }
-              }
-              return fileModel;
-}
 
         private async Task<bool> TagExistsAsync(string tagValue)
         {
             return await _context.BasicTags.AnyAsync(t => t.Value == tagValue);
         }
-        
+
         private void deleteFilesFromPalette(List<FileDTO> files)
         {
             var dtoFilePaths = files
-                    .Where(file => file.palette) 
+                    .Where(file => file.palette)
                     .Select(file => file.filePath)
-                    .ToList(); 
+                    .ToList();
 
             var filesToDelete = _context.Files
                 .Where(f => f.UserId == files[0].userId && f.Palette && dtoFilePaths.Contains(f.OriginalPath))
@@ -462,7 +456,7 @@ namespace DAMBackend.Controllers
         private List<FileModel> findExistingFiles(List<FileDTO> files){
                 var dtoFilePaths = files
                     .Select(file => file.filePath)
-                    .ToList(); 
+                    .ToList();
 
             var existingFiles = _context.Files
                 .Where(f => f.UserId == files[0].userId && f.Palette && dtoFilePaths.Contains(f.OriginalPath))
@@ -492,7 +486,7 @@ namespace DAMBackend.Controllers
             return _context.Files.Any(e => e.Id == id);
         }
 
-        private FileModel ExtractExifMetadata(ImageSharpExif.ExifProfile exifProfile, FileModel fileModel)
+        private UpladedFile ExtractExifMetadata(ImageSharpExif.ExifProfile exifProfile, UpladedFile fileModel)
         {
             object? latRef = null;
             object? lonRef = null;
@@ -605,10 +599,10 @@ namespace DAMBackend.Controllers
                 return File(memoryStream.ToArray(), "application/zip", "DownloadedFiles.zip");
             }
         }
-        
-        
+
+
         // POST: api/files/uploadToProject/{pid}
-        
+
         // Sample input: [102, 103, 104]
 
         [HttpPost("uploadToProject/{pid}")]
@@ -624,7 +618,7 @@ namespace DAMBackend.Controllers
             }
 
             var files = await _context.Files.Where(f => fids.Contains(f.Id) && f.Palette).ToListAsync();
-            
+
             foreach (var file in files)
             {
                 var updatedPath = await _azureBlobService.MoveBlobWithinContainerAsync("palettes",Path.GetFileName(new Uri(file.OriginalPath).LocalPath), "projects");
@@ -638,7 +632,7 @@ namespace DAMBackend.Controllers
 
             return Ok("Files uploaded successfully.");
         }
-    
+
         [HttpPost("delete-files")]
         public async Task<IActionResult> DeleteFiles([FromBody] List<string> fileNames)
         {
@@ -695,27 +689,44 @@ namespace DAMBackend.Controllers
           }
       }
 
-          public async Task<IFormFile> GetBlobAsStreamAsync(string url)
-              {
-              using (HttpClient client = new HttpClient())
-                      {
-                          byte[] fileBytes = await client.GetByteArrayAsync(url);
+      public UpladedFile ProcessImageToExif(IFormFile imageFile)
+                         {
+                             string originalPath = "not for now";
+                             string viewPath = "not for now";
+                             string thumbnailPath = "not for now";
 
-                          var stream = new MemoryStream(fileBytes);
-                          stream.Position = 0;
+                             var fileModel = new UpladedFile
+                             {
+//                                 Name = Path.GetFileNameWithoutExtension(imageFile.FileName),
+//                                 Extension = Path.GetExtension(imageFile.FileName),
+                                 ThumbnailPath = thumbnailPath,
+//                                 ViewPath = viewPath,
+                                 OriginalPath = originalPath,
+                                 PixelWidth = 0,
+                                 PixelHeight = 0,
 
-                          IFormFile formFile = new FormFile(stream, 0, stream.Length, "file", "downloaded_file.jpg")
-                          {
-                              Headers = new HeaderDictionary(),
-                              ContentType = "image/jpeg"
-                          };
+                             };
 
-                          return formFile;
-                      }
-    }
-   }
+                             using (var stream = imageFile.OpenReadStream())
+                             using (var image = SixLabors.ImageSharp.Image.Load(stream))
+                             {
+                                 fileModel.PixelWidth = image.Width;
+                                 fileModel.PixelHeight = image.Height;
+//                                 fileModel.Palette = true;
 
-  }
+                                 var exifProfile = image.Metadata.ExifProfile;
+                                 if (exifProfile != null)
+                                 {
+                                     ExtractExifMetadata(exifProfile, fileModel);
+                                 }
+                             }
+
+                             return fileModel;
+                         }
+
+      }
+
+}
+
 //}
-
 
