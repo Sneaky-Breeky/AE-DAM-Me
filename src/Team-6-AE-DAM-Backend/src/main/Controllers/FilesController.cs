@@ -31,6 +31,8 @@ namespace DAMBackend.Controllers
     {
         public string ThumbnailPath { get; set; }
         public string OriginalPath { get; set; }
+        
+        // Exif data
     }
 
     [Route("api/[controller]")]

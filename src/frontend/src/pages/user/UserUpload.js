@@ -310,6 +310,7 @@ export default function UserUpload() {
                     location: location || "",
                     projectId: project ? project.id : null,
                     userId: user.id
+                    // add exif data
                 }
             });
 

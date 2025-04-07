@@ -16,6 +16,7 @@ namespace DAMBackend.Models
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public ImageResolution resolution { get; set; }
+        // add exif data
     }
     
     public class MetadataTagDTO
