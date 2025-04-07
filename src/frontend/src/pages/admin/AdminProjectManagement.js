@@ -117,8 +117,8 @@ export default function ProjectManagement() {
 
     const handleDeleteProject = async (p) => {
         try {
-            const result = await deleteProject(p.id);
             await addLog(user.id, null, p.id, 'deleted a project');
+            const result = await deleteProject(p.id);
 
             if (result.error) {
                 throw new Error(result.error);
