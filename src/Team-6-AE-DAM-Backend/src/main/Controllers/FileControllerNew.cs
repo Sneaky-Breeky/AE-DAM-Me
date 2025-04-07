@@ -41,9 +41,9 @@ namespace DAMBackend.Controllers
                 _context = context;
                 _azureBlobService = azureBlobService;
             }
-            [HttpPost("upload")]
+            [HttpPost("upload/{userId}")]
             [Consumes("multipart/form-data")]
-            public async Task<ActionResult<List<UpladedFile>>> UploadFiles(List<IFormFile> files)
+            public async Task<ActionResult<List<UpladedFile>>> UploadFiles(List<IFormFile> files, int userId)
            {
                 if (files.Count > 100)
                 {
@@ -57,6 +57,7 @@ namespace DAMBackend.Controllers
                                 return BadRequest(errorMessage);
                             }
                         var fileModel = ProcessImageToExif(file);
+                        fileModel.UserId = userId;
                         fileModels.Add(fileModel);
 
                         var id = Guid.NewGuid();
@@ -207,4 +208,3 @@ namespace DAMBackend.Controllers
 
                }
                }
-
