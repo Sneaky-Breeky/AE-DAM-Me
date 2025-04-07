@@ -31,6 +31,7 @@ namespace DAMBackend.Controllers
     {
         public string ThumbnailPath { get; set; }
         public string OriginalPath { get; set; }
+        public string ViewPath { get; set; }
 
         public decimal? GPSLat { get; set; }
                 public decimal? GPSLon { get; set; }
@@ -179,6 +180,7 @@ namespace DAMBackend.Controllers
                 var uploadedFile = ProcessImageToExif(file);
                 uploadedFile.ThumbnailPath = fileUrlThumbnail;
                 uploadedFile.OriginalPath = fileUrlOriginal;
+                uploadedFile.ViewPath = fileUrlOriginal;
 
                 filesLinks.Add(uploadedFile);
             }
