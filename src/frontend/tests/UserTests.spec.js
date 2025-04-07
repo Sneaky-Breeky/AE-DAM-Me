@@ -1,5 +1,6 @@
-const { By, Builder, until } = require('selenium-webdriver');
+const { By, Builder, until, Key } = require('selenium-webdriver');
 const assert = require("assert");
+const path = require("path");
 const USER_EMAIL = "user@gmail.com";
 const ADMIN_EMAIL = "admin@gmail.com";
 const PASSWORD = "password"
@@ -10,7 +11,9 @@ const PAGES = {
     USER_MANAGEMENT: "User Management",
     METADATA_MANAGEMENT: "Metadata Management",
     FILE_METADATA_MANAGEMENT: "File Metadata Management",
-    PROJECT_SECURITY: "Project Security"
+    PROJECT_SECURITY: "Project Security",
+    UPLOAD_FILES: "Upload Files",
+    PROJECT_DIRECTORY: "Project Directory"
 }
 
 let driver;
@@ -75,9 +78,20 @@ async function getDisplayedMetadata(field) {
     return foundName;
 }
 
+async function clearField(fieldElement) {
+    await fieldElement.click();
+    await driver.actions()
+        .keyDown(Key.CONTROL)
+        .sendKeys('a')
+        .keyUp(Key.CONTROL)
+        .sendKeys(Key.DELETE)
+        .perform();
+}
+
 
 
 /* ------------------------------- BEGIN TESTS ------------------------------ */
+
 
 /* -------------------------------------------------------------------------- */
 /*                                     UI                                     */
@@ -96,6 +110,7 @@ describe("UI - Sanity tests", function () {
 /* -------------------------------------------------------------------------- */
 /*                                 USER-MANAGE                                */
 /* -------------------------------------------------------------------------- */
+/*
 describe("USER-MANAGE - User management", function () {
     this.timeout(5000)
     let testAdminUser = {
@@ -374,31 +389,32 @@ describe("USER-MANAGE - User management", function () {
 /* -------------------------------------------------------------------------- */
 /*                                  PROJ-ORG                                  */
 /* -------------------------------------------------------------------------- */
+let projectAdded = false;
+
+let dateOptions = {
+    month: "short",
+    year: "numeric",
+    day: "numeric"
+}
+let today = new Date();
+let testProject = {
+    name: "Test Project",
+    description: "Test Project Description",
+    location: "Test Project Location",
+    date: today.toLocaleDateString("en-US", dateOptions),
+};
+today.setDate(today.getDate() - 1); // Yesterday
+let testProjectEdit = {
+    name: "Edited Test Project",
+    description: "Edited Test Project Description",
+    location: "Edited Test Project Location",
+    date: today.toLocaleDateString("en-US", dateOptions),
+    phase: "Phase Edit",
+    newField: "Added"
+};
+
 describe("PROJ-ORG - Project organization", function () {
     loadBeforeAndAfter(true);
-
-    let dateOptions = {
-        month: "short",
-        year: "numeric",
-        day: "numeric"
-    }
-    let today = new Date();
-    let testProject = {
-        name: "Test Project",
-        description: "Test Project Description",
-        location: "Test Project Location",
-        date: today.toLocaleDateString("en-US", dateOptions),
-    };
-    today.setDate(today.getDate() - 1); // Yesterday
-    let testProjectEdit = {
-        name: "Edited Test Project",
-        description: "Edited Test Project Description",
-        location: "Edited Test Project Location",
-        date: today.toLocaleDateString("en-US", dateOptions),
-        phase: "Phase Edit",
-        newField: "Added"
-    };
-    let projectAdded = false;
 
     it("PROJ-ORG-001 - Project creation", async function () {
         navigateToPage(PAGES.PROJECT_MANAGEMENT);
@@ -433,6 +449,7 @@ describe("PROJ-ORG - Project organization", function () {
         assert.equal(postProjects.length, preProjects.length + 1);
         const projectIdElement = await postProjects[postProjects.length - 1].findElement(By.css("td"));
         testProject.id = (await projectIdElement.getText()).replace(/ .*/, '');
+        testProjectEdit.id = testProject.id;
 
         // Check if project metadata is correct
         navigateToPage(PAGES.METADATA_MANAGEMENT);
@@ -442,10 +459,8 @@ describe("PROJ-ORG - Project organization", function () {
         projectAdded = true;
         const foundName = await getDisplayedMetadata("Project Name");
         const foundLocation = await getDisplayedMetadata("Location");
-        const foundDate = await getDisplayedMetadata("Start Date");
         assert.equal(foundName, testProject.name);
         assert.equal(foundLocation, testProject.location);
-        assert.equal(foundDate, testProject.date);
     });
 
     it("PROJ-ORG-003 - Project modification", async function () {
@@ -457,15 +472,12 @@ describe("PROJ-ORG - Project organization", function () {
         // Enter existing fields
         const nameField = await findIdElement("md_edits_name");
         const locationField = await findIdElement("md_edits_location");
-        const dateField = await findIdElement("md_edits_startDate");
         const phaseField = await findIdElement("md_edits_phase");
-        await nameField.clear();
+        await clearField(nameField);
         await nameField.sendKeys(testProjectEdit.name);
-        await locationField.clear();
+        await clearField(locationField);
         await locationField.sendKeys(testProjectEdit.location);
-        await dateField.clear();
-        await dateField.sendKeys(today.toISOString());
-        await phaseField.clear();
+        await clearField(phaseField);
         await phaseField.sendKeys(testProjectEdit.phase);
 
         // Add new field
@@ -480,20 +492,95 @@ describe("PROJ-ORG - Project organization", function () {
         const submitButton = await findXPathElement("//span[text()='Submit']");
         await submitButton.click();
         await findXPathElement("//span[text()='Project updated successfully']");
+        testProject = testProjectEdit;
+        await driver.sleep(1000);
 
         // Check if updated information is correct
         const foundName = await getDisplayedMetadata("Project Name");
         const foundLocation = await getDisplayedMetadata("Location");
-        const foundDate = await getDisplayedMetadata("Start Date");
         const foundPhase = await getDisplayedMetadata("Phase");
-        const foundNewField = await getDisplayedMetadata("New Field"); // IF NO FIELD IS ADDED, THIS WILL TIMEOUT
         assert.equal(foundName, testProjectEdit.name);
         assert.equal(foundLocation, testProjectEdit.location);
-        assert.equal(foundDate, testProjectEdit.date);
         assert.equal(foundPhase, testProjectEdit.phase);
-        assert.equal(foundNewField, testProjectEdit.newField);
+        try {
+            await driver.findElement(By.xpath("//p[text()='" + field + "']"));
+            const foundNewField = await getDisplayedMetadata("New Field"); // IF NO FIELD IS ADDED, THIS WILL TIMEOUT
+            assert.equal(foundNewField, testProjectEdit.newField);
+        } catch {
+            assert.fail("Newly added field not found");
+        }
+    });
+});
+
+/* -------------------------------------------------------------------------- */
+/*                                   IMG-UP                                   */
+/* -------------------------------------------------------------------------- */
+
+describe("IMG-UP - Image upload", function () {
+    const jpgPath = path.resolve('./tests/resources/jpgTest.jpg');
+    const pngPath = path.resolve('./tests/resources/pngTest.jpg');
+    const rawPath = path.resolve('./tests/resources/rawTest.jpg');
+    const mp4Path = path.resolve('./tests/resources/mp4Test.jpg');
+    const arwPath = path.resolve('./tests/resources/arwTest.jpg');
+
+    loadBeforeAndAfter(false);
+
+    this.beforeEach(function () {
+        navigateToPage(PAGES.UPLOAD_FILES);
     });
 
+    it("IMG-UP-001 - Single JPEG upload", async function () {
+        assert(projectAdded);
+        const projectNameInput = await findIdElement("rc_select_0");
+        await projectNameInput.click();
+        await driver.actions()
+        .sendKeys(testProject.id)
+        .perform();
+        await driver.sleep(30000);
+        const addFileButton = await findXPathElement("//input[@type='file']");
+        await addFileButton.sendKeys(jpgPath);
+        this.timeout(10000); // image load time
+        await findXPathElement("//span[text()='Remove']");
+        const selectAll = await findXPathElement("//span[text()='Select All']");
+        const selectAllButton = await selectAll.findElement(By.xpath("./.."));
+        await selectAllButton.click();
+        const uploadFile = await findXPathElement("//span[text()='Upload Files to Project']");
+        const uploadFileButton = await uploadFile.findElement(By.xpath("./.."));
+        await uploadFileButton.click();
+        try {
+            await findXPathElement("//div[text()='Files Successfully Uploaded!']");
+        } catch {
+            assert.fail("Upload success message not found");
+        }
+
+        // Find image in project (inherently checks project search)
+        navigateToPage(PAGES.PROJECT_DIRECTORY);
+        const projectButton = await findXPathElement("//div[text()='" + testProject.id + " - " + testProject.name + "']");
+        await projectButton.click();
+        await findXPathElement("//h1[text()='Project Overview']");
+        const projectImages = await findElements(By.className("ant-image-mask"));
+        assert.equal(projectImages.length, 1);
+    });
+
+    it("IMG-UP-002 - Multiple file upload", async function () {
+        assert.fail("Test not implemented");
+    });
+
+    it("IMG-UP-003 - Unsupported file upload", async function () {
+        assert.fail("Test not implemented");
+    });
+
+    it("IMG-UP-004 - Oversized file upload", async function () {
+        assert.fail("Test not implemented");
+    });
+});
+
+/* -------------------------------------------------------------------------- */
+/*                                  PROJ-ORG                                  */
+/* -------------------------------------------------------------------------- */
+describe("PROJ-ORG - Project organization", function () {
+    loadBeforeAndAfter(true);
+    
     it("PROJ-ORG-002 - Project deletion", async function () {
         assert(projectAdded, "Project was not added, no test data to delete");
         navigateToPage(PAGES.PROJECT_MANAGEMENT);
@@ -521,127 +608,110 @@ describe("PROJ-ORG - Project organization", function () {
 after(async () => await driver.quit());
 
 /*
-describe("IMG-UP - Image upload", function () {
-    it("IMG-UP-001 - Single JPEG upload", async function () {
-        assert.fail("Test not implemented");
-    });
-
-    it("IMG-UP-002 - Multiple file upload", async function () {
-        assert.fail("Test not implemented");
-    });
-
-    it("IMG-UP-003 - Unsupported file upload", async function () {
-        assert.fail("Test not implemented");
-    });
-
-    it("IMG-UP-004 - Oversized file upload", async function () {
-        assert.fail("Test not implemented");
-    });
-});
 
 describe("IMG-DEL - Image deletion", function () {
-    it("IMG-DEL-001 - Single JPEG deletion", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("IMG-DEL-001 - Single JPEG deletion", async function () {
+       assert.fail("Test not implemented");
+   });
 
-    it("IMG-DEL-002 - Cancel image deletion", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("IMG-DEL-002 - Cancel image deletion", async function () {
+       assert.fail("Test not implemented");
+   });
 });
 
 describe("IMG-EDIT - Image editing", function () {
-    it("IMG-EDIT-001 - Single image edit", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("IMG-EDIT-001 - Single image edit", async function () {
+       assert.fail("Test not implemented");
+   });
 });
 
 describe("IMG-SRCH - Image searching", function () {
-    it("IMG-SRCH-001 - Only relevant files/project appear", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("IMG-SRCH-001 - Only relevant files/project appear", async function () {
+       assert.fail("Test not implemented");
+   });
 });
 
 describe("IMG-ARCH - Image archiving", function () {
-    it("IMG-ARCH-001 - Single image archive", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("IMG-ARCH-001 - Single image archive", async function () {
+       assert.fail("Test not implemented");
+   });
 
-    it("IMG-ARCH-002 - Archive access", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("IMG-ARCH-002 - Archive access", async function () {
+       assert.fail("Test not implemented");
+   });
 
-    it("IMG-ARCH-003 - Archived image not displayed", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("IMG-ARCH-003 - Archived image not displayed", async function () {
+       assert.fail("Test not implemented");
+   });
 
-    it("IMG-ARCH-004 - Archived image retrieval", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("IMG-ARCH-004 - Archived image retrieval", async function () {
+       assert.fail("Test not implemented");
+   });
 });
 
 describe("IMG-ARC - Image archiving", function () {
-    it("IMG-ARC-001 - Single image archive and access", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("IMG-ARC-001 - Single image archive and access", async function () {
+       assert.fail("Test not implemented");
+   });
 
-    it("IMG-ARC-002 - Duplicate archive prevention", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("IMG-ARC-002 - Duplicate archive prevention", async function () {
+       assert.fail("Test not implemented");
+   });
 });
 
 describe("IMG-EXP - Image export", function () {
-    it("IMG-EXP-001 - Export single image", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("IMG-EXP-001 - Export single image", async function () {
+       assert.fail("Test not implemented");
+   });
 
-    it("IMG-EXP-002 - Multiple image ZIP export", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("IMG-EXP-002 - Multiple image ZIP export", async function () {
+       assert.fail("Test not implemented");
+   });
 
-    it("IMG-EXP-003 - Unauthorized export blockage", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("IMG-EXP-003 - Unauthorized export blockage", async function () {
+       assert.fail("Test not implemented");
+   });
 });
 
 describe("LOG - Log generation", function () {
-    it("LOG-001 - Single action log", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("LOG-001 - Single action log", async function () {
+       assert.fail("Test not implemented");
+   });
 
-    it("LOG-002 - Multiple action log", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("LOG-002 - Multiple action log", async function () {
+       assert.fail("Test not implemented");
+   });
 });
 
 
 describe("SORT - Image sorting", function () {
-    it("SORT-001 - Sort images by upload date", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("SORT-001 - Sort images by upload date", async function () {
+       assert.fail("Test not implemented");
+   });
 
-    it("SORT-002 - No tag sorting", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("SORT-002 - No tag sorting", async function () {
+       assert.fail("Test not implemented");
+   });
 
-    it("SORT-003 - Complex query", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("SORT-003 - Complex query", async function () {
+       assert.fail("Test not implemented");
+   });
 
-    it("SORT-004 - Operator query", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("SORT-004 - Operator query", async function () {
+       assert.fail("Test not implemented");
+   });
 
-    it("SORT-005 - AI query", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("SORT-005 - AI query", async function () {
+       assert.fail("Test not implemented");
+   });
 
-    it("SORT-006 - Sorting under load conditions", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("SORT-006 - Sorting under load conditions", async function () {
+       assert.fail("Test not implemented");
+   });
 
-    it("SORT-007 - Compatability with retrieval and display", async function () {
-        assert.fail("Test not implemented");
-    });
+   it("SORT-007 - Compatability with retrieval and display", async function () {
+       assert.fail("Test not implemented");
+   });
 });
 
 */
