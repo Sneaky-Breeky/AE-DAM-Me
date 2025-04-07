@@ -16,7 +16,7 @@ public class FileDTO
         public bool palette { get; set; }
 
         public decimal? GPSLat { get; set; }
-                        public decimal? GPSLon { get; set; }
+                    public decimal? GPSLon { get; set; }
                         public decimal? GPSAlt { get; set; }
 
                         public  int PixelWidth { get; set; }
