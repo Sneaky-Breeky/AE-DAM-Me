@@ -41,7 +41,7 @@ namespace DAMBackend.Controllers
                 _context = context;
                 _azureBlobService = azureBlobService;
             }
-            [HttpPost("upload/{userId}")]
+            [HttpPost("saveToPalette/{userId}")]
             [Consumes("multipart/form-data")]
             public async Task<ActionResult<List<UpladedFile>>> UploadFiles(List<IFormFile> files, int userId)
            {

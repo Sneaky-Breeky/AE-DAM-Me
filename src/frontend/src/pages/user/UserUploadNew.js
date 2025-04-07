@@ -299,7 +299,7 @@ export default function UserUpload() {
                 throw new Error('Failed to upload files.');
             }
             const uploadedFileUrls = await response.json();
-            const response2 = await fetch(`${API_BASE_URL}/api/filesNew/upload/${user.id}`, {
+            const response2 = await fetch(`${API_BASE_URL}/api/filesNew/saveToPalette/${user.id}`, {
                 method: 'POST',
                 body: formData,
             });
