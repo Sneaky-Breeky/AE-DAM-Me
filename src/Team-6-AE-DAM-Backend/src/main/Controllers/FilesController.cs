@@ -617,7 +617,7 @@ namespace DAMBackend.Controllers
           }
       }
 
-                    public UpladedFile ProcessImageToExif(IFormFile imageFile)
+                    private UpladedFile ProcessImageToExif(IFormFile imageFile)
                          {
                              string originalPath = "not for now";
                              string viewPath = "not for now";
