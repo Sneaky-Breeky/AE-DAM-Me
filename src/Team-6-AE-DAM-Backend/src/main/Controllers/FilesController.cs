@@ -697,27 +697,27 @@ namespace DAMBackend.Controllers
           }
       }
 
-          public async Task<IFormFile> GetBlobAsStreamAsync(string url)
+      private async Task<IFormFile> GetBlobAsStreamAsync(string url)
+      {
+          using (HttpClient client = new HttpClient())
+          {
+              byte[] fileBytes = await client.GetByteArrayAsync(url);
+
+              var stream = new MemoryStream(fileBytes);
+              stream.Position = 0;
+
+              IFormFile formFile = new FormFile(stream, 0, stream.Length, "file", "downloaded_file.jpg")
               {
-              using (HttpClient client = new HttpClient())
-                      {
-                          byte[] fileBytes = await client.GetByteArrayAsync(url);
+                  Headers = new HeaderDictionary(),
+                  ContentType = "image/jpeg"
+              };
 
-                          var stream = new MemoryStream(fileBytes);
-                          stream.Position = 0;
-
-                          IFormFile formFile = new FormFile(stream, 0, stream.Length, "file", "downloaded_file.jpg")
-                          {
-                              Headers = new HeaderDictionary(),
-                              ContentType = "image/jpeg"
-                          };
-
-                          return formFile;
-                      }
+              return formFile;
+          }
+      }
     }
-   }
 
-  }
+}
 //}
 
 
