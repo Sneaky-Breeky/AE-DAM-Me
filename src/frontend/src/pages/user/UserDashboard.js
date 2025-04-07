@@ -63,41 +63,52 @@ export default function UserDashboard() {
 
     const handleSearch = async () => {
         const [start, end] = dateRange || [];
+        const StartDate = start
+            ? dayjs(start).toISOString()
+            : '0001-01-01T00:00:00Z';
 
-        const startDate = start ? dayjs(start).toISOString() : '0001-01-01T00:00:00Z';
-        const endDate = end ? dayjs(end).toISOString() : '0001-01-01T00:00:00Z';
+        const EndDate = end
+            ? dayjs(end).toISOString()
+            : '9999-12-31T23:59:59Z';
 
-        try {
-            const response = await fetchProjectsByDateRange(startDate, endDate);
-            let filtered = response;
+        const query = {
+            StartDate: StartDate,
+            EndDate: EndDate,
+        };
 
-            if (searchQuery.trim() !== '') {
-                const lowerQuery = searchQuery.toLowerCase();
+        console.log("Search Query:", query);
+        
+        let filteredbydate = projects.filter(project => {
+            const projectDate = dayjs(project.startDate);
+            return  (!start || projectDate.isAfter(dayjs(StartDate).startOf('day'))) &&
+                (!end || projectDate.isBefore(dayjs(EndDate).endOf('day')));
+        });
 
-                filtered = await Promise.all(
-                    response.map(async (project) => {
-                        const match =
-                            project.name.toLowerCase().includes(lowerQuery) ||
-                            project.id.toString().includes(lowerQuery) ||
-                            project.location.toLowerCase().includes(lowerQuery);
+        let filtered = filteredbydate;
+        if (searchQuery.trim() !== '') {
+            const lowerQuery = searchQuery.toLowerCase();
 
-                        const tags = await getProjectBasicTags(project.id);
-                        const tagMatch = tags?.some(tag =>
-                            tag.toLowerCase().includes(lowerQuery)
-                        );
+            filtered = await Promise.all(
+                filtered.map(async (project) => {
+                    const match =
+                        project.name.toLowerCase().includes(lowerQuery) ||
+                        project.id.toString().includes(lowerQuery) ||
+                        project.location.toLowerCase().includes(lowerQuery);
 
-                        return match || tagMatch ? project : null;
-                    })
-                );
+                    const tags = await getProjectBasicTags(project.id);
+                    const tagMatch = tags?.some(tag =>
+                        tag.toLowerCase().includes(lowerQuery)
+                    );
 
-                filtered = filtered.filter(Boolean);
-            }
+                    return match || tagMatch ? project : null;
+                })
+            );
 
-            setProjects(response);
-            setFilteredProjects(filtered);
-        } catch (error) {
-            console.error("Error fetching projects:", error);
+            filtered = filtered.filter(Boolean);
         }
+
+        setProjects(filtered);
+        setFilteredProjects(filtered);
     };
 
     const handleClearFilters = () => {
