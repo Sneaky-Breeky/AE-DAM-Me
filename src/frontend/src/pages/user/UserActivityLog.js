@@ -22,12 +22,7 @@ export default function ActivityLog() {
             if (user && user.id) {
                 setLoading(true);
                 const result = await fetchLog(user.id);
-                if (result.error) {
-                    setError(result.error);
-                    setLogs([]);
-                } else {
-                    setLogs(result.data || []); // assuming your fetchLog returns { data: [...] }
-                }
+                setLogs(result);
                 setLoading(false);
             }
         }
