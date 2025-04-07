@@ -906,7 +906,7 @@ export default function UserUpload() {
         }
 
         for (const fid of fileIds) {
-            await addLog(user.id, fid, project.id, 'uploading file to project');
+            await addLog(user.id, fid, project.id, 'Uploaded images to project');
         }
 
         message.success("Files uploaded to project!");
