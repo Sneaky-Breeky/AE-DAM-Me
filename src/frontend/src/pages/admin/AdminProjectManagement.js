@@ -89,7 +89,7 @@ export default function ProjectManagement() {
         };
         try {
             const result = await postProject(projectData);
-            await addLog(user.id, null, result.id, 'added a new project');
+            await addLog(user.id, null, result.id, 'Created a new project');
             setProject(result);
 
             if (result.error) {
@@ -117,7 +117,7 @@ export default function ProjectManagement() {
 
     const handleDeleteProject = async (p) => {
         try {
-            await addLog(user.id, null, null, `deleted a project ID: ${p.id}`);
+            await addLog(user.id, null, null, `Deleted a project ID: ${p.id}`);
             const result = await deleteProject(p.id);
 
             if (result.error) {
@@ -135,7 +135,7 @@ export default function ProjectManagement() {
     const handleArchiveProject = async (p) => {
         try {
             const response = await archiveProject(p.id);
-            await addLog(user.id, null, p.id, 'archived a project');
+            await addLog(user.id, null, p.id, 'Archived a project');
 
             if (response.error) {
                 throw new Error("Archive error", response.error);
@@ -149,7 +149,7 @@ export default function ProjectManagement() {
         }
     };
     const handleProjectExport = async (p) => {
-        await addLog(user.id, null, p.id, 'exported a project');
+        await addLog(user.id, null, p.id, 'Exported a project');
         const archiveFileUrl = await exportProject(p.id);
         const a = document.createElement("a");
         a.href = archiveFileUrl;

@@ -16,7 +16,7 @@ function PopupForm({ visible, onClose, refreshUsers }) {
 
 
   const handleSubmit = async (values) => {
-      await addLog(user.id, null,null, 'added new user');
+      await addLog(user.id, null,null, 'Added new user');
     try {
       await addUser(values);
       message.success("User added successfully!");
