@@ -9,6 +9,7 @@ const { Title } = Typography;
 
 export default function ActivityLog() {
     const { user, isAdmin } = useAuth();
+    const variable = true;
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -82,7 +83,7 @@ export default function ActivityLog() {
                 <div style={{ overflowY: 'auto', width: '100%', height: '100%' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
-                        {isAdmin ? (
+                        {variable ? (
                             <tr style={{ height: '10%' }}>
                                 <th
                                     style={{
@@ -151,7 +152,7 @@ export default function ActivityLog() {
                             .sort((a, b) => new Date(b.logDate) - new Date(a.logDate))
                             .map((log, index) => (
                                 <tr key={log.id || index}>
-                                {isAdmin ? (
+                                {variable ? (
                                     <>
                                         <td
                                             style={{
