@@ -58,7 +58,18 @@ namespace DAMBackend.Controllers
                             }
                         var fileModel = ProcessImageToExif(file);
                         fileModels.Add(fileModel);
+
+                        var id = Guid.NewGuid();
+                        var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                        var fileName = string.Concat("Original_", id.ToString(), fileExtension);
+                        using var stream = file.OpenReadStream();
+
+                        string fileUrlOriginal = await _azureBlobService.UploadAsync(file, fileName, ContainerType.Palette);
+
+//                        _context.Files.Update(fileModel);
+//                        await _context.SaveChangesAsync();
                     }
+
                 return Ok(fileModels);
               }
            public FileModel ProcessImageToExif(IFormFile imageFile)
@@ -76,7 +87,6 @@ namespace DAMBackend.Controllers
                            OriginalPath = originalPath,
                            PixelWidth = 0,
                            PixelHeight = 0,
-                           UserId = 10
                        };
 
                        using (var stream = imageFile.OpenReadStream())
