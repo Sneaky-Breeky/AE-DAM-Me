@@ -317,11 +317,21 @@ namespace DAMBackend.Controllers
 //                    Project = project,
                     Palette = file.palette,
                     ProjectId = file.projectId,
-                    PixelHeight = dimensions.HasValue ? dimensions.Value.Height : 0,
-                    PixelWidth = dimensions.HasValue ? dimensions.Value.Width : 0,
                     bTags = newTags,
                     Resolution = file.resolution,
-                    Location = file.location
+                    Location = file.location,
+
+                    GPSLat = file.GPSLat,
+                    GPSLon = file.GPSLon,
+                    GPSAlt = file.GPSAlt,
+//
+                    PixelWidth = file.PixelWidth,
+                    PixelHeight = file.PixelHeight,
+                        Make = file.Make,
+                        Model = file.Model,
+                        FocalLength = file.FocalLength,
+                        Aperture = file.Aperture,
+                        Copyright = file.Copyright
                 };
 
 
