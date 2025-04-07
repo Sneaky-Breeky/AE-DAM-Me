@@ -51,7 +51,6 @@ export async function fetchProjects() {
                     ImagePath: fileModel?.thumbnailPath
                         ? fileModel.thumbnailPath
                         : "/images/emptyProject.png",
-                    //${process.env.PUBLIC_URL}${project.imagePath} : 
                 };
             })
         );
@@ -92,7 +91,6 @@ export async function fetchProjectsForUser(userId) {
                     ImagePath: fileModel?.thumbnailPath
                         ? fileModel.thumbnailPath
                         : "/images/emptyProject.png",
-                    //${process.env.PUBLIC_URL}${project.imagePath} : 
                 };
             })
         );

@@ -12,6 +12,7 @@ public class FileDTO
         public int? projectId { get; set; }
         public string location { get; set; }
         public string filePath { get; set; }
+        public string thumbnailPath { get; set; }
         public int userId { get; set; }
         public bool palette { get; set; }
 

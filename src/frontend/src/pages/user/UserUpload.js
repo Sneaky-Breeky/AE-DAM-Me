@@ -744,12 +744,15 @@ export default function UserUpload() {
         try {
             // Create a copy of the current files to maintain after the palette update
             const currentFiles = [...files];
+            console.log("this is temp", currentFiles);
 
             const filesToSave = files.map(({ file, ...rest }) => ({
                 ...rest,
                 filePath: rest.original,
+                thumbnailPath: rest.preview,
                 palette: true
             }));
+            console.log("filesToSave", filesToSave);
 
             await saveFiles(filesToSave);
 
