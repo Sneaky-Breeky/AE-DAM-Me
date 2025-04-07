@@ -66,6 +66,7 @@ export default function UserUpload() {
     const fileInputRef = useRef(null);
     const [uploadSuccess, setUploadSuccess] = useState(false);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+    const [selectedResolution, setSelectedResolution] = useState(null);
     const metadataBoxStyle = {
         textAlign: 'left',
         backgroundColor: '#f5f5f5',
@@ -862,6 +863,11 @@ export default function UserUpload() {
             return;
         }
 
+        if (!selectedResolution) {
+            message.error("Please select a resolution before uploading.");
+            return;
+        }
+
         const selectedFileObjs = files.filter(f => selectedFiles.has(f.file.name));
 
         if (selectedFileObjs.length === 0) {
@@ -890,15 +896,15 @@ export default function UserUpload() {
                 onOk: () => proceedUpload(selectedFileObjs),
             });
         } else {
-            await proceedUpload(selectedFileObjs);
+            await proceedUpload(selectedFileObjs, selectedResolution);
         }
     };
 
-    const proceedUpload = async (selectedFileObjs) => {
+    const proceedUpload = async (selectedFileObjs, selectedResolution) => {
         const fileIds = selectedFileObjs.map(f => f.id);
         setSpinning(true);
 
-        const res = await uploadFilesToProject(project.id, fileIds);
+        const res = await uploadFilesToProject(project.id, fileIds, selectedResolution);
 
         setSpinning(false);
         if (res.error) {
@@ -1414,11 +1420,13 @@ export default function UserUpload() {
                     <Title level={5}>Adjust Resolution:</Title>
                     <Select
                         placeholder="Select resolution"
+                        value={selectedResolution}
+                        onChange={(value) => setSelectedResolution(value)}
                         style={{ width: '100%' }}
                         options={[
-                            { value: 'low', label: 'Low' },
-                            { value: 'medium', label: 'Medium' },
-                            { value: 'high', label: 'High' }
+                            { value: 'Low', label: 'Low' },
+                            { value: 'Medium', label: 'Medium' },
+                            { value: 'High', label: 'High' }
                         ]}
                         suffixIcon={<DownOutlined />}
                     />
