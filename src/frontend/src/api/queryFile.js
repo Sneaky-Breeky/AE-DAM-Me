@@ -33,7 +33,7 @@ export async function fetchProjectsByDateRange(StartDate, EndDate) {
     }
 }
 export async function getProjectBasicTags (pid){
-    console.log("insider query api");
+    //console.log("insider query api");
     console.log(pid);
     try {
         const url = `${QUERY_URL}/basictags/${pid}`

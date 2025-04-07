@@ -44,14 +44,13 @@ export async function fetchProjects() {
         const processedProjects = await Promise.all(
             projects.map(async (project) => {
                 const fileModel = await getFirstImageForProject({ projectId: project.id });
-                console.log(fileModel);
+                //console.log(fileModel);
 
                 return {
                     ...project,
                     ImagePath: fileModel?.thumbnailPath
                         ? fileModel.thumbnailPath
                         : "/images/emptyProject.png",
-                    //${process.env.PUBLIC_URL}${project.imagePath} : 
                 };
             })
         );
@@ -85,14 +84,13 @@ export async function fetchProjectsForUser(userId) {
         const processedProjects = await Promise.all(
             projects.map(async (project) => {
                 const fileModel = await getFirstImageForProject({ projectId: project.id });
-                console.log(fileModel);
+                //console.log(fileModel);
 
                 return {
                     ...project,
                     ImagePath: fileModel?.thumbnailPath
                         ? fileModel.thumbnailPath
                         : "/images/emptyProject.png",
-                    //${process.env.PUBLIC_URL}${project.imagePath} : 
                 };
             })
         );
