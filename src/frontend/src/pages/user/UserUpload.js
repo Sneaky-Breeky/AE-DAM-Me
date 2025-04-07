@@ -312,10 +312,21 @@ export default function UserUpload() {
                     date: selectedDate || null,
                     location: location || "",
                     projectId: project ? project.id : null,
-                    userId: user.id
+                    userId: user.id,
+                    aperture: uploadedFileUrls[index].aperture || null,
+                    copyright: uploadedFileUrls[index].copyright || null,
+                    focalLength: uploadedFileUrls[index].focalLength || null,
+                    gpsAlt: uploadedFileUrls[index].gpsAlt || null,
+                    gpsLat: uploadedFileUrls[index].gpsLat || null,
+                    gpsLon: uploadedFileUrls[index].gpsLon || null,
+                    make: uploadedFileUrls[index].make || null,
+                    model: uploadedFileUrls[index].model || null,
+                    pixelHeight: uploadedFileUrls[index].pixelHeight,
+                    pixelWidth: uploadedFileUrls[index].pixelWidth,
                     // add exif data
                 }
             });
+            console.log(newFiles);
 
             setFiles((prevFiles) => [...prevFiles, ...newFiles]);
             setUserFiles((prevUserFiles) => [...prevUserFiles, ...newFiles]);
