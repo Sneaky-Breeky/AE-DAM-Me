@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -180,7 +180,9 @@ namespace DAMBackend.Controllers
                 UpladedFile uploadedFile = new UpladedFile
                 {
                     ThumbnailPath = fileUrlThumbnail,
-                    OriginalPath = fileUrlOriginal
+                    OriginalPath = fileUrlOriginal,
+
+
                 };
 
                 // filesLinks.Add(new {thumbnail = fileUrlThumbnail, origin = fileUrlOriginal});

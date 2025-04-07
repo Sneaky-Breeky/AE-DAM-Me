@@ -29,6 +29,7 @@ public class FileDTO
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public ImageResolution resolution { get; set; }
+        // add exif data
     }
 
     
