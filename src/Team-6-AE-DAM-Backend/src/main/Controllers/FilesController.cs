@@ -315,16 +315,24 @@ namespace DAMBackend.Controllers
                     ViewPath = updatedPath,
                     OriginalPath = updatedPath,
                     DateTimeOriginal = file.date,
-//                    User = user,
                     UserId = file.userId,
-//                    Project = project,
                     Palette = file.palette,
                     ProjectId = file.projectId,
-                    PixelHeight = dimensions.HasValue ? dimensions.Value.Height : 0,
-                    PixelWidth = dimensions.HasValue ? dimensions.Value.Width : 0,
                     bTags = newTags,
-                    Resolution = file.resolution,
-                    Location = file.location
+                     Resolution = file.resolution,
+                     Location = file.location,
+
+                    PixelHeight = file.PixelHeight,
+                    PixelWidth = file.PixelWidth,
+
+                    GPSLat = file.GPSLat,
+                    GPSLon = file.GPSLon,
+                    GPSAlt = file.GPSAlt,
+                    Make = file.Make,
+                    Model = file.Model,
+                    FocalLength = file.FocalLength,
+                    Aperture = file.Aperture,
+                    Copyright = file.Copyright
                 };
 
 

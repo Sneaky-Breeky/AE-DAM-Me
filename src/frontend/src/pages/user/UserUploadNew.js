@@ -313,9 +313,22 @@ export default function UserUpload() {
                     date: selectedDate || null,
                     location: location || "",
                     projectId: project ? project.id : null,
-                    userId: user.id
-                }
+                    userId: user.id,
+
+                    pixelHeight: file.pixelHeight,
+                    pixelWidth: file.pixelWidth,
+
+                    GPSLat: file.GPSLat,
+                    GPSLon: file.GPSLon,
+                    GPSAlt: file.GPSAlt,
+                    make: file.make,
+                    model: file.model,
+                    focalLength: file.focalLength,
+                    aperture: file.aperture,
+                    copyright: file.copyright
+                };
             });
+
 
             setFiles((prevFiles) => [...prevFiles, ...newFiles]);
             setUserFiles((prevUserFiles) => [...prevUserFiles, ...newFiles]);
