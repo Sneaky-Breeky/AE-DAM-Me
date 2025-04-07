@@ -9,6 +9,7 @@ import { fetchProjects, putProject, getFilesForProject,deleteFileFromProject} fr
 import { getProjectImageMetaDataValuesTags } from "../../api/imageApi";
 import {editFileMetadataTag} from "../../api/fileApi";
 import { useAuth } from '../../contexts/AuthContext';
+import {addLog} from "../../api/logApi";
 
 const { Title } = Typography;
 
@@ -48,7 +49,9 @@ export default function AdminFileManage() {
     const deleteSelectedImages = async () => {
       console.log(selectedImages);
       const selectedImagesArray = [...selectedImages];
+        await Promise.all(selectedImagesArray.map(fileId => addLog(user.id, null,project.id, `Deleted Image Id: ${fileId} From Project`)));
       await Promise.all(selectedImagesArray.map(fileId => deleteFileFromProject(project.id, fileId)));
+
       const files = await getFilesForProject({ projectId: project.id });
       setImageList(files || []);
       setSelectedImages(new Set());

@@ -97,6 +97,7 @@ if (Object.keys(updatedFields).length > 0) {
         projectId: project.id,
         updatedProjectData: updatedProject
     });
+    await addLog(user.id,null,project.id,"Updated Project Metadata");
 
 if (putRes.error) throw new Error(putRes.error);
 }
@@ -135,7 +136,7 @@ await addProjectTag(project.id, tag.field, tag.fieldMD, type);
         ...prev,
         tags: updatedTags
     }));
-    await addLog(user.id,null,null,"Updated Project");
+
 
 message.success("Project updated successfully");
 setEditOpen(false);

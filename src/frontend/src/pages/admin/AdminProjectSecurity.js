@@ -5,6 +5,8 @@ import {SearchOutlined, EditOutlined, CloseOutlined} from '@ant-design/icons';
 import {fetchProjects, fetchUsersForProject, putProject} from '../../api/projectApi';
 import {fetchUsers} from '../../api/authApi';
 import {giveUserAccess, removeAllUserAccess} from "../../api/userApi";
+import { useAuth } from '../../contexts/AuthContext';
+import {addLog} from "../../api/logApi";
 
 
 const {Title} = Typography;
@@ -195,7 +197,7 @@ export default function AdminProjectSecurity() {
     const [selectedChecked, setSelectedChecked] = useState(false);
     const [listUsers, setListUsers] = useState([]);
     const [originalUsersForProject, setOriginalUsersForProject] = useState([]);
-
+    const { user } = useAuth();
 // Fetch users
     const getUsers = async () => {
         try {
@@ -284,6 +286,7 @@ export default function AdminProjectSecurity() {
             setOriginalUsersForProject(usersToGrantAccess);
             await getProjects();
             message.success("Project access updated!");
+            await addLog(user.id,null,project.id,'Updated Project User Access')
         } catch (err) {
             console.error("Failed to update access:", err);
             message.error("Failed to update project access.");

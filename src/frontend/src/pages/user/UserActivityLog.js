@@ -100,7 +100,7 @@ export default function ActivityLog() {
                                         borderBottom: '1px solid black',
                                     }}
                                 >
-                                    Activities
+                                    Data Changed
                                 </th>
                                 <th
                                     style={{
@@ -119,7 +119,7 @@ export default function ActivityLog() {
                                         paddingLeft: '20px', // Added padding to the left of Type of Log column for more gap
                                     }}
                                 >
-                                    Type of Log
+                                    Activity
                                 </th>
                             </tr>
                         ) : (
