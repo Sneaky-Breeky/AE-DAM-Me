@@ -95,7 +95,7 @@ export default function ActivityLog() {
                                 </th>
                                 <th
                                     style={{
-                                        width: '40%', // Reduced width for Activities column
+                                        width: '35%', // Reduced width for Activities column
                                         textAlign: 'left',
                                         borderBottom: '1px solid black',
                                     }}
@@ -104,7 +104,7 @@ export default function ActivityLog() {
                                 </th>
                                 <th
                                     style={{
-                                        width: '15%', // Reduced width for Timestamp column
+                                        width: '20%', // Increased width for Timestamp column
                                         textAlign: 'left',
                                         borderBottom: '1px solid black',
                                     }}
@@ -126,7 +126,7 @@ export default function ActivityLog() {
                             <tr style={{ height: '10%' }}>
                                 <th
                                     style={{
-                                        width: '60%', // Reduced width for Activities column
+                                        width: '55%', // Reduced width for Activities column
                                         textAlign: 'left',
                                         borderBottom: '1px solid black',
                                     }}
@@ -135,7 +135,7 @@ export default function ActivityLog() {
                                 </th>
                                 <th
                                     style={{
-                                        width: '40%', // Reduced width for Timestamp column
+                                        width: '45%', // Increased width for Timestamp column
                                         textAlign: 'left',
                                         borderBottom: '1px solid black',
                                     }}
@@ -162,7 +162,7 @@ export default function ActivityLog() {
                                         </td>
                                         <td
                                             style={{
-                                                width: '40%',
+                                                width: '35%',
                                                 textAlign: 'left',
                                                 borderBottom: '1px solid black',
                                             }}
@@ -187,7 +187,7 @@ export default function ActivityLog() {
                                         </td>
                                         <td
                                             style={{
-                                                width: '15%',
+                                                width: '20%',
                                                 textAlign: 'left',
                                                 borderBottom: '1px solid black',
                                             }}
@@ -213,7 +213,7 @@ export default function ActivityLog() {
                                     <>
                                         <td
                                             style={{
-                                                width: '60%',
+                                                width: '55%',
                                                 textAlign: 'left',
                                                 borderBottom: '1px solid black',
                                             }}
@@ -238,7 +238,7 @@ export default function ActivityLog() {
                                         </td>
                                         <td
                                             style={{
-                                                width: '40%',
+                                                width: '45%',
                                                 textAlign: 'left',
                                                 borderBottom: '1px solid black',
                                             }}
