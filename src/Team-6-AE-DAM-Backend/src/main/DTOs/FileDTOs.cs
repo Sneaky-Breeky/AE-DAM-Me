@@ -3,7 +3,8 @@ using System.Text.Json.Serialization;
 
 namespace DAMBackend.Models
 {
-    public class FileDTO
+
+public class FileDTO
     {
         public FileDTO() { }
         public DateTime? date { get; set; }
@@ -14,10 +15,23 @@ namespace DAMBackend.Models
         public int userId { get; set; }
         public bool palette { get; set; }
 
+        public decimal? GPSLat { get; set; }
+                        public decimal? GPSLon { get; set; }
+                        public decimal? GPSAlt { get; set; }
+
+                        public  int PixelWidth { get; set; }
+                        public  int PixelHeight { get; set; }
+                        public string? Make { get; set; }
+                        public string? Model { get; set; }
+                        public int? FocalLength { get; set; }
+                        public float? Aperture { get; set; }
+                        public string? Copyright { get; set; }
+
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public ImageResolution resolution { get; set; }
         // add exif data
     }
+
     
     public class MetadataTagDTO
     {
