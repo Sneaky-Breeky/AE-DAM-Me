@@ -30,19 +30,21 @@ namespace DAMBackend.Controllers
     public class UpladedFile
     {
         public string ThumbnailPath { get; set; }
+        
+        public string? ViewPath { get; set; }
         public string OriginalPath { get; set; }
 
         public decimal? GPSLat { get; set; }
-                public decimal? GPSLon { get; set; }
-                public decimal? GPSAlt { get; set; }
+        public decimal? GPSLon { get; set; }
+        public decimal? GPSAlt { get; set; }
 
-                public  int PixelWidth { get; set; }
-                public  int PixelHeight { get; set; }
-                public string? Make { get; set; }
-                public string? Model { get; set; }
-                public int? FocalLength { get; set; }
-                public float? Aperture { get; set; }
-                public string? Copyright { get; set; }
+        public  int PixelWidth { get; set; }
+        public  int PixelHeight { get; set; }
+        public string? Make { get; set; }
+        public string? Model { get; set; }
+        public int? FocalLength { get; set; }
+        public float? Aperture { get; set; }
+        public string? Copyright { get; set; }
     }
 
     [Route("api/[controller]")]
@@ -51,11 +53,13 @@ namespace DAMBackend.Controllers
     {
         private readonly AzureBlobService _azureBlobService;
         private readonly SQLDbContext _context;
+        private SubmissionEngine submissionEngine;
 
         public FilesController(SQLDbContext context, AzureBlobService azureBlobService)
         {
             _context = context;
             _azureBlobService = azureBlobService;
+            submissionEngine = new SubmissionEngine();
         }
 
         // GET: api/Files
@@ -160,14 +164,13 @@ namespace DAMBackend.Controllers
 
                 var id = Guid.NewGuid();
 
-                var fileName = string.Concat("Original_", id.ToString(), fileExtension);
+                string fileName = string.Concat("Original_", id.ToString(), fileExtension);
                 // Save the file to the upload directory
                 using var stream = file.OpenReadStream();
                 string fileUrlOriginal = await _azureBlobService.UploadAsync(file, fileName, ContainerType.Palette);
 
 
                 // generate thumbnail
-                SubmissionEngine submissionEngine = new SubmissionEngine();
                 var thumbnail = await submissionEngine.GenerateThumbnail(file);
                 var fileExtensionThumbnail = Path.GetExtension(thumbnail.FileName).ToLowerInvariant();
                 // do the same upload for thumbnail
@@ -177,7 +180,7 @@ namespace DAMBackend.Controllers
                 string fileUrlThumbnail = await _azureBlobService.UploadThumbnailAsync(thumbnail, fileNameThumbnail);
 
                 var uploadedFile = ProcessImageToExif(file);
-                uploadedFile.ThumbnailPath = fileNameThumbnail;
+                uploadedFile.ThumbnailPath = fileUrlThumbnail;
                 uploadedFile.OriginalPath = fileUrlOriginal;
 
                 filesLinks.Add(uploadedFile);
@@ -212,19 +215,18 @@ namespace DAMBackend.Controllers
                 return NotFound("Original file not found in database.");
 
             Console.WriteLine("Upload/edited endpoint hit!");
-            // Delete old blob & thumbnail
-            await _azureBlobService.DeleteAsync(existingFile.OriginalPath);
-            if (!string.IsNullOrEmpty(existingFile.ThumbnailPath))
-                await _azureBlobService.DeleteThumbnailAsync(existingFile.ThumbnailPath);
+            // // Delete old blob & thumbnail
+            // await _azureBlobService.DeleteAsync(existingFile.OriginalPath);
+            // if (!string.IsNullOrEmpty(existingFile.ThumbnailPath))
+            //     await _azureBlobService.DeleteThumbnailAsync(existingFile.ThumbnailPath);
 
             // Upload new file & thumb
             var newId = Guid.NewGuid();
             var newFileName = $"Original_{newId}{fileExt}";
             using var stream = file.OpenReadStream();
             string newOriginalUrl = await _azureBlobService.UploadAsync(file, newFileName, ContainerType.Palette);
-
-            var engine = new SubmissionEngine();
-            var thumb = await engine.GenerateThumbnail(file);
+            
+            var thumb = await submissionEngine.GenerateThumbnail(file);
             var thumbExt = Path.GetExtension(thumb.FileName).ToLowerInvariant();
             var thumbName = $"Thumbnail_{newId}{thumbExt}";
             using var thumbStream = thumb.OpenReadStream();
@@ -542,10 +544,11 @@ namespace DAMBackend.Controllers
 
             foreach (var file in files)
             {
-                var updatedPath = await _azureBlobService.MoveBlobWithinContainerAsync("palettes",Path.GetFileName(new Uri(file.OriginalPath).LocalPath), "projects");
+                string updatedPathOriginal = await _azureBlobService.MoveBlobWithinContainerAsync("palettes",Path.GetFileName(new Uri(file.OriginalPath).LocalPath), "projects");
+                // string updatedPathView = await _azureBlobService.MoveBlobWithinContainerAsync("palettes",Path.GetFileName(new Uri(file.ViewPath).LocalPath), "projects");
                 file.ProjectId = pid;
                 file.Palette = false;
-                file.OriginalPath = updatedPath;
+                file.OriginalPath = updatedPathOriginal;
                 project.Files.Add(file);
             }
 

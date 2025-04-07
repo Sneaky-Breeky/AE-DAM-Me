@@ -23,12 +23,7 @@ using ImageSharpExifTag = SixLabors.ImageSharp.Metadata.Profiles.Exif.ExifTag;
 
 namespace DAMBackend.SubmissionEngineEnv
 {
-    public enum CompressionLevel // used for Compress method
-    {
-        Low,
-        Medium,
-        High // High means original resolution
-    }
+    
     public class SubmissionEngine
     {
 		public readonly string _uploadPath = "";
@@ -97,7 +92,7 @@ namespace DAMBackend.SubmissionEngineEnv
         }
 
         // compress jpg and png image based on the compression option
-        public async Task<IFormFile> UploadJpgPng(IFormFile file, CompressionLevel option)
+        public async Task<IFormFile> UploadJpgPng(IFormFile file, ImageResolution option)
         {
         
             // Compression settings
@@ -106,17 +101,17 @@ namespace DAMBackend.SubmissionEngineEnv
             int maxHeight;
             switch (option)
             {
-                case CompressionLevel.Low:
+                case ImageResolution.Low:
                     quality = 30;
                     maxWidth = 800;
                     maxHeight = 600;
                     break;
-                case CompressionLevel.Medium:
+                case ImageResolution.Medium:
                     quality = 60;
                     maxWidth = 1600;
                     maxHeight = 1200;
                     break;
-                case CompressionLevel.High:
+                case ImageResolution.High:
                     quality = 100;
                     maxWidth = int.MaxValue;
                     maxHeight = int.MaxValue;
@@ -132,7 +127,7 @@ namespace DAMBackend.SubmissionEngineEnv
             using (var image = await Image.LoadAsync(inputStream))
             {
                 // Resize if not high quality
-                if (option != CompressionLevel.High)
+                if (option != ImageResolution.High)
                 {
                     image.Mutate(x => x.Resize(new ResizeOptions
                     {
@@ -160,7 +155,7 @@ namespace DAMBackend.SubmissionEngineEnv
 
 
 		// compression method for RAW file
-       	public async Task<IFormFile> UploadRaw(IFormFile file, CompressionLevel option)
+       	public async Task<IFormFile> UploadRaw(IFormFile file, ImageResolution option)
         {
             if (file == null || file.Length == 0)
             {
@@ -175,7 +170,7 @@ namespace DAMBackend.SubmissionEngineEnv
                 throw new Exception("Unsupported RAW file format.");
             }
             
-            if (option == CompressionLevel.High)
+            if (option == ImageResolution.High)
             {
                 // Return original RAW file as-is
                 var rawStream = new MemoryStream();
@@ -190,7 +185,7 @@ namespace DAMBackend.SubmissionEngineEnv
             }
         
             // Proceed with compression logic for Medium/Low
-            uint quality = option == CompressionLevel.Medium ? 60u : 20u;
+            uint quality = option == ImageResolution.Medium ? 60u : 20u;
 
             try
             {
@@ -241,7 +236,7 @@ namespace DAMBackend.SubmissionEngineEnv
         }
 
 
-        public async Task<IFormFile> UploadMp4(IFormFile file, CompressionLevel option)
+        public async Task<IFormFile> UploadMp4(IFormFile file, ImageResolution option)
         {
             if (file == null || file.Length == 0)
                 throw new Exception("Invalid file.");
@@ -250,7 +245,7 @@ namespace DAMBackend.SubmissionEngineEnv
             if (fileExtension != ".mp4")
                 throw new Exception("Only MP4 files are supported.");
         
-            if (option == CompressionLevel.High)
+            if (option == ImageResolution.High)
             {
                 // Return original file as-is
                 var rawStream = new MemoryStream();
@@ -276,8 +271,8 @@ namespace DAMBackend.SubmissionEngineEnv
             // Define compression args
             string compressionArgs = option switch
             {
-                CompressionLevel.Low => "-crf 32",
-                CompressionLevel.Medium => "-crf 28",
+                ImageResolution.Low => "-crf 32",
+                ImageResolution.Medium => "-crf 28",
                 _ => throw new Exception("Invalid compression level.") // Already handled High
             };
         

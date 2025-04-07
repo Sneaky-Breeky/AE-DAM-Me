@@ -44,7 +44,7 @@ export async function fetchProjects() {
         const processedProjects = await Promise.all(
             projects.map(async (project) => {
                 const fileModel = await getFirstImageForProject({ projectId: project.id });
-                console.log(fileModel);
+                //console.log(fileModel);
 
                 return {
                     ...project,
@@ -85,7 +85,7 @@ export async function fetchProjectsForUser(userId) {
         const processedProjects = await Promise.all(
             projects.map(async (project) => {
                 const fileModel = await getFirstImageForProject({ projectId: project.id });
-                console.log(fileModel);
+                //console.log(fileModel);
 
                 return {
                     ...project,

@@ -89,6 +89,7 @@ export default function UserProjectOverview() {
                 }
 
                 const files = await getFilesForProject({ projectId: id });
+                console.log(files);
 
                 const filesWithTags = await Promise.all(
                     files.map(async (file) => {
@@ -658,7 +659,7 @@ export default function UserProjectOverview() {
                                 >
                                     <Image
                                         key={file.id}
-                                        src={file.thumbnailPath || file.viewPath || file.originalPath}
+                                        src={file.thumbnailPath}
                                         width={200}
                                         preview={false}
                                         style={{
