@@ -106,17 +106,20 @@ export default function ActivityLog() {
                             logs.map((log, index) => (
                                 <tr key={log.id || index}>
                                     <td style={{ width: '20%', textAlign: 'left', borderBottom: '1px solid black' }}>
-                                        <p style={{margin: '0'}}>{log.UserID}</p>
+                                        <p style={{margin: '0'}}>{log.userId}</p>
                                     </td>
                                     <td style={{ width: '50%', textAlign: 'left', borderBottom: '1px solid black' }}>
                                         <p style={{margin: '0'}}>{log.action}</p>
-                                        {log.FileID && 
-                                        (<p style={{margin: '0' }}><span>File ID: </span> <span style={{ color: 'grey', fontStyle: 'italic' }}>{log.FileID} </span></p>)}
-                                        {log.ProjectID && 
-                                        (<p style={{margin: '0' }}><span>Project ID: </span> <span style={{ color: 'grey', fontStyle: 'italic' }}>{log.ProjectID} </span></p>)}
+                                        {log.fileId &&
+                                        (<p style={{margin: '0' }}><span>File ID: </span> <span style={{ color: 'grey', fontStyle: 'italic' }}>{log.fileId} </span></p>)}
+                                        {log.projectId &&
+                                        (<p style={{margin: '0' }}><span>Project ID: </span> <span style={{ color: 'grey', fontStyle: 'italic' }}>{log.projectId} </span></p>)}
                                     </td>
                                     <td style={{ width: '30%', textAlign: 'left', borderBottom: '1px solid black' }}>
                                         <p style={{margin: '0'}}>{dayjs(log.time).format('MMM DD, YYYY h:mma')}</p>
+                                    </td>
+                                    <td style={{ width: '20%', textAlign: 'left', borderBottom: '1px solid black' }}>
+                                        <p style={{margin: '0'}}>{log.typeOfLog}</p>
                                     </td>
                                 </tr>
                             ))
@@ -127,9 +130,9 @@ export default function ActivityLog() {
                                     <td style={{ width: '70%', textAlign: 'left', borderBottom: '1px solid black' }}>
                                         <p style={{margin: '0'}}>{log.action}</p>
                                         <p style={{margin: '0'}}>{log.action}</p>
-                                        {log.FileID && 
+                                        {log.fileId &&
                                         (<p style={{margin: '0' }}><span>File ID: </span> <span style={{ color: 'grey', fontStyle: 'italic' }}>{log.FileID} </span></p>)}
-                                        {log.ProjectID && 
+                                        {log.projectId &&
                                         (<p style={{margin: '0' }}><span>Project ID: </span> <span style={{ color: 'grey', fontStyle: 'italic' }}>{log.ProjectID} </span></p>)}
                                     </td>
                                     <td style={{ width: '30%', textAlign: 'left', borderBottom: '1px solid black' }}>
