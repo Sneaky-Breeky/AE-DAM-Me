@@ -271,16 +271,19 @@ export default function UserUpload() {
         // Check if any files are selected
         const totalFiles = files.length + selectedFiles.length;
 
+        
         if (totalFiles > MAX_FILES) {
             message.error(`You can only upload up to ${MAX_FILES} images. You tried adding ${totalFiles}.`);
             return;
         }
-
+        
         const formData = new FormData();
-
+        
         selectedFiles.forEach(file => {
             formData.append('files', file);
         });
+
+        // console.log("dump formData", formData);
 
         try {
             setSpinning(true);
@@ -331,12 +334,14 @@ export default function UserUpload() {
     };
 
     const getCroppedImg = async (imageSrc, crop, rotation = 0) => {
+        console.log("dump imageSrc", imageSrc);
         const createImage = (url) =>
             new Promise((resolve, reject) => {
                 const image = new window.Image();
                 image.setAttribute('crossOrigin', 'anonymous'); // Prevent CORS issues
                 image.onload = () => resolve(image);
                 image.onerror = reject;
+                image.originalurl = imageSrc;
                 image.src = url;
             });
 
@@ -400,9 +405,10 @@ export default function UserUpload() {
             // Upload with FormData
             const formData = new FormData();
             formData.append('files', croppedFile);
+            formData.append('originalurl', currentFile.original);
 
             setSpinning(true);
-            const response = await fetch(`${API_BASE_URL}/api/files/upload`, {
+            const response = await fetch(`${API_BASE_URL}/api/Files/upload/edited`, {
                 method: 'POST',
                 body: formData,
             });

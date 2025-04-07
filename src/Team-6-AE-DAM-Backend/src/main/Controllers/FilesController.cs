@@ -178,6 +178,65 @@ namespace DAMBackend.Controllers
             return Ok(filesLinks);
         }
 
+        // Call function in submission engine
+        [HttpPost("upload/edited")]
+        [Consumes("multipart/form-data")]
+        public async Task<ActionResult<List<UpladedFile>>> UploadFile()
+        {
+            var files = Request.Form.Files;
+            var originalUrl = Request.Form["originalurl"].ToString();
+
+            if (files.Count != 1 || string.IsNullOrWhiteSpace(originalUrl))
+                return BadRequest("One file and originalurl must be provided.");
+
+            var file = files[0];
+            var fileExt = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".raw", ".arw", ".mp4" };
+
+            if (!allowedExtensions.Contains(fileExt))
+                return BadRequest($"Unsupported file type: {fileExt}");
+
+            if (file.Length > 500 * 1024 * 1024)
+                return BadRequest("File size exceeds limit.");
+
+            var existingFile = await _context.Files.FirstOrDefaultAsync(f => f.OriginalPath == originalUrl);
+            if (existingFile == null)
+                return NotFound("Original file not found in database.");
+
+            Console.WriteLine("Upload/edited endpoint hit!");
+            // Delete old blob & thumbnail
+            await _azureBlobService.DeleteAsync(existingFile.OriginalPath);
+            if (!string.IsNullOrEmpty(existingFile.ThumbnailPath))
+                await _azureBlobService.DeleteThumbnailAsync(existingFile.ThumbnailPath);
+
+            // Upload new file & thumb
+            var newId = Guid.NewGuid();
+            var newFileName = $"Original_{newId}{fileExt}";
+            using var stream = file.OpenReadStream();
+            string newOriginalUrl = await _azureBlobService.UploadAsync(file, newFileName, ContainerType.Palette);
+
+            var engine = new SubmissionEngine();
+            var thumb = await engine.GenerateThumbnail(file);
+            var thumbExt = Path.GetExtension(thumb.FileName).ToLowerInvariant();
+            var thumbName = $"Thumbnail_{newId}{thumbExt}";
+            using var thumbStream = thumb.OpenReadStream();
+            string newThumbUrl = await _azureBlobService.UploadThumbnailAsync(thumb, thumbName);
+
+            // Update DB
+            existingFile.OriginalPath = newOriginalUrl;
+            existingFile.ThumbnailPath = newThumbUrl;
+            existingFile.DateTimeOriginal = DateTime.UtcNow;
+
+            _context.Files.Update(existingFile);
+            await _context.SaveChangesAsync();
+
+            return Ok(new List<UpladedFile> {
+                new UpladedFile {
+                    OriginalPath = newOriginalUrl,
+                    ThumbnailPath = newThumbUrl
+                }
+            });
+        }
 
         [HttpPost]
         public async Task<ActionResult<List<FileModel>>> AddFiles(List<FileDTO> files)
@@ -196,8 +255,6 @@ namespace DAMBackend.Controllers
             var existingFiles = findExistingFiles(files);
             var existingFilePaths = existingFiles.Select(f => f.OriginalPath);
             var newFiles = files.Where(file => !existingFilePaths.Contains(file.filePath));
-
-
            
             var savedFiles = new List<FileModel> { };
 
@@ -259,7 +316,7 @@ namespace DAMBackend.Controllers
                     Location = file.location
                 };
 
-                // fileModel = await ExifExtract(updatedPath,fileModel);
+                fileModel = await ExifExtract(updatedPath,fileModel);
 
                 _context.Files.Add(fileModel);
 
@@ -582,16 +639,16 @@ namespace DAMBackend.Controllers
             return Ok("Files uploaded successfully.");
         }
     
-      [HttpPost("delete-files")]
-      public async Task<IActionResult> DeleteFiles([FromBody] List<string> fileNames)
-      {
-          if (fileNames == null || fileNames.Count == 0)
-          {
-              return BadRequest("No files specified for deletion.");
-          }
+        [HttpPost("delete-files")]
+        public async Task<IActionResult> DeleteFiles([FromBody] List<string> fileNames)
+        {
+            if (fileNames == null || fileNames.Count == 0)
+            {
+                return BadRequest("No files specified for deletion.");
+            }
 
-          try
-          {
+            try
+            {
               // Assuming _azureBlobService.ProjectsContainer returns the BlobContainerClient
               var containerClient = _azureBlobService.ProjectsContainer;
 
