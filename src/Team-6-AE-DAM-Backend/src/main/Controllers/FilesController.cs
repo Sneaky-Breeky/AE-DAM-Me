@@ -43,7 +43,6 @@ namespace DAMBackend.Controllers
                 public int? FocalLength { get; set; }
                 public float? Aperture { get; set; }
                 public string? Copyright { get; set; }
-
         // Exif data
     }
 
@@ -178,12 +177,15 @@ namespace DAMBackend.Controllers
                 using var streamthumbnail = thumbnail.OpenReadStream();
                 string fileUrlThumbnail = await _azureBlobService.UploadThumbnailAsync(thumbnail, fileNameThumbnail);
 
-                var fileModel = ProcessImageToExif(file);
-                fileModel.ThumbnailPath = fileUrlThumbnail;
-                fileModel.OriginalPath = fileUrlOriginal;
-//
+                UpladedFile uploadedFile = new UpladedFile
+                {
+                    ThumbnailPath = fileUrlThumbnail,
+                    OriginalPath = fileUrlOriginal
+                };
 
-                filesLinks.Add(fileModel);
+                // filesLinks.Add(new {thumbnail = fileUrlThumbnail, origin = fileUrlOriginal});
+                // Console.WriteLine($"bruh: {fileUrlOriginal} {fileUrlThumbnail}");
+                filesLinks.Add(uploadedFile);
             }
 
             return Ok(filesLinks);
@@ -315,26 +317,17 @@ namespace DAMBackend.Controllers
                     ViewPath = updatedPath,
                     OriginalPath = updatedPath,
                     DateTimeOriginal = file.date,
+//                    User = user,
                     UserId = file.userId,
+//                    Project = project,
                     Palette = file.palette,
                     ProjectId = file.projectId,
+                    PixelHeight = dimensions.HasValue ? dimensions.Value.Height : 0,
+                    PixelWidth = dimensions.HasValue ? dimensions.Value.Width : 0,
                     bTags = newTags,
-                     Resolution = file.resolution,
-                     Location = file.location,
-
-                    PixelHeight = file.PixelHeight,
-                    PixelWidth = file.PixelWidth,
-
-                    GPSLat = file.GPSLat,
-                    GPSLon = file.GPSLon,
-                    GPSAlt = file.GPSAlt,
-                    Make = file.Make,
-                    Model = file.Model,
-                    FocalLength = file.FocalLength,
-                    Aperture = file.Aperture,
-                    Copyright = file.Copyright
+                    Resolution = file.resolution,
+                    Location = file.location
                 };
-
 
 
                 _context.Files.Add(fileModel);
@@ -430,6 +423,7 @@ namespace DAMBackend.Controllers
         }
 
 
+
         private async Task<bool> TagExistsAsync(string tagValue)
         {
             return await _context.BasicTags.AnyAsync(t => t.Value == tagValue);
@@ -494,84 +488,8 @@ namespace DAMBackend.Controllers
             return _context.Files.Any(e => e.Id == id);
         }
 
-        private UpladedFile ExtractExifMetadata(ImageSharpExif.ExifProfile exifProfile, UpladedFile fileModel)
-        {
-            object? latRef = null;
-            object? lonRef = null;
 
-            foreach (var tag in exifProfile.Values)
-            {
-                if (tag.Tag == ImageSharpExifTag.GPSLatitudeRef)
-                {
-                    latRef = tag.GetValue();
-                }
-                else if (tag.Tag == ImageSharpExifTag.GPSLongitudeRef)
-                {
-                    lonRef = tag.GetValue();
-                }
-                else if (tag.Tag == ImageSharpExifTag.GPSLatitude)
-                {
-                    fileModel.GPSLat = ConvertDMSToDecimal(tag.GetValue(), latRef?.ToString());
-                }
-                else if (tag.Tag == ImageSharpExifTag.GPSLongitude)
-                {
-                    fileModel.GPSLon = ConvertDMSToDecimal(tag.GetValue(), lonRef?.ToString());
-                }
-                else if (tag.Tag == ImageSharpExifTag.GPSAltitude &&
-                         tag.GetValue() is SixLabors.ImageSharp.Rational altitudeRational)
-                {
-                    fileModel.GPSAlt = (decimal)altitudeRational.ToDouble();
-                }
-                else if (tag.Tag == ImageSharpExifTag.Make)
-                {
-                    fileModel.Make = tag.GetValue()?.ToString();
-                }
-                else if (tag.Tag == ImageSharpExifTag.Model)
-                {
-                    fileModel.Model = tag.GetValue()?.ToString();
-                }
-                else if (tag.Tag == ImageSharpExifTag.Copyright)
-                {
-                    fileModel.Copyright = tag.GetValue()?.ToString();
-                }
-                else if (tag.Tag == ImageSharpExifTag.FocalLength)
-                {
-                    if (tag.GetValue() is SixLabors.ImageSharp.Rational rational)
-                    {
-                        fileModel.FocalLength = (int)rational.ToDouble();
-                    }
-                }
-                else if (tag.Tag == ImageSharpExifTag.FNumber)
-                {
-                    if (tag.GetValue() is SixLabors.ImageSharp.Rational rational)
-                    {
-                        fileModel.Aperture = (float)rational.ToDouble();
-                    }
-                }
-            }
-            return fileModel;
-        }
 
-        private decimal? ConvertDMSToDecimal(object dmsValue, string? reference)
-        {
-            if (dmsValue is SixLabors.ImageSharp.Rational[] dmsArray && dmsArray.Length == 3)
-            {
-                decimal degrees = (decimal)dmsArray[0].ToDouble();
-                decimal minutes = (decimal)dmsArray[1].ToDouble();
-                decimal seconds = (decimal)dmsArray[2].ToDouble();
-
-                decimal decimalDegrees = degrees + (minutes / 60) + (seconds / 3600);
-
-                if (reference == "S" || reference == "W")
-                {
-                    decimalDegrees = -decimalDegrees;
-                }
-
-                return decimalDegrees;
-            }
-
-            return null;
-        }
 
         [HttpPost("download-zip")]
         public async Task<IActionResult> DownloadFilesAsZip([FromBody] List<string> fileNames)
@@ -697,44 +615,9 @@ namespace DAMBackend.Controllers
           }
       }
 
-      public UpladedFile ProcessImageToExif(IFormFile imageFile)
-                         {
-                             string originalPath = "not for now";
-                             string viewPath = "not for now";
-                             string thumbnailPath = "not for now";
 
-                             var fileModel = new UpladedFile
-                             {
-//                                 Name = Path.GetFileNameWithoutExtension(imageFile.FileName),
-//                                 Extension = Path.GetExtension(imageFile.FileName),
-                                 ThumbnailPath = thumbnailPath,
-//                                 ViewPath = viewPath,
-                                 OriginalPath = originalPath,
-                                 PixelWidth = 0,
-                                 PixelHeight = 0,
-
-                             };
-
-                             using (var stream = imageFile.OpenReadStream())
-                             using (var image = SixLabors.ImageSharp.Image.Load(stream))
-                             {
-                                 fileModel.PixelWidth = image.Width;
-                                 fileModel.PixelHeight = image.Height;
-//                                 fileModel.Palette = true;
-
-                                 var exifProfile = image.Metadata.ExifProfile;
-                                 if (exifProfile != null)
-                                 {
-                                     ExtractExifMetadata(exifProfile, fileModel);
-                                 }
-                             }
-
-                             return fileModel;
-                         }
-
-      }
 
 }
-
+}
 //}
 

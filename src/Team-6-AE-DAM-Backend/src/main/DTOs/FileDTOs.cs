@@ -16,16 +16,16 @@ public class FileDTO
         public bool palette { get; set; }
 
         public decimal? GPSLat { get; set; }
-        public decimal? GPSLon { get; set; }
-        public decimal? GPSAlt { get; set; }
+                        public decimal? GPSLon { get; set; }
+                        public decimal? GPSAlt { get; set; }
 
-        public required int PixelWidth { get; set; }
-        public required int PixelHeight { get; set; }
-        public string? Make { get; set; }
-        public string? Model { get; set; }
-        public int? FocalLength { get; set; }
-        public float? Aperture { get; set; }
-        public string? Copyright { get; set; }
+                        public  int PixelWidth { get; set; }
+                        public  int PixelHeight { get; set; }
+                        public string? Make { get; set; }
+                        public string? Model { get; set; }
+                        public int? FocalLength { get; set; }
+                        public float? Aperture { get; set; }
+                        public string? Copyright { get; set; }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public ImageResolution resolution { get; set; }
