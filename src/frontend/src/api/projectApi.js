@@ -39,13 +39,25 @@ export async function fetchProjects() {
         }
 
         const projects = await response.json();
+        
 
-        const processedProjects = projects.map(project => ({
-            ...project,
-            ImagePath: project.imagePath ? `${process.env.PUBLIC_URL}${project.imagePath}` : ''
-        }));
+        const processedProjects = await Promise.all(
+            projects.map(async (project) => {
+                const fileModel = await getFirstImageForProject({ projectId: project.id });
+                console.log(fileModel);
 
-        console.log("Processed Image Paths:", processedProjects.map(p => p.ImagePath));
+                return {
+                    ...project,
+                    ImagePath: fileModel?.thumbnailPath
+                        ? fileModel.thumbnailPath
+                        : "/images/emptyProject.png",
+                    //${process.env.PUBLIC_URL}${project.imagePath} : 
+                };
+            })
+        );
+        //console.log(processedProjects);
+        
+        //console.log("Processed Image Paths:", processedProjects.map(p => p.ImagePath));
 
         return processedProjects;
     } catch (error) {
@@ -70,12 +82,20 @@ export async function fetchProjectsForUser(userId) {
         const projects = result.data || [];
 
         // 2. Remap the 'imagePath' to a valid URL
-        const processedProjects = projects.map(project => ({
-            ...project,
-            ImagePath: project.imagePath
-                ? `${process.env.PUBLIC_URL}${project.imagePath}`
-                : ''
-        }));
+        const processedProjects = await Promise.all(
+            projects.map(async (project) => {
+                const fileModel = await getFirstImageForProject({ projectId: project.id });
+                console.log(fileModel);
+
+                return {
+                    ...project,
+                    ImagePath: fileModel?.thumbnailPath
+                        ? fileModel.thumbnailPath
+                        : "/images/emptyProject.png",
+                    //${process.env.PUBLIC_URL}${project.imagePath} : 
+                };
+            })
+        );
 
         return processedProjects;
     } catch (error) {
@@ -424,6 +444,51 @@ export async function getFilesForProject({ projectId }) {
         return [];
     }
 }
+
+// for thumbnail
+export async function getFirstImageForProject({ projectId }) {
+    try {
+        const url = `${PROJECTS_URL}/files/${projectId}/first-image`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Failed to fetch first image: ${errText}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error("getFirstImageForProject error:", error);
+        return null; // or fallback to a placeholder
+    }
+    // try {
+    //     const url = `${PROJECTS_URL}/files/${projectId}`;
+    //
+    //     const response = await fetch(url, {
+    //         method: 'GET',
+    //         headers: {
+    //             'Accept': 'application/json',
+    //         },
+    //     });
+    //
+    //     if (!response.ok) {
+    //         const errText = await response.text();
+    //         throw new Error(`Failed to fetch images: ${errText}`);
+    //     }
+    //
+    //     return await response.json();
+    // } catch (error) {
+    //     console.error("getFilesForImages error:", error);
+    //     return [];
+    // }
+}
+
 
 export async function archiveProject(projectId) {
     try {

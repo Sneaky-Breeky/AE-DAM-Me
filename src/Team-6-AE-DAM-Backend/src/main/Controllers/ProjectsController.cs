@@ -518,6 +518,20 @@ namespace DAMBackend.Controllers
             
             return Ok(files);
         }
+        
+        // for thumbnail
+        [HttpGet("files/{pid}/first-image")]
+        public async Task<ActionResult<FileModel>> GetFirstProjectImage(int pid)
+        {
+            var firstImage = await _context.Files
+                .Where(f => f.ProjectId == pid)
+                .Include(f => f.bTags)
+                .Include(f => f.mTags)
+                .FirstOrDefaultAsync();
+            
+            return Ok(firstImage);
+        }
+
 
         [HttpPost("{projectId}/archive")]        
         public async Task<IActionResult> ArchiveProject(int projectId)
