@@ -38,6 +38,7 @@ export async function addLog(userID, fileID, projectId, typeOfLog) {
         TypeOfLog: typeOfLog,
         Date: new Date().toISOString(),
     };
+    console.log(logData);
     try {
         const response = await fetch(`${LOG_URL}/addLog`, {
             method: "POST",
