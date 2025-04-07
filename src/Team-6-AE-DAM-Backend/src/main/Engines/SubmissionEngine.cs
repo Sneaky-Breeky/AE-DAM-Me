@@ -31,6 +31,37 @@ namespace DAMBackend.SubmissionEngineEnv
         public SubmissionEngine()
         {
         }
+        public async Task<IFormFile> CompressImage(IFormFile file)
+                {
+                    if (file == null || file.Length == 0)
+                    {
+                        throw new Exception("Invalid file.");
+                    }
+
+                    var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+                    // Check the file extension and call the appropriate method based on the type
+                    if (new[] { ".arw", ".cr2", ".nef", ".dng" }.Contains(fileExtension))
+                    {
+                        // Call the GenerateThumbnailRaw for RAW files
+                        return await UploadRaw(file,ImageResolution.Medium);
+                    }
+        			else if (new[] { ".mp4" }.Contains(fileExtension))
+                    {
+                        // Call the GenerateThumbnailJpgPng for JPG/PNG files
+                        return await UploadMp4(file,ImageResolution.Medium);
+                    }
+                    else if (new[] { ".jpg", ".jpeg", ".png" }.Contains(fileExtension))
+                    {
+                        // Call the GenerateThumbnailJpgPng for JPG/PNG files
+                        return await UploadJpgPng(file, ImageResolution.Medium);
+                    }
+                    else
+                    {
+                        throw new Exception("Unsupported file format for thumbnail generation.");
+                    }
+                }
+
       
         // upload multiple files to pallete, no compression performed
         // make use the user has access to the palette
@@ -325,9 +356,9 @@ namespace DAMBackend.SubmissionEngineEnv
             {
                 throw new Exception("Invalid file.");
             }
-        
+
             var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-        
+
             // Check the file extension and call the appropriate method based on the type
             if (new[] { ".arw", ".cr2", ".nef", ".dng" }.Contains(fileExtension))
             {
