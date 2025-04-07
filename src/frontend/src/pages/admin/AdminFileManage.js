@@ -3,9 +3,11 @@ import Box from '@mui/material/Box';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import { Typography, Input, Space, Image, Button, Popconfirm, Form, Tooltip} from 'antd';
+import { Typography, Input, Space, Image, Button, Popconfirm, Form, Tooltip, message} from 'antd';
 import { SearchOutlined, DeleteOutlined, CloseOutlined, EditOutlined, QuestionCircleOutlined} from '@ant-design/icons';
 import { fetchProjects, putProject, getFilesForProject,deleteFileFromProject} from '../../api/projectApi';
+import { getProjectImageMetaDataValuesTags } from "../../api/imageApi";
+import {editFileMetadataTag} from "../../api/fileApi";
 import { useAuth } from '../../contexts/AuthContext';
 
 const { Title } = Typography;
@@ -58,13 +60,25 @@ export default function AdminFileManage() {
     setSelectedImages(new Set());
   };
 
-    const toggleSelectImage = (fileId) => {
+    const toggleSelectImage = async (fileId) => {
         if (!isEditMode) {
             const selectedFile = imageList.find(file => file.id === fileId);
             if (selectedFile) {
-                setDialogOpen(true);
-                setImageEdit(selectedFile);
-                console.log(imageEdit);
+                try {
+                    const metadataTags = await getProjectImageMetaDataValuesTags({ pid: project.id, fid: fileId });
+                    setImageEdit({
+                        ...selectedFile,
+                        Metadata: metadataTags || [],
+                    });
+                    setDialogOpen(true);
+                } catch (err) {
+                    console.error("Failed to fetch basic tags:", err);
+                    setImageEdit({
+                        ...selectedFile,
+                        bTags: [],
+                    });
+                    setDialogOpen(true);
+                }
             }
         } else {
             const updatedSelection = new Set(selectedImages);
@@ -77,29 +91,51 @@ export default function AdminFileManage() {
         }
     };
 
-  useEffect(() => {
-      // When the `md` array changes, update the form fields
-      if (imageEdit && dialogOpen && Array.isArray(imageEdit.Metadata)) {
-          const newFormValues = {};
-          imageEdit.Metadata.forEach((md, index) => {
-              newFormValues[index] = md;
-          });
-          form.setFieldsValue(newFormValues);
-      }
-  }, [imageEdit, dialogOpen]);
+    useEffect(() => {
+        if (imageEdit && dialogOpen && Array.isArray(imageEdit.Metadata)) {
+            const newFormValues = {};
+            imageEdit.Metadata.forEach((md, index) => {
+                newFormValues[`value-${index}`] = md.sValue || md.iValue;
+            });
+            form.setFieldsValue(newFormValues);
+        }
+    }, [imageEdit, dialogOpen]);
 
   const handleDialogClose = () => setDialogOpen(false);
 
-  const handleSubmitForm = () => {
+    const handleSubmitForm = async () => {
+        try {
+            const updatedValues = form.getFieldsValue();
 
-    console.log(Object.values(form.getFieldsValue())); // gives array, use to replace tags
-    //TODO: POST tags from form into imageEdit
+            const updates = imageEdit.Metadata.map(async (md, index) => {
+                const originalValue = md.sValue || md.iValue;
+                const newValue = updatedValues[`value-${index}`];
 
-    // reset form and imageEdit
-    setImageEdit(null);
-    form.resetFields();
-    setDialogOpen(false);
-  };
+                if (newValue !== originalValue) {
+                    try {
+                        await editFileMetadataTag(imageEdit.id, md.key, newValue);
+                        console.log(`Updated ${md.key} to ${newValue}`);
+                    } catch (err) {
+                        console.error(`Failed to update ${md.key}:`, err);
+                    }
+                }
+            });
+
+            await Promise.all(updates);
+
+            message.success("Metadata updated successfully");
+
+            const refreshedFiles = await getFilesForProject({ projectId: project.id });
+            setImageList(refreshedFiles || []);
+            setImageEdit(null);
+            form.resetFields();
+            setDialogOpen(false);
+        } catch (error) {
+            console.error("Error during metadata update:", error);
+            message.error("Failed to update metadata");
+        }
+    };
+    
 
   return (
     <Box
@@ -383,28 +419,22 @@ export default function AdminFileManage() {
             style={{ marginRight: "20px" }}
           />
 
-          <Form
-          form={form}
-          name="file_md_edits"
-          autoComplete="off"
-          onFinish={handleSubmitForm}
-          >
-          <div class='column'>
-            <h5 style={{ marginTop: "5%", marginBottom: "5%" }}>Tags:</h5>
-              {(imageEdit.bTags || []).map((md, index) => (
-
-              <Form.Item
-              key={index}  // Unique key for each item
-              style={{ marginBottom: "5px", marginRight: "10px" }}
-              name={index}
-            >
-              <Input defaultValue={md} />
-            </Form.Item>))}
-            
-          </div>
-
-          <Button type="primary" onClick={handleSubmitForm} style={{marginTop:'10%', float: 'right'}}>Submit</Button>
-          </Form>
+              <Form form={form} name="file_md_edits" autoComplete="off" onFinish={handleSubmitForm}>
+                  <div className="column">
+                      <h5 style={{ marginTop: "5%", marginBottom: "5%" }}>Metadata:</h5>
+                      {(imageEdit.Metadata || []).map((md, index) => (
+                          <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                              <Input value={md.key} disabled style={{ width: '45%' }} />
+                              <Form.Item name={`value-${index}`} style={{ width: '45%' }}>
+                                  <Input placeholder="Value" />
+                              </Form.Item>
+                          </div>
+                      ))}
+                  </div>
+                  <Button type="primary" htmlType="submit" style={{ marginTop: '10%', float: 'right' }} disabled={imageEdit?.Metadata?.length === 0}>
+                      Submit
+                  </Button>
+              </Form>
 
           </div>)
         : (

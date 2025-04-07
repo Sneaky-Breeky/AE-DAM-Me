@@ -64,13 +64,11 @@ export default function UserDashboard() {
     const handleSearch = async () => {
         const [start, end] = dateRange || [];
 
-        const query = {
-            StartDate: start ? dayjs(start).toISOString() : '0001-01-01T00:00:00Z',
-            EndDate: end ? dayjs(end).toISOString() : '0001-01-01T00:00:00Z'
-        };
+        const startDate = start ? dayjs(start).toISOString() : '0001-01-01T00:00:00Z';
+        const endDate = end ? dayjs(end).toISOString() : '0001-01-01T00:00:00Z';
 
         try {
-            const response = await fetchProjectsByDateRange(query);
+            const response = await fetchProjectsByDateRange(startDate, endDate);
             let filtered = response;
 
             if (searchQuery.trim() !== '') {

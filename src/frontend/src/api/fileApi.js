@@ -50,6 +50,31 @@ export const removeBasicTag = async (fid, value) => {
     }
 };
 
+export async function editFileMetadataTag(fid, key, newValue) {
+    try {
+        const url = `${META_URL}/Advanced/${fid}/${key}/${newValue}`;
+
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+
+        const result = await response.text();
+        return result;
+    } catch (error) {
+        console.error("Error updating metadata tag:", error);
+        return null;
+    }
+}
+
+
 export async function addMetaAdvanceTag(fid,requestBody) {
     console.log("i am here md");
     try {
