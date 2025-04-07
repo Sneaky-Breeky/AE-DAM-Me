@@ -137,6 +137,17 @@ export default function UserUpload() {
                     projectId: file.projectId,
                     userId: file.userId,
                     file: { name: file.name },
+                    aperture : file.aperture,
+                    copyright : file.copyright,
+                    focalLength : file.focalLength,
+                    gpsAlt : file.gpsAlt,
+                    gpsLat : file.gpsLat,
+                    gpsLon : file.gpsLon,
+                    make : file.make,
+                    model : file.model,
+                    pixelHeight : file.pixelHeight,
+                    pixelWidth: file.pixelWidth,
+                    thumbnailPath : file.thumbnailPath
                 }));
 
             paletteFiles.forEach(file => {
@@ -299,21 +310,31 @@ export default function UserUpload() {
                 throw new Error('Failed to upload files.');
             }
 
-            const uploadedFileUrls = await response.json();
+            const uploadedFiles = await response.json();
 
-            console.log("dump", uploadedFileUrls);
+            console.log("dump", uploadedFiles);
 
             const newFiles = selectedFiles.map((file, index) => {
                 return {
-                    file: { name: getFileName(uploadedFileUrls[index].originalPath) },
-                    preview: uploadedFileUrls[index].thumbnailPath || URL.createObjectURL(file),
-                    original: uploadedFileUrls[index].originalPath,
+                    file: { name: getFileName(uploadedFiles[index].originalPath) },
+                    preview: uploadedFiles[index].thumbnailPath || URL.createObjectURL(file),
+                    original: uploadedFiles[index].originalPath,
                     metadata: [],
                     date: selectedDate || null,
                     location: location || "",
                     projectId: project ? project.id : null,
-                    userId: user.id
-                    // add exif data
+                    userId: user.id,
+                    aperture : uploadedFiles[index].aperture,
+                    copyright : uploadedFiles[index].copyright,
+                    focalLength : uploadedFiles[index].focalLength,
+                    gpsAlt : uploadedFiles[index].gpsAlt,
+                    gpsLat : uploadedFiles[index].gpsLat,
+                    gpsLon : uploadedFiles[index].gpsLon,
+                    make : uploadedFiles[index].make,
+                    model : uploadedFiles[index].model,
+                    pixelHeight : uploadedFiles[index].pixelHeight,
+                    pixelWidth: uploadedFiles[index].pixelWidth,
+                    thumbnailPath : uploadedFiles[index].thumbnailPath
                 }
             });
 

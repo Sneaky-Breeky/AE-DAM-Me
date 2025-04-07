@@ -15,17 +15,19 @@ public class FileDTO
         public int userId { get; set; }
         public bool palette { get; set; }
 
-        public decimal? GPSLat { get; set; }
-                        public decimal? GPSLon { get; set; }
-                        public decimal? GPSAlt { get; set; }
+        public decimal? gpsLat { get; set; }
+        public decimal? gpsLon { get; set; }
+        public decimal? gpsAlt { get; set; }
 
-                        public  int PixelWidth { get; set; }
-                        public  int PixelHeight { get; set; }
-                        public string? Make { get; set; }
-                        public string? Model { get; set; }
-                        public int? FocalLength { get; set; }
-                        public float? Aperture { get; set; }
-                        public string? Copyright { get; set; }
+        public  int pixelWidth { get; set; }
+        public  int pixelHeight { get; set; }
+        public string? make { get; set; }
+        public string? model { get; set; }
+        public int? focalLength { get; set; }
+        public float? aperture { get; set; }
+        public string? copyright { get; set; }
+
+        public string? thumbnailPath { get; set; }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public ImageResolution resolution { get; set; }
