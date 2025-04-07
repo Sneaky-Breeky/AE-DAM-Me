@@ -90,7 +90,7 @@ namespace DAMBackend.Migrations
                     b.Property<int?>("ProjectId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("Resolution")
+                    b.Property<int>("Resolution")
                         .HasColumnType("int");
 
                     b.Property<string>("ThumbnailPath")
@@ -136,11 +136,11 @@ namespace DAMBackend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LogId"));
 
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
                     b.Property<int>("FileId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("LogDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("ProjectId")
                         .HasColumnType("int");
@@ -239,6 +239,9 @@ namespace DAMBackend.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("isArchived")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
-import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Space, Image, Popconfirm, Tooltip } from 'antd';
+import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Space, Image, Popconfirm, Tooltip, message } from 'antd';
 import {
     SearchOutlined,
     CalendarOutlined,
@@ -14,118 +14,256 @@ import {
     ZoomInOutlined,
     ZoomOutOutlined,
     EditOutlined,
-    QuestionCircleOutlined
+    QuestionCircleOutlined,
+    CheckCircleOutlined
 } from '@ant-design/icons';
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { projects, users } from '../../utils/dummyData.js';
+import { useParams } from 'react-router-dom';
+import {fetchProject, getFilesForProject} from '../../api/projectApi';
+import {downloadFilesZip} from '../../api/fileApi';
 import dayjs from 'dayjs';
+import {getProjectBasicTags, getProjectMetaDataTags, searchProjectFiles} from "../../api/queryFile";
+import {getProjectImageBasicTags, getProjectImageMetaDataTags} from "../../api/imageApi";
 
 const { RangePicker } = DatePicker;
 const { Title } = Typography;
 const { Meta } = Card;
 
-// instead of passing project via state, try access the url id and using params
 export default function UserProjectOverview() {
-    const { projectId } = useParams();
-    const project = projects.find(proj => proj.id === projectId);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedDate, setSelectedDate] = useState(null);
-    const navigate = useNavigate();
-    const [current, setCurrent] = React.useState(0);
-    const { state } = useLocation();
-    const [imageList, setImageList] = useState(state.project.files);
-    const [isEditMode, setIsEditMode] = useState(false);
+    //project variables
+    const { id } = useParams();
+    const [project, setProject] = useState(null);
+    const [projectMetaTags, setProjectMetaTags] = useState([]);
+    
+    //project's files' metadata variables
+    const [allFileMetaTags, setAllFileMetaTags] = useState([]);
+    const [selectedFileMDKey, setSelectedFileMDKey] = useState([]);
+    const [fileMDValue, setFileMDValue] = useState([]);
+    const [selectedOperator, setSelectedOperator] = useState(null);
+    const [operatorDisabled, setOperatorDisabled] = useState(false);
 
+    //project's files' tags
+    const [allFileTags, setAllFileTags] = useState([]);
+    const [selectedFileTag, setSelectedFileTag] = useState([]);
+    
+    
+    //image variables
+    const [imageList, setImageList] = useState([]);
     const [selectedImages, setSelectedImages] = useState(new Set());
+
+    //other variables
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedDateRange, setSelectedDateRange] = useState([]);
     const [selectedStatus, setSelectedStatus] = useState("");
+    const [current, setCurrent] = React.useState(0);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchProjectAndFiles() {
+            try {
+                const projectData = await fetchProject(id);
+                const projectFilesMetadataData = await getProjectMetaDataTags({ pid: id });
+                const projectFilesTagsData = await getProjectBasicTags(id);
+                setAllFileMetaTags(Array.isArray(projectFilesMetadataData) ? projectFilesMetadataData : []);
+                setAllFileTags(Array.isArray(projectFilesTagsData) ? projectFilesTagsData : []);
+
+                if (!projectData) {
+                    console.warn("No project found");
+                    setProject({});
+                    return;
+                }
+
+                const files = await getFilesForProject({ projectId: id });
+
+                const filesWithTags = await Promise.all(files.map(async (file) => {
+                    const basicTags = await getProjectImageBasicTags({ pid: id, fid: file.id });
+                    const metadataTags = await getProjectImageMetaDataTags({ pid: id, fid: file.id });
+
+                    return {
+                        ...file,
+                        basicTags: basicTags || [],
+                        metadataTags: metadataTags || [],
+                    };
+                }));
+
+                //setProjectMetaTags(metaTags || []);
+                setProject(projectData);
+                setImageList(filesWithTags);
+            } catch (err) {
+                console.error("Failed to load project or files:", err);
+                setProject({});
+                setImageList([]);
+            }
+        }
+
+        if (id) {
+            fetchProjectAndFiles();
+        }
+    }, [id]);
 
 
 
-    if (!state?.project) {
-        return <p>Project not found.</p>;
+    if (project === null) {
+        return <p>Loading project...</p>;
     }
 
-    // if (!project) {
-    //     return <p>Project not found.</p>;
-    // }
+    const handleSearch = async () => {
+        const metadataFields = [selectedFileMDKey, selectedOperator, fileMDValue];
+        const metadataFilledCount = metadataFields.filter(val => {
+            if (Array.isArray(val)) return val.length > 0; // treat [] as no input 
+            return Boolean(val);
+        }).length;
 
-
-    // when backend is done connect this part with backend
-    const handleSearch = () => {
-        let filteredImages = state.project.files;
-
-        console.log(state.project.status);
-        if (searchQuery.trim() !== '') {
-            const query = searchQuery.toLowerCase();
-            filteredImages = filteredImages.filter(file =>
-                file.Metadata.some(tag => tag.toLowerCase().includes(query))
-            );
+        if (metadataFilledCount > 0 && metadataFilledCount < 3) {
+            message.warning('Please fill out all 3 metadata fields: key, operator, and value.');
+            return;
         }
 
-        if (selectedDate) {
-            filteredImages = filteredImages.filter(file =>
-                dayjs(file.Date).isSame(selectedDate, 'day')
-            );
+        const isNumber = !isNaN(fileMDValue);
+        const v_type = isNumber ? 1 : 0;
+
+        if (!isNumber && selectedOperator !== "=") {
+            message.warning("Only '=' is allowed for string metadata comparisons.");
+            return;
         }
 
-        if (selectedStatus) {
-            filteredImages = filteredImages.filter(file =>
-                file.Status.toLowerCase() === selectedStatus.toLowerCase()
-            );
-        }
+        const metadataFilters = metadataFilledCount === 3 ? [
+            {
+                Key: selectedFileMDKey,
+                Op: selectedOperator,
+                Value: fileMDValue,
+                v_type: v_type
+            }
+        ] : [];
 
-        setImageList(filteredImages);
-        console.log("Filtered images:", filteredImages);
+        const tagArray = selectedFileTag && selectedFileTag.length > 0
+            ? Array.isArray(selectedFileTag)
+                ? selectedFileTag
+                : [selectedFileTag]
+            : [];
+
+        const filterPayload = {
+            BasicTags: { bTags: tagArray },
+            MetadataTags: metadataFilters
+        };
+
+
+        try {
+            const result = await searchProjectFiles(id, filterPayload);
+            let filtered = result;
+
+            if (selectedDateRange && selectedDateRange.length === 2) {
+                const [start, end] = selectedDateRange;
+                filtered = result.filter(file => {
+                    const fileDate = dayjs(file.dateTimeOriginal);
+                    return fileDate.isValid() && fileDate.isAfter(start) && fileDate.isBefore(end);
+                });
+            }
+
+            const hydratedFiles = await Promise.all(
+                filtered.map(async (file) => {
+                    const basicTags = await getProjectImageBasicTags({ pid: id, fid: file.id });
+                    const metadataTags = await getProjectImageMetaDataTags({ pid: id, fid: file.id });
+
+                    return {
+                        ...file,
+                        basicTags: basicTags || [],
+                        metadataTags: metadataTags || [],
+                    };
+                })
+            );
+
+            setImageList(hydratedFiles);
+        } catch (error) {
+            console.error("Search failed:", error);
+            setImageList([]);
+        }
     };
 
 
-    const handleClearFilters = () => {
+
+
+
+    const handleClearFilters = async () => {
         setSearchQuery('');
-        setSelectedDate(null);
+        setSelectedDateRange(null);
         setSelectedStatus('');
-        setImageList(state.project.files);
+        setSelectedFileMDKey(null);
+        setSelectedOperator(null);
+        setFileMDValue('');
+        setSelectedFileTag(null);
+        setOperatorDisabled(false);
+
+        try {
+            const files = await getFilesForProject({ projectId: id });
+            const filesWithTags = await Promise.all(files.map(async (file) => {
+                const basicTags = await getProjectImageBasicTags({ pid: id, fid: file.id });
+                const metadataTags = await getProjectImageMetaDataTags({ pid: id, fid: file.id });
+
+                return {
+                    ...file,
+                    basicTags: basicTags || [],
+                    metadataTags: metadataTags || [],
+                };
+            }));
+
+            setImageList(filesWithTags);
+        } catch (err) {
+            console.error("Failed to reload project files:", err);
+            setImageList([]);
+        }
     };
 
+    
 
     const onDownload = () => {
-        const url = imageList[current];
+        const url = imageList[current].originalPath;
         const suffix = url.slice(url.lastIndexOf('.'));
         const filename = Date.now() + suffix;
-
-        fetch(url)
-            .then((response) => response.blob())
-            .then((blob) => {
-                const blobUrl = URL.createObjectURL(new Blob([blob]));
-                const link = document.createElement('a');
-                link.href = blobUrl;
-                link.download = filename;
-                document.body.appendChild(link);
-                link.click();
-                URL.revokeObjectURL(blobUrl);
-                link.remove();
-            });
+        downloadFile(url,filename)
     };
+
+    const downloadFile = (url,filename) => {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download =  filename; // Name of the downloaded file
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url); 
+    }
 
     const toggleEditMode = () => {
         setIsEditMode((prev) => !prev);
         setSelectedImages(new Set());
     };
 
-    const toggleSelectImage = (index) => {
+    const toggleSelectImage = (file) => {                       
         if (!isEditMode) return;
-
-        const updatedSelection = new Set(selectedImages);
-        if (updatedSelection.has(index)) {
-            updatedSelection.delete(index);
-        } else {
-            updatedSelection.add(index);
-        }
-        setSelectedImages(updatedSelection);
+        addFile(file.id);
+    };
+    const addFile = (fileId) => {
+        setSelectedImages((prevSelected) => {
+            const newSelected = new Set(prevSelected); // Append new image ID
+            newSelected.has(fileId);
+            if (newSelected.has(fileId)) {
+                newSelected.delete(fileId);
+            }
+            else {
+                newSelected.add(fileId);
+            }
+            return newSelected;
+        });
     };
 
-    const downloadSelectedImages = () => {
+    const downloadSelectedImages = async () => {
         console.log(selectedImages);
-        //setImageList(imageList.filter((_, index) => !selectedImages.has(index)));
+        
+        const filesToBeDownloaded = imageList.filter((_, index) => selectedImages.has(_.id));
+        const filesNameList = Array.from(filesToBeDownloaded).map(file => file.name);
+        setLoading(true);
+        await downloadFilesZip(filesNameList);
+        setLoading(false);
         setSelectedImages(new Set());
         setIsEditMode(false);
       };
@@ -167,8 +305,8 @@ export default function UserProjectOverview() {
                         }}
                     >
                         <Meta
-                            title={<span style={{ color: 'white', fontWeight: 'bold' }}>{state.project.name}</span>}
-                            description={<span style={{ color: 'white' }}>{state.project.location}</span>}
+                            title={<span style={{ color: 'white', fontWeight: 'bold' }}>{project?.name}</span>}
+                            description={<span style={{ color: 'white' }}>{project.location}</span>}
                             style={{ textAlign: 'center' }}
                         />
                     </Card>
@@ -185,10 +323,15 @@ export default function UserProjectOverview() {
             <Box
                 sx={{
                     flexGrow: 1,
-                    backgroundColor: 'gray.50',
                     padding: 1,
+                    width:'70%',
+                    margin: '20px auto',
+                    backgroundColor: '#f5f5f5',
+                    borderRadius: '10px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
                 }}
             >
+                
                 <Form
                     layout="inline"
                     onFinish={handleSearch}
@@ -197,40 +340,143 @@ export default function UserProjectOverview() {
                         justifyContent: 'center',
                         alignItems: 'center',
                         gap: '10px',
+                        marginBottom: '10px',
                     }}
                 >
+                    <Box
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        gap={2}
+                        mb={2}
+                    >
+                    <span style={{ fontWeight: 'bold', fontSize: '20px' }}>Filter Date:</span>
+
+                        <Form.Item>
+                            <RangePicker
+                                maxDate={dayjs()}
+                                onChange={(dates) => setSelectedDateRange(dates)}
+                                allowClear
+                                style={{ width: 300 }}
+                                placeholder={['Start date', 'End date']}
+                                suffixIcon={<CalendarOutlined />}
+                                value={selectedDateRange}
+                            />
+                        </Form.Item>
+                    </Box>
+
+                    
+                    <Box
+                        display="flex"
+                        alignItems="center"
+                        gap={2}
+                        mb={2}
+                        justifyContent="center"
+                    >
+
+                    <span style={{ fontWeight: 'bold', fontSize: '20px' }}>Filter Metadata:</span>
                     <Form.Item>
-                        <Input
-                            placeholder="Search images by key word..."
-                            prefix={<SearchOutlined />}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            style={{ width: '300px' }}
+                        <Select
+                            showSearch
+                            placeholder="Metadata key"
+                            allowClear
+                            filterOption={(input, option) =>
+                                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                            }
+                            options={allFileMetaTags.map((md) => ({
+                                value: md,
+                                label: md,
+                            }))}
+                            onChange={setSelectedFileMDKey}
+                            style={{ width:'100%', marginBottom:'5%'}}
+                            //disabled={selectProject === null}
+                            value={selectedFileMDKey !== null ? selectedFileMDKey : undefined}
                         />
                     </Form.Item>
+                    
 
                     <Form.Item>
                         <Select
-                            defaultValue="Active"
-                            style={{ width: 120 }}
+                            placeholder="?"
+                            //style={{ width: 60 }}
+                            style={{ width:'100%', marginBottom:'5%', overflow:'auto'}}
                             allowClear
+                            disabled={operatorDisabled}
                             options={[
-                                { value: 'active', label: 'Active' },
-                                { value: 'archived', label: 'Archived' }]}
-                            onChange={(value) => setSelectedStatus(value)}
-                            placeholder="Select status"
+                                { value: '>', label: '>' },
+                                { value: '<', label: '<' },
+                                { value: '=', label: '=' },
+                                { value: '<=', label: '≤' },
+                                { value: '>=', label: '≥' },
+                            ]}
+                            onChange={(value) => setSelectedOperator(value)}
+                            value={selectedOperator}
                         />
                     </Form.Item>
 
+                        <Form.Item>
+                            <Input
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setFileMDValue(value);
+
+                                    // if string is in metadata value input, automatically have '=' in operator field and disable it
+                                    if (value === '') {
+                                        setOperatorDisabled(false);
+                                        setSelectedOperator(null);
+                                    } else if (isNaN(value)) {
+                                        setSelectedOperator('=');
+                                        setOperatorDisabled(true);
+                                    } else {
+                                        setOperatorDisabled(false);
+                                    }
+                                }}
+                                style={{ width:'100%', marginBottom:'5%', overflow:'auto' }}
+                                placeholder="Metadata value"
+                                value={fileMDValue}
+                            />
+                        </Form.Item>
+
+                    </Box>
+
+
+
+                    <Box
+                            display="flex"
+                            alignItems="center"
+                            gap={2}
+                            mb={2}
+                            justifyContent="center"
+                        >
+                    <span style={{ fontWeight: 'bold', fontSize: '20px' }}>Filter Tags:</span>
                     <Form.Item>
-                        <DatePicker
-                            maxDate={dayjs()}
-                            placeholder="Select date"
-                            onChange={(date, dateString) => setSelectedDate(dateString)}
-                            suffixIcon={<CalendarOutlined />}
+                        <Select
+                            showSearch
+                            placeholder="Tag"
+                            allowClear
+                            filterOption={(input, option) =>
+                                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                            }
+                            options={allFileTags.map((md) => ({
+                                value: md,
+                                label: md,
+                            }))}
+                            onChange={setSelectedFileTag}
+                            style={{ width:'100%', marginBottom:'5%', overflow:'auto'}}
+                            //disabled={selectProject === null}
+                            value={selectedFileTag !== null ? selectedFileTag : undefined}
                         />
                     </Form.Item>
+                    </Box>
 
+
+                <Box
+                    display="flex"
+                    alignItems="center"
+                    gap={2}
+                    mb={2}
+                    justifyContent="center"
+                >
                     <Form.Item>
                         <Button type="primary" htmlType="submit" color="cyan" variant="solid">
                             Search
@@ -242,10 +488,13 @@ export default function UserProjectOverview() {
                             Clear Filters
                         </Button>
                     </Form.Item>
-                </Form>
-            </Box>
+                    
+                </Box>
+            </Form>
 
-
+        </Box>
+        
+        
 
             {/* Main content */}
             <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
@@ -262,24 +511,23 @@ export default function UserProjectOverview() {
                     padding: '20px',
                     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
                         <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width:'100%'}}>
-                        <div><strong>Location: </strong><span>{state.project.location}</span></div>
-                        <div><strong>Start Date: </strong><span>{dayjs(state.project.startDate).format('MMM DD, YYYY')}</span></div>
-                        <div><strong>State: </strong><span>{state.project.status}</span></div>
-                        <div><strong>Phase: </strong><span>{state.project.phase}</span></div>
+                        <div><strong>Location: </strong><span>{project.location}</span></div>
+                        <div><strong>Start Date: </strong><span>{dayjs(project.startDate).format('MMM DD, YYYY')}</span></div>
+                        <div><strong>State: </strong><span>{project.status}</span></div>
+                        <div><strong>Phase: </strong><span>{project.phase}</span></div>
                         </div>
-                    <div style={{margin: '20px auto', marginBottom: '0', width:'100%'}}>
+                    <div style={{ margin: '20px auto', marginBottom: '0', width: '100%' }}>
                         <strong>Metadata: </strong>
-                        {Array.isArray(state.project?.fields) && state.project.fields.length > 0 ? (
-                            state.project.fields.map((f, idx) => (
-                                <span key={idx}>
-        {f.field}: <span style={{ color: 'grey', fontStyle: 'italic' }}>{f.fieldMD}</span>{' '}
-      </span>
+                        {projectMetaTags.length > 0 ? (
+                            projectMetaTags.map((tag, idx) => (
+                                <span key={idx} style={{ marginRight: '8px', color: 'grey', fontStyle: 'italic' }}>
+                {tag}
+            </span>
                             ))
                         ) : (
                             <span style={{ color: 'grey', fontStyle: 'italic' }}>No metadata</span>
                         )}
                     </div>
-
                 </Box>
                 {/* Download Images */}
                 <Box sx={{ display: 'flex', alignItems: 'start', justifyContent: 'left', margin: '20px auto', gap: '10px', width:'70%', }}>
@@ -316,26 +564,42 @@ export default function UserProjectOverview() {
                                 <div
                                     key={file.Id}
                                     style={{ position: 'relative', cursor: 'pointer' }}
-                                    onClick={() => toggleSelectImage(file.Id)}
                                 >
                                     <Image
-                                        src={file.FilePath}
+                                        key={file.id}
+                                        src={file.thumbnailPath || file.viewPath || file.originalPath}t
                                         width={200}
                                         preview={false}
                                         style={{
-                                            border: selectedImages.has(file.Id) ? '4px solid blue' : 'none',
                                             borderRadius: '8px',
                                             transition: '0.2s ease-in-out',
+                                            objectFit: 'cover',
                                         }}
                                     />
-                                    {selectedImages.has(file.Id) && (
+                                    {!selectedImages.has(file.id) ? (
                                         <DownloadOutlined
+                                            onClick={() => toggleSelectImage(file)}
                                             style={{
                                                 position: 'absolute',
                                                 top: 5,
                                                 right: 5,
                                                 color: 'white',
-                                                background: 'blue',
+                                                background: 'red',
+                                                borderRadius: '50%',
+                                                padding: '5px',
+                                                cursor: 'pointer',
+                                                fontSize: '16px',
+                                            }}
+                                        />
+                                    ):(
+                                        <CheckCircleOutlined
+                                            onClick={() => toggleSelectImage(file)}
+                                            style={{
+                                                position: 'absolute',
+                                                top: 5,
+                                                right: 5,
+                                                color: 'white',
+                                                background: 'green',
                                                 borderRadius: '50%',
                                                 padding: '5px',
                                                 cursor: 'pointer',
@@ -367,25 +631,38 @@ export default function UserProjectOverview() {
                                 onChange: (index) => setCurrent(index),
                             }}
                         >
-                            <Space wrap size={16} style={{ justifyContent: 'center' }}>
+                            {imageList.length === 0 ? (
+                                <Typography.Text type="secondary">No files found for this project.</Typography.Text>
+                            ) : (
+                                <Space wrap size={16} style={{ justifyContent: 'center' }}>
+                                    {imageList.map((file) => (
+                                        <Tooltip
+                                            key={file.Id}
+                                            title={
+                                                <>
+                                                    <div><strong>Basic Tags:</strong> {file.basicTags?.join(', ') || 'None'}</div>
+                                                    <div><strong>Metadata Tags:</strong> {file.mTags?.map(t => t.value).join(', ') || 'None'}</div>
+                                                </>
+                                            }
+                                        >
+                                           
+                                            <Image
+                                                src={file.thumbnailPath || file.originalPath  || file.viewPath}
+                                                width={200}
+                                                preview={true}
+                                                style={{
+                                                    borderRadius: '8px',
+                                                    transition: '0.2s ease-in-out',
+                                                    objectFit: 'cover',
+                                                }}
+                                            />
+                                            
+                                        </Tooltip>
+                                        
+                                    ))}
+                                </Space>
+                            )}
 
-                                {imageList.map((file) => (
-                                    <Tooltip title={
-                                        <>{file.Metadata.map((md, index) => 
-                                            index < file.Metadata.length - 1 ? (
-                                                <span key={index}>{md}, </span>
-                                            ) : (
-                                                <span key={index}>{md}</span>
-                                            )
-                                        )}</>}>
-                                        <Image
-                                        key={file.Id}
-                                        src={file.FilePath}
-                                        width={200}
-                                    />
-                                    </Tooltip>
-                                ))}
-                            </Space>
                         </Image.PreviewGroup>
                     )}
                 </Box>

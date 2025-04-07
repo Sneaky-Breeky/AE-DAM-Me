@@ -15,7 +15,7 @@ using CsvHelper.Configuration;
 namespace DAMBackend.Controllers
 {
     // api/MetadataFiles
-    [Route("api/[controller]")]
+    [Route("api/metaData")]
     [ApiController]
     public class MetadataFilesController : ControllerBase
     {
@@ -32,8 +32,8 @@ namespace DAMBackend.Controllers
               "Value": "Hello" or "3902" // Depends on type
               "Type": 0 // for String or 1 for "Integer", depending on the value type
             }
-        */
-        [HttpPost("Advanced/{fid}")]
+        */  
+        [HttpPost("advanced/{fid}")]
         public async Task<IActionResult> AddFileMetaTag(
             int fid,
             [FromBody] MetadataTagDTO request)
@@ -71,7 +71,7 @@ namespace DAMBackend.Controllers
         
         // POST: Basic/{fid}/{value}
         // Add a tag to a project, if it doesnt exist create it
-        [HttpPost("Basic/{fid}/{value}")]
+        [HttpPost("basic/{fid}/{value}")]
         public async Task<IActionResult> AddFileBasicTag(int fid, string value)
         {
             var tag = await _context.BasicTags.FindAsync(value);

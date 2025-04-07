@@ -1,29 +1,14 @@
 import { API_BASE_URL } from "./apiURL.js";
 
-const QUERY_URL = `${API_BASE_URL}/api/query/projectQuery`;
+const QUERY_URL = `${API_BASE_URL}/api/query`;
 
 export async function fetchProjectsByDateRange({ StartDate, EndDate }) {
     try {
-        // const defaultDate = '0001-01-01T00:00:00Z';
 
-        // const body = {
-        //     StartDate: StartDate || defaultDate,
-        //     EndDate: EndDate || defaultDate,
-        //     Status: null,
-        //     Location: null
-        // };
-        // const response = await fetch(QUERY_URL, {
-        //     method: 'POST',
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //         Accept: 'application/json',
-        //     },
-        //     body: JSON.stringify(body),
-        // });
-        
         const sD = StartDate ? new Date(StartDate).toISOString() : '0001-01-01T00:00:00Z';
         const eD = EndDate ? new Date(EndDate).toISOString() : '0001-01-01T00:00:00Z';
-        const url = `${QUERY_URL}/nothing/nothing/${sD}/${eD}`;
+
+        const url = `${QUERY_URL}/projectQuery/null/null/${sD}/${eD}`;
 
         const response = await fetch(url, {
             method: 'GET',
@@ -31,6 +16,7 @@ export async function fetchProjectsByDateRange({ StartDate, EndDate }) {
                 'Accept': 'application/json',
             },
         });
+        console.log(response);
 
         if (!response.ok) {
             const errText = await response.text();
@@ -40,6 +26,112 @@ export async function fetchProjectsByDateRange({ StartDate, EndDate }) {
         return await response.json();
     } catch (error) {
         console.error("fetchProjectsByDateRange error:", error);
+        return [];
+    }
+}
+export async function getProjectBasicTags (pid){
+    console.log("insider query api");
+    console.log(pid);
+    try {
+        const url = `${QUERY_URL}/basictags/${pid}`
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching basic tags:', error);
+        return null;
+    }
+}
+export async function getProjectMetaDataKeysUpload (pid){
+    try {
+        const url = `${QUERY_URL}/metadatatags/${pid}`
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching basic tags:', error);
+        return null;
+    }
+}
+export async function getProjectMetaDataTags ({pid}){
+    try {
+        const url = `${QUERY_URL}/metadatatags/${pid}`
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching basic tags:', error);
+        return null;
+    }
+}
+async function searchProject({pid, requestBody}) {
+    try {
+        const url = `${QUERY_URL}/searchProject/${pid}`;
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP errr! Status: ${response.status}`);
+        }
+
+        const filesResult = await response.json();
+        return filesResult;
+    } catch (error) {
+        console.error("Error fetching project files:", error);
+    }
+}
+
+export async function searchProjectFiles(pid, filterPayload) {
+    try {
+        const response = await fetch(`${QUERY_URL}/searchProject/${pid}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(filterPayload)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+
+        const files = await response.json();
+        return files;
+    } catch (error) {
+        console.error("Error fetching filtered project files:", error);
         return [];
     }
 }

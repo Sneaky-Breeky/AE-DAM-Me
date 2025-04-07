@@ -2,6 +2,8 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using DAMBackend.Models;
 using Google.Protobuf.Reflection;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace DAMBackend.blob
 {
@@ -9,18 +11,26 @@ namespace DAMBackend.blob
     {
         private readonly BlobContainerClient _projectsContainer;
         private readonly BlobContainerClient _palettesContainer;
+        private readonly BlobContainerClient _assetsContainer;
+        private readonly BlobContainerClient _thumbnailContainer;
 
         private readonly BlobContainerClient _projectExportContainer;
+
+        private readonly BlobServiceClient _blobServiceClient;
 
         public AzureBlobService(BlobServiceClient blobServiceClient)
         {
             try
             {
+                _blobServiceClient = blobServiceClient;
+
                 var projectsContainerName = "projects";
                 var palettesContainerName = "palettes";
+                var assetsContainerName = "assets";
                 var projectExportContainerName = "export";
+                var thumbnailContainerName = "thumbnail";
 
-
+    
                 _projectsContainer = blobServiceClient.GetBlobContainerClient(projectsContainerName);
                 _projectsContainer.CreateIfNotExists();
                 Console.WriteLine($"Azure Blob container '{projectsContainerName}' is ready.");
@@ -32,6 +42,14 @@ namespace DAMBackend.blob
                 _projectExportContainer = blobServiceClient.GetBlobContainerClient(projectExportContainerName);
                 _projectExportContainer.CreateIfNotExists();
                 Console.WriteLine($"Azure Blob container '{projectExportContainerName}' is ready.");
+
+                _assetsContainer = blobServiceClient.GetBlobContainerClient(assetsContainerName);
+                _assetsContainer.CreateIfNotExists();
+                Console.WriteLine($"Azure Blob container '{assetsContainerName}' is ready.");
+
+                _thumbnailContainer = blobServiceClient.GetBlobContainerClient(thumbnailContainerName);
+                _thumbnailContainer.CreateIfNotExists();
+                Console.WriteLine($"Azure Blob container '{thumbnailContainerName}' is ready.");
             }
             catch (Exception ex)
             {
@@ -53,6 +71,17 @@ namespace DAMBackend.blob
             await blobClient.UploadAsync(stream, overwrite: true);
             return blobClient.Uri.ToString();
         }
+
+        public async Task<string> UploadThumbnailAsync(IFormFile file, string blobName)
+        {
+            BlobContainerClient container = _thumbnailContainer;
+
+            var blobClient = container.GetBlobClient(blobName);
+            using var stream = file.OpenReadStream();
+            await blobClient.UploadAsync(stream, overwrite: true);
+            return blobClient.Uri.ToString();
+        }
+
         public async Task<string> UploadAsync(MemoryStream stream, string blobName)
         {
             BlobContainerClient container = _projectExportContainer;
@@ -101,6 +130,7 @@ namespace DAMBackend.blob
 
             return null;
         }
+
         public async Task<Stream> DownloadFileFromUrlAsync(string fileUrl)
         {
             try
@@ -117,7 +147,124 @@ namespace DAMBackend.blob
                 return null;
             }
         }
+
+        // set a project to be archived, return a boolean
+        public async Task<bool> SetProjectToArchiveAsync(int projectId, SQLDbContext _context)
+        {
+            try
+            {
+                var files = await _context.Files
+                    .Where(f => f.ProjectId == projectId)
+                    .ToListAsync();
+
+                if (!files.Any())
+                {
+                    Console.WriteLine($"No files found for project {projectId}.");
+                    return false;
+                }
+
+                foreach (var file in files)
+                {
+                    try
+                    {
+                        var uris = new[] { file.OriginalPath, file.ViewPath, file.ThumbnailPath };
+                        foreach (var uri in uris)
+                        {
+                            if (string.IsNullOrWhiteSpace(uri))
+                                continue;
+
+                            try
+                            {
+                                var (container, blobName) = ParseBlobInfoFromUri(uri);
+                                var containerClient = _blobServiceClient.GetBlobContainerClient(container);
+                                var blobClient = containerClient.GetBlobClient(blobName);
+                                await blobClient.SetAccessTierAsync(AccessTier.Archive);
+                                Console.WriteLine($"Archived: {uri}");
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Failed to archive blob {uri}: {ex.Message}");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to archive file {file.Id}: {ex.Message}");
+                    }
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to archive project {projectId}: {ex.Message}");
+                return false;
+            }
+        }
+    
+
+        // set a project back to active, 
+        public async Task<bool> UnarchiveProjectAsync(int projectId, SQLDbContext _context)
+        {
+            try
+            {
+                var files = await _context.Files
+                    .Where(f => f.ProjectId == projectId)
+                    .ToListAsync();
+
+                if (!files.Any())
+                {
+                    Console.WriteLine($"No files found for project {projectId}.");
+                    return false;
+                }
+
+                foreach (var file in files)
+                {
+                    try
+                    {
+                        var uris = new[] { file.OriginalPath, file.ViewPath, file.ThumbnailPath };
+                        foreach (var uri in uris)
+                        {
+                            if (string.IsNullOrWhiteSpace(uri))
+                                continue;
+
+                            try
+                            {
+                                var (container, blobName) = ParseBlobInfoFromUri(uri);
+                                var containerClient = _blobServiceClient.GetBlobContainerClient(container);
+                                var blobClient = containerClient.GetBlobClient(blobName);
+                                await blobClient.SetAccessTierAsync(AccessTier.Hot);
+                                Console.WriteLine($"Unarchived: {uri}");
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Failed to unarchive blob {uri}: {ex.Message}");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to unarchive file {file.Id}: {ex.Message}");
+                    }
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to unarchive project {projectId}: {ex.Message}");
+                return false;
+            }
+        }
+
+        private (string containerName, string blobName) ParseBlobInfoFromUri(string uri)
+        {
+            var parsedUri = new Uri(uri);
+            var segments = parsedUri.AbsolutePath.TrimStart('/').Split('/', 2); // [container, blobPath]
+            return (segments[0], segments[1]);
+        }
     }
+
     public enum ContainerType
     {
         Palette,
