@@ -34,16 +34,16 @@ namespace DAMBackend.Controllers
         public string ViewPath { get; set; }
 
         public decimal? GPSLat { get; set; }
-                public decimal? GPSLon { get; set; }
-                public decimal? GPSAlt { get; set; }
+        public decimal? GPSLon { get; set; }
+        public decimal? GPSAlt { get; set; }
 
-                public  int PixelWidth { get; set; }
-                public  int PixelHeight { get; set; }
-                public string? Make { get; set; }
-                public string? Model { get; set; }
-                public int? FocalLength { get; set; }
-                public float? Aperture { get; set; }
-                public string? Copyright { get; set; }
+        public  int PixelWidth { get; set; }
+        public  int PixelHeight { get; set; }
+        public string? Make { get; set; }
+        public string? Model { get; set; }
+        public int? FocalLength { get; set; }
+        public float? Aperture { get; set; }
+        public string? Copyright { get; set; }
     }
 
     [Route("api/[controller]")]
@@ -52,11 +52,14 @@ namespace DAMBackend.Controllers
     {
         private readonly AzureBlobService _azureBlobService;
         private readonly SQLDbContext _context;
+        
+        private SubmissionEngine _submissionEngine;
 
         public FilesController(SQLDbContext context, AzureBlobService azureBlobService)
         {
             _context = context;
             _azureBlobService = azureBlobService;
+            _submissionEngine = new SubmissionEngine();
         }
 
         // GET: api/Files
@@ -176,6 +179,9 @@ namespace DAMBackend.Controllers
                 // Save the thumbnail to the thumbnail directory
                 using var streamthumbnail = thumbnail.OpenReadStream();
                 string fileUrlThumbnail = await _azureBlobService.UploadThumbnailAsync(thumbnail, fileNameThumbnail);
+                
+                Console.WriteLine(fileUrlOriginal);
+                Console.WriteLine(fileUrlThumbnail);
 
                 var uploadedFile = ProcessImageToExif(file);
                 uploadedFile.ThumbnailPath = fileUrlThumbnail;
@@ -535,33 +541,103 @@ namespace DAMBackend.Controllers
 
         // Sample input: [102, 103, 104]
 
-        [HttpPost("uploadToProject/{pid}")]
-        public async Task<IActionResult> UploadToProject([FromBody] List<int> fids, int pid)
+        [HttpPost("uploadToProject/{pid}/{selectedResolution}")]
+        public async Task<IActionResult> UploadToProject([FromBody] List<int> fids, int pid, string selectedResolution)
         {
-            var project = _context.Projects
+            var project = await _context.Projects
                 .Include(p => p.Files)
-                .FirstOrDefault(p => p.Id == pid);
-
+                .FirstOrDefaultAsync(p => p.Id == pid);
+        
             if (project == null)
             {
                 return NotFound("No project found.");
             }
-
-            var files = await _context.Files.Where(f => fids.Contains(f.Id) && f.Palette).ToListAsync();
-
+        
+            var files = await _context.Files
+                .Where(f => fids.Contains(f.Id) && f.Palette)
+                .ToListAsync();
+        
             foreach (var file in files)
             {
-                var updatedPath = await _azureBlobService.MoveBlobWithinContainerAsync("palettes",Path.GetFileName(new Uri(file.OriginalPath).LocalPath), "projects");
+                // Move the original file to the project container
+                var updatedPath = await _azureBlobService.MoveBlobWithinContainerAsync(
+                    "palettes",
+                    Path.GetFileName(new Uri(file.OriginalPath).LocalPath),
+                    "projects"
+                );
+        
                 file.ProjectId = pid;
                 file.Palette = false;
                 file.OriginalPath = updatedPath;
+        
+                var resolution = selectedResolution?.Trim().ToLower();
+        
+                if (resolution == "low")
+                {
+                    // ✅ Keep existing thumbnail
+                }
+                else if (resolution == "medium")
+                {
+                    // ❗ Delete the existing thumbnail from blob storage
+                    await _azureBlobService.DeleteThumbnailAsync(file.ThumbnailPath);
+
+                    // ❗ Download original from updatedPath, compress to medium, and upload to thumbnail location
+                    var originalImage = await _azureBlobService.GetFormFileFromUrlAsync(file.OriginalPath);
+                    // compress it to medium
+                    var compressedMediumImage = await _submissionEngine.CompressImage(originalImage);
+                    // put it back to thumbnail
+                    var newIdThumbnail = Guid.NewGuid();
+                    var thumbnailNameTemp = Path.GetExtension(compressedMediumImage.FileName).ToLowerInvariant();
+                    var thumbNameFix = $"Thumbnail_{newIdThumbnail}{thumbnailNameTemp}";
+                    using var thumbStreamMedium = compressedMediumImage.OpenReadStream();
+                    string newThumbUrlMedium = await _azureBlobService.UploadThumbnailAsync(compressedMediumImage, thumbNameFix);
+                    // string newThumbnailPath = await _imageService.CompressToMediumAsync(updatedPath);
+                    file.ThumbnailPath = newThumbUrlMedium;
+                }
+                else if (resolution == "high")
+                {
+                    // ❗ Delete the existing thumbnail from blob storage
+                    await _azureBlobService.DeleteThumbnailAsync(file.ThumbnailPath);
+                    
+                    var extension = Path.GetExtension(file.OriginalPath).ToLowerInvariant();
+
+                    if (extension == ".jpg" || extension == ".jpeg" || extension == ".png")
+                    {
+                        // ✅ Copy original to thumbnail for image types
+                        file.ThumbnailPath = file.OriginalPath;
+                    }
+                    else // for raw and video case
+                    {
+                        // ❗ Delete the existing thumbnail from blob storage
+                        await _azureBlobService.DeleteThumbnailAsync(file.ThumbnailPath);
+
+                        // ❗ Download original from updatedPath, compress to medium, and upload to thumbnail location
+                        var originalImage = await _azureBlobService.GetFormFileFromUrlAsync(file.OriginalPath);
+                        // compress it to high
+                        var compressedHighImage = await _submissionEngine.CompressImageHigh(originalImage);
+                        // put it back to thumbnail
+                        var newIdThumbnail = Guid.NewGuid();
+                        var thumbnailNameTemp = Path.GetExtension(compressedHighImage.FileName).ToLowerInvariant();
+                        var thumbNameFix = $"Thumbnail_{newIdThumbnail}{thumbnailNameTemp}";
+                        using var thumbStreamHigh= compressedHighImage.OpenReadStream();
+                        string newThumbUrlHigh = await _azureBlobService.UploadThumbnailAsync(compressedHighImage, thumbNameFix);
+                        // pass it to thumbnail path
+                        file.ThumbnailPath = newThumbUrlHigh;
+                    }
+                }
+                else
+                {
+                    return BadRequest("Invalid resolution specified.");
+                }
+        
                 project.Files.Add(file);
             }
-
+        
             await _context.SaveChangesAsync();
-
+        
             return Ok("Files uploaded successfully.");
         }
+
 
         [HttpPost("delete-files")]
         public async Task<IActionResult> DeleteFiles([FromBody] List<string> fileNames)
@@ -636,6 +712,13 @@ namespace DAMBackend.Controllers
                                  PixelHeight = 0,
 
                              };
+                             
+                             var allowedExtension = new[] { ".jpg", ".jpeg", ".png"};
+                             var fileExtension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+                             if (!allowedExtension.Contains(fileExtension))
+                             {
+                                 return fileModel;
+                             }
 
                              using (var stream = imageFile.OpenReadStream())
                              using (var image = SixLabors.ImageSharp.Image.Load(stream))

@@ -32,35 +32,62 @@ namespace DAMBackend.SubmissionEngineEnv
         {
         }
         public async Task<IFormFile> CompressImage(IFormFile file)
-                {
-                    if (file == null || file.Length == 0)
-                    {
-                        throw new Exception("Invalid file.");
-                    }
+        {
+            if (file == null || file.Length == 0)
+            {
+                throw new Exception("Invalid file.");
+            }
 
-                    var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
 
-                    // Check the file extension and call the appropriate method based on the type
-                    if (new[] { ".arw", ".cr2", ".nef", ".dng" }.Contains(fileExtension))
-                    {
-                        // Call the GenerateThumbnailRaw for RAW files
-                        return await UploadRaw(file,ImageResolution.Medium);
-                    }
-        			else if (new[] { ".mp4" }.Contains(fileExtension))
-                    {
-                        // Call the GenerateThumbnailJpgPng for JPG/PNG files
-                        return await UploadMp4(file,ImageResolution.Medium);
-                    }
-                    else if (new[] { ".jpg", ".jpeg", ".png" }.Contains(fileExtension))
-                    {
-                        // Call the GenerateThumbnailJpgPng for JPG/PNG files
-                        return await UploadJpgPng(file, ImageResolution.Medium);
-                    }
-                    else
-                    {
-                        throw new Exception("Unsupported file format for thumbnail generation.");
-                    }
-                }
+            // Check the file extension and call the appropriate method based on the type
+            if (new[] { ".arw", ".cr2", ".nef", ".dng", ".raw"}.Contains(fileExtension))
+            {
+                // Call the GenerateThumbnailRaw for RAW files
+                return await UploadRaw(file, ImageResolution.Medium);
+            }
+        	else if (new[] { ".mp4" }.Contains(fileExtension))
+            {
+                // Call the GenerateThumbnailJpgPng for JPG/PNG files
+                return await GenerateMp4ThumbnailAsyncMedium(file);
+            }
+            else if (new[] { ".jpg", ".jpeg", ".png" }.Contains(fileExtension))
+            {
+                // Call the GenerateThumbnailJpgPng for JPG/PNG files
+                return await UploadJpgPng(file, ImageResolution.Medium);
+            }
+            else
+            {
+                throw new Exception("Unsupported file format for thumbnail generation.");
+            }
+        }
+        
+        // handle raw and .mp4 image thumbnail
+        public async Task<IFormFile> CompressImageHigh(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                throw new Exception("Invalid file.");
+            }
+
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+            // Check the file extension and call the appropriate method based on the type
+            if (new[] { ".arw", ".cr2", ".nef", ".dng", ".raw"}.Contains(fileExtension))
+            {
+                // Call the GenerateThumbnailRaw for RAW files
+                return await UploadRaw(file, ImageResolution.High);
+            }
+            else if (new[] { ".mp4" }.Contains(fileExtension))
+            {
+                // Call the GenerateThumbnailJpgPng for JPG/PNG files
+                return await GenerateMp4ThumbnailAsyncMedium(file);
+            }
+            else
+            {
+                throw new Exception("Unsupported file format for thumbnail generation.");
+            }
+        }
 
       
         // upload multiple files to pallete, no compression performed
@@ -186,7 +213,7 @@ namespace DAMBackend.SubmissionEngineEnv
 
 
 		// compression method for RAW file
-       	public async Task<IFormFile> UploadRaw(IFormFile file, ImageResolution option)
+        public async Task<IFormFile> UploadRaw(IFormFile file, ImageResolution option)
         {
             if (file == null || file.Length == 0)
             {
@@ -195,59 +222,50 @@ namespace DAMBackend.SubmissionEngineEnv
         
             var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
             var allowedExtensionsRaw = new[] { ".arw", ".cr2", ".nef", ".dng" };
-            
+        
             if (!allowedExtensionsRaw.Contains(fileExtension))
             {
                 throw new Exception("Unsupported RAW file format.");
             }
-            
-            if (option == ImageResolution.High)
-            {
-                // Return original RAW file as-is
-                var rawStream = new MemoryStream();
-                await file.CopyToAsync(rawStream);
-                rawStream.Position = 0;
-
-                return new FormFile(rawStream, 0, rawStream.Length, file.Name, file.FileName)
-                {
-                    Headers = file.Headers,
-                    ContentType = file.ContentType
-                };
-            }
         
-            // Proceed with compression logic for Medium/Low
-            uint quality = option == ImageResolution.Medium ? 60u : 20u;
-
+            // Define quality by resolution level
+            uint quality = option switch
+            {
+                ImageResolution.Low => 20u,
+                ImageResolution.Medium => 60u,
+                ImageResolution.High => 90u,
+                _ => 60u
+            };
+        
             try
             {
                 using (var stream = file.OpenReadStream())
                 {
                     var settings = new MagickReadSettings
                     {
-                        Density = new Density(300)
+                        Density = new Density(300),
+                        Format = fileExtension switch
+                        {
+                            ".cr2" => MagickFormat.Cr2,
+                            ".nef" => MagickFormat.Nef,
+                            ".arw" => MagickFormat.Arw,
+                            ".dng" => MagickFormat.Dng,
+                            _ => MagickFormat.Unknown
+                        }
                     };
-
-                    settings.Format = fileExtension switch
-                    {
-                        ".cr2" => MagickFormat.Cr2,
-                        ".nef" => MagickFormat.Nef,
-                        ".arw" => MagickFormat.Arw,
-                        ".dng" => MagickFormat.Dng,
-                        _ => settings.Format
-                    };
-
+        
                     using (var image = new MagickImage(stream, settings))
                     {
                         image.AutoOrient();
                         image.Format = MagickFormat.Jpeg;
                         image.Quality = quality;
-
+        
                         var outputStream = new MemoryStream();
                         await image.WriteAsync(outputStream);
                         outputStream.Position = 0;
-
+        
                         var newFileName = Path.ChangeExtension(file.FileName, ".jpg");
-
+        
                         return new FormFile(outputStream, 0, outputStream.Length, file.Name, newFileName)
                         {
                             Headers = file.Headers,
@@ -263,6 +281,74 @@ namespace DAMBackend.SubmissionEngineEnv
             catch (Exception ex)
             {
                 throw new Exception($"Unexpected error during RAW file processing: {ex.Message}", ex);
+            }
+        }
+
+        
+        
+        public async Task<IFormFile> GenerateMp4ThumbnailAsyncMedium(IFormFile videoFile)
+        {
+            string tempDir = Path.Combine(Directory.GetCurrentDirectory(), "TestOutput", "Temp");
+            Directory.CreateDirectory(tempDir);
+        
+            string tempVideoPath = Path.Combine(tempDir, $"input_{Guid.NewGuid()}.mp4");
+            string tempThumbnailPath = Path.Combine(tempDir, $"thumb_{Guid.NewGuid()}.jpg");
+        
+            try
+            {
+                // Save uploaded video
+                await using (var fs = new FileStream(tempVideoPath, FileMode.Create))
+                    await videoFile.CopyToAsync(fs);
+        
+                // FFmpeg arguments to generate a thumbnail (no orientation adjustments)
+                string ffmpegArgs = $"-ss 00:00:00 -i \"{tempVideoPath}\" -vframes 1 -q:v 1 \"{tempThumbnailPath}\"";
+                //string ffmpegArgs = $"-ss 00:00:10 -i \"{tempVideoPath}\" -vf \"thumbnail,scale=iw:ih\" -vframes 1 -q:v 3 \"{tempThumbnailPath}\"";
+        
+                var startInfo = new ProcessStartInfo("ffmpeg", ffmpegArgs)
+                {
+                    RedirectStandardError = true,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+        
+                string ffmpegError = "";
+                string ffmpegOutput = "";
+        
+                using (var process = Process.Start(startInfo))
+                {
+                    ffmpegError = await process.StandardError.ReadToEndAsync();
+                    ffmpegOutput = await process.StandardOutput.ReadToEndAsync();
+                    await process.WaitForExitAsync();
+        
+                    if (process.ExitCode != 0 || !File.Exists(tempThumbnailPath))
+                    {
+                        throw new Exception($"FFmpeg failed. Exit Code: {process.ExitCode}\n" +
+                            $"Output: {ffmpegOutput}\n" +
+                            $"Error: {ffmpegError}");
+                    }
+                }
+        
+                // Return thumbnail as IFormFile
+                var memory = new MemoryStream(await File.ReadAllBytesAsync(tempThumbnailPath));
+                string fileName = $"{Path.GetFileNameWithoutExtension(videoFile.FileName)}_thumbnail.jpg";
+        
+                return new FormFile(memory, 0, memory.Length, "thumbnail", fileName)
+                {
+                    Headers = new HeaderDictionary(),
+                    ContentType = "image/jpeg"
+                };
+            }
+            catch (Exception ex)
+            {
+                // Log the full exception details
+                Console.WriteLine($"Thumbnail Generation Error: {ex}");
+                throw; // Re-throw to maintain original error handling
+            }
+            finally
+            {
+                SafeDeleteFile(tempVideoPath);
+                SafeDeleteFile(tempThumbnailPath);
             }
         }
 

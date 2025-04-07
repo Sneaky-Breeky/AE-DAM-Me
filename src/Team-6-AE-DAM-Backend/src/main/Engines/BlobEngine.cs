@@ -145,6 +145,31 @@ namespace DAMBackend.blob
                 return null;
             }
         }
+        
+        public async Task<IFormFile> GetFormFileFromUrlAsync(string fileUrl)
+        {
+            var stream = await DownloadFileFromUrlAsync(fileUrl);
+
+            if (stream == null)
+                return null;
+
+            // You can extract the file name from the URL
+            string fileName = Path.GetFileName(new Uri(fileUrl).LocalPath);
+
+            
+            // Reset stream position so it's readable
+            stream.Position = 0;
+        
+            // Create a new IFormFile from memory stream
+            var compressedFile = new FormFile(stream, 0, stream.Length, "file", fileName)
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "image/jpeg"
+            };
+
+            return compressedFile;
+        }
+
 
         // set a project to be archived, return a boolean
         public async Task<bool> SetProjectToArchiveAsync(int projectId, SQLDbContext _context)
