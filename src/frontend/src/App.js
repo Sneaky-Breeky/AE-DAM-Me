@@ -6,7 +6,7 @@ import AdminUserManage from './pages/admin/AdminUserManage';
 import AdminMetadataManage from './pages/admin/AdminMetadataManage';
 import AdminFileManage from './pages/admin/AdminFileManage';
 import UserDashboard from './pages/user/UserDashboard';
-import UserUpload from './pages/user/UserUpload';
+import UserUpload from './pages/user/UserUploadNew';
 import ProjectDirectory from './pages/user/UserProjectDir';
 import ProjectOverview from './pages/user/UserProjectOverview';
 import ProjectManagement from './pages/admin/AdminProjectManagement';
