@@ -72,7 +72,7 @@ namespace DAMBackend.Models
                     j => j.HasOne(ft => ft.Tag).WithMany().HasForeignKey(ft => ft.TagId)
                         .OnDelete(DeleteBehavior.Restrict),
                     j => j.HasOne(ft => ft.File).WithMany().HasForeignKey(ft => ft.FileId)
-                        .OnDelete(DeleteBehavior.Restrict),
+                        .OnDelete(DeleteBehavior.Cascade),
                     j =>
                     {
                         j.ToTable("FileTag");
