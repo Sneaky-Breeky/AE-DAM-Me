@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -320,13 +320,20 @@ namespace DAMBackend.Controllers
 //                    Project = project,
                     Palette = file.palette,
                     ProjectId = file.projectId,
-                    PixelHeight = dimensions.HasValue ? dimensions.Value.Height : 0,
-                    PixelWidth = dimensions.HasValue ? dimensions.Value.Width : 0,
+                    PixelHeight = file.pixelHeight,
+                    PixelWidth = file.pixelWidth,
                     bTags = newTags,
                     Resolution = file.resolution,
-                    Location = file.location
+                    Location = file.location,
+                    Aperture = file.aperture,
+                    Copyright = file.copyright,
+                    FocalLength = file.focalLength,
+                    GPSAlt = file.gpsAlt,
+                    GPSLat = file.gpsLat,
+                    GPSLon = file.gpsLon,
+                    Make = file.make,
+                    Model = file.model
                 };
-
 
                 _context.Files.Add(fileModel);
 
@@ -614,7 +621,7 @@ namespace DAMBackend.Controllers
           }
       }
 
-public UpladedFile ProcessImageToExif(IFormFile imageFile)
+                    private UpladedFile ProcessImageToExif(IFormFile imageFile)
                          {
                              string originalPath = "not for now";
                              string viewPath = "not for now";
@@ -635,6 +642,7 @@ public UpladedFile ProcessImageToExif(IFormFile imageFile)
                              using (var stream = imageFile.OpenReadStream())
                              using (var image = SixLabors.ImageSharp.Image.Load(stream))
                              {
+                                Console.WriteLine("Going to extract exif :::::::::::::::::::::;");
                                  fileModel.PixelWidth = image.Width;
                                  fileModel.PixelHeight = image.Height;
 //                                 fileModel.Palette = true;
@@ -642,6 +650,7 @@ public UpladedFile ProcessImageToExif(IFormFile imageFile)
                                  var exifProfile = image.Metadata.ExifProfile;
                                  if (exifProfile != null)
                                  {
+                                    Console.WriteLine("Going to extract exif inside if:::::::::::::::::::::;");
                                      ExtractExifMetadata(exifProfile, fileModel);
                                  }
                              }

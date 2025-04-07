@@ -206,12 +206,13 @@
          // Helper for finding files with associated basictags
          private async Task<IQueryable<FileModel>> GetFilesBasicTagQuery(List<string> searchTags, ProjectModel project)
          {
-             var files = _context.Files.Where(f => !f.Palette);
+             var files = _context.Files.Where(f => f.ProjectId == project.Id && !f.Palette);
 
              foreach (var tag in searchTags)
              {
-                 files = files.Where(f => _context.FileTags
-                     .Any(ft => ft.TagId == tag && ft.FileId == f.Id));
+                 // files = files.Where(f => _context.FileTags
+                 //     .Any(ft => ft.TagId == tag && ft.FileId == f.Id));
+                 files = files.Where(f => f.bTags.Any(bt => bt.Value == tag));
              }
 
              // files = files.DistinctBy(f => f.Id);
@@ -317,6 +318,7 @@
 
              // Query basictags first, then metadataTags
 
+             // Basic tag filtering
              var bTags = request.BasicTags?.bTags;
              IQueryable<FileModel> files;
 
@@ -333,19 +335,39 @@
              {
                  return BadRequest("No files match the criteria.");
              }
+             
+             // check to see if there are metadata tag fields
+             if (request.MetadataTags == null || request.MetadataTags.Count == 0)
+             {
+                 var basicFiltered = await files.ToListAsync();
+                 if (!basicFiltered.Any())
+                     return BadRequest("No files match the criteria.");
+        
+                 return Ok(basicFiltered);
+             }
+             
 
 
              // Metadata tags associated with the project
              IQueryable<MetadataTagModel> mTags = _context.MetadataTags
                  .Where(mt => files.Any(f => f.ProjectId == pid && f.Id == mt.FileId));
+             
+             List<List<int>> conditionMatchedFileIds = new();
 
-
+            // Query one tag at a time and then find files, then query again
              foreach (MetadataTagQueryDTO mTag in request.MetadataTags ?? new List<MetadataTagQueryDTO>())
              {
                  try
                  {
                      value_type v_type = (value_type)mTag.v_type;
-                     mTags = GetFilesMetadataTagQuery(mTag.Key, mTag.Op, mTag.Value, mTags, v_type);
+                     var filteredQuery = GetFilesMetadataTagQuery(mTag.Key, mTag.Op, mTag.Value, mTags, v_type);
+                     
+                     var fileIds = await filteredQuery
+                         .Select(mt => mt.FileId)
+                         .Distinct()
+                         .ToListAsync();
+                     
+                     conditionMatchedFileIds.Add(fileIds);
 
                  }
                  catch (Exception e)
@@ -354,16 +376,32 @@
                  }
 
              }
+             
+             // Find files that matched
+             var matchedFileIds = conditionMatchedFileIds
+                 .Aggregate((prev, next) => prev.Intersect(next).ToList());
 
-             var filteredFileIds = await mTags.Select(mt => mt.FileId).ToListAsync();
-
-             if (filteredFileIds == null || !filteredFileIds.Any())
+             if (!matchedFileIds.Any())
              {
                  return BadRequest("No files match the metadata criteria.");
              }
 
-             // Filter files by metadata tag matching file IDs
-             var filteredFiles = await files.Where(f => filteredFileIds.Contains(f.Id)).ToListAsync();
+             var filteredFiles = await files.Where(f => matchedFileIds.Contains(f.Id)).ToListAsync();
+
+             if (!filteredFiles.Any())
+             {
+                 return BadRequest("No files match the criteria.");
+             }
+             
+             // var filteredFileIds = await mTags.Select(mt => mt.FileId).ToListAsync();
+             //
+             // if (filteredFileIds == null || !filteredFileIds.Any())
+             // {
+             //     return BadRequest("No files match the metadata criteria.");
+             // }
+             //
+             // // Filter files by metadata tag matching file IDs
+             // var filteredFiles = await files.Where(f => filteredFileIds.Contains(f.Id)).ToListAsync();
 
              if (filteredFiles == null || !filteredFiles.Any())
              {
