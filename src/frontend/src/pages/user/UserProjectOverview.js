@@ -510,7 +510,7 @@ export default function UserProjectOverview() {
                         justifyContent="center"
                     >
                         <Form.Item>
-                            <Button type="primary" htmlType="submit" color="cyan" variant="solid">
+                            <Button type="primary" htmlType="submit" color="cyan" variant="solid" disabled={metadataQueries.length === 0 && tagQueries.length === 0 && (!selectedDateRange || selectedDateRange.length !== 2)}>
                                 Search
                             </Button>
                         </Form.Item>
