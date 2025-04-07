@@ -337,6 +337,7 @@ export default function UserUpload() {
                     thumbnailPath : uploadedFiles[index].thumbnailPath
                 }
             });
+            console.log(newFiles);
 
             setFiles((prevFiles) => [...prevFiles, ...newFiles]);
             setUserFiles((prevUserFiles) => [...prevUserFiles, ...newFiles]);
