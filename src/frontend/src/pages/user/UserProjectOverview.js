@@ -747,7 +747,8 @@ export default function UserProjectOverview() {
                                             }
                                         >
                                             <Image
-                                                src={file.thumbnailPath || file.originalPath || file.viewPath}
+                                                //src={file.thumbnailPath || file.originalPath || file.viewPath}
+                                                src={file.originalPath}
                                                 width={200}
                                                 preview={true}
                                                 style={{
