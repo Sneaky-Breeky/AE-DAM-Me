@@ -154,16 +154,9 @@ export default function Login({ setLoggedIn }) {
               color={passwordError ? 'error' : 'primary'}
             />
           </FormControl>
-          <FormControlLabel
-            control={<Checkbox value="remember" color="primary" />}
-            label="Remember me"
-          />
-          <Button type="submit" fullWidth variant="contained" color="primary">
+          <Button type="submit" fullWidth variant="contained" color="primary" style={{ marginTop: '16px' }}>
             Sign in
           </Button>
-          <Link href="#" variant="body2" sx={{ alignSelf: 'center' }}>
-            Forgot your password?
-          </Link>
         </Box>
       </Card>
     </SignInContainer>
