@@ -66,8 +66,8 @@
 
      public class LogImageRequest
      {
-         public int FileId { get; set; }
-         public int ProjectId { get; set; }
+         public int? FileId { get; set; }
+         public int? ProjectId { get; set; }
          public int UserId { get; set; }
          public string TypeOfLog { get; set; }
          public DateTime LogDate { get; set; }

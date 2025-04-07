@@ -24,7 +24,7 @@ namespace DAMBackend.Models
         
         public LogImage() { }
 
-        public LogImage(int fileId, int projectId, int userId, string typeOfLog, DateTime date)
+        public LogImage(int? fileId, int? projectId, int userId, string typeOfLog, DateTime date)
         {
             FileId = fileId;
             ProjectId = projectId;
