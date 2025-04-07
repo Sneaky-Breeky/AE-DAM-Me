@@ -64,6 +64,7 @@ export default function AdminFileManage() {
             if (selectedFile) {
                 setDialogOpen(true);
                 setImageEdit(selectedFile);
+                console.log(imageEdit);
             }
         } else {
             const updatedSelection = new Set(selectedImages);
@@ -92,7 +93,10 @@ export default function AdminFileManage() {
   const handleSubmitForm = () => {
 
     console.log(Object.values(form.getFieldsValue())); // gives array, use to replace tags
+    //TODO: POST tags from form into imageEdit
 
+    // reset form and imageEdit
+    setImageEdit(null);
     form.resetFields();
     setDialogOpen(false);
   };
@@ -368,11 +372,12 @@ export default function AdminFileManage() {
 
       <DialogContent>
 
-        {imageEdit ? (
+        {imageEdit !== null ? (
           <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', gap: '10%', margin:'auto'}}>
 
           <Image
-            src={imageEdit.FilePath}
+            key={imageEdit.id}
+            src={imageEdit.thumbnailPath || imageEdit.viewPath || imageEdit.originalPath}t
             width={200}
             preview={false}
             style={{ marginRight: "20px" }}
@@ -386,14 +391,14 @@ export default function AdminFileManage() {
           >
           <div class='column'>
             <h5 style={{ marginTop: "5%", marginBottom: "5%" }}>Tags:</h5>
-              {(imageEdit.Metadata || []).map((md, index) => (
+              {(imageEdit.bTags || []).map((md, index) => (
 
               <Form.Item
               key={index}  // Unique key for each item
               style={{ marginBottom: "5px", marginRight: "10px" }}
               name={index}
             >
-                  <Input defaultValue={md} />
+              <Input defaultValue={md} />
             </Form.Item>))}
             
           </div>

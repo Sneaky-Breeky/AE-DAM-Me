@@ -224,12 +224,15 @@ export default function UserDashboard() {
                 <Box
                     sx={{
                         display: 'flex',
+                        lexDirection: 'column',
                         flexWrap: 'wrap',
                         justifyContent: 'space-evenly',
                         alignItems: 'center',
                         gap: 2,
+                        width: '20%',
                         minWidth: '150px',
                         height: '60vh',
+                        margin: '10px auto',
                     }}
                 >
 
@@ -240,8 +243,8 @@ export default function UserDashboard() {
                         }}
                         sx={{
                             textAlign: 'center',
-                            width: '80%',
-                            height: '30%',
+                            width: 200,
+                            height: 160,
                             margin: '10%',
                             backgroundColor: 'grey.300',
                             border: 1,
@@ -250,8 +253,8 @@ export default function UserDashboard() {
                             '&:hover': {boxShadow: 3},
                         }}
                     >
-                        <PlusOutlined style={{marginTop: '10%', marginBottom: '0', fontSize: '400%' }}/>
-                        <h4 style={{ margin: '0', marginBottom: '5%' }}>Upload Images/Videos</h4>
+                        <PlusOutlined style={{marginTop: '30px', fontSize: '50px'}}/>
+                        <h4>Upload Images/Videos</h4>
                     </Box>
 
                     <Box
@@ -261,8 +264,8 @@ export default function UserDashboard() {
                         }}
                         sx={{
                             textAlign: 'center',
-                            width: '80%',
-                            height: '30%',
+                            width: 200,
+                            height: 160,
                             margin: '10%',
                             backgroundColor: 'grey.300',
                             border: 1,
@@ -271,8 +274,8 @@ export default function UserDashboard() {
                             '&:hover': {boxShadow: 3},
                         }}
                     >
-                        <UnorderedListOutlined style={{marginTop: '10%', marginBottom: '0', fontSize: '400%' }}/>
-                        <h4 style={{ margin: '0', marginBottom: '5%' }}>Activity Log</h4>
+                        <UnorderedListOutlined style={{marginTop: '30px', fontSize: '50px'}}/>
+                        <h4>Activity Log</h4>
                     </Box>
                 </Box>
 
@@ -290,7 +293,7 @@ export default function UserDashboard() {
                         alignItems: 'center',
                         height: '60vh',
                         width: '65%',
-                        margin: '20px auto',
+                        margin: '10px auto',
                         backgroundColor: '#f5f5f5',
                         borderRadius: '10px',
                         padding: '20px',

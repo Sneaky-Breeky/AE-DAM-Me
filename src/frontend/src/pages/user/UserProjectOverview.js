@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
-import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Space, Image, Popconfirm, Tooltip, message } from 'antd';
+import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, Space, Image, Popconfirm, Tooltip, Tag, message } from 'antd';
 import {
     SearchOutlined,
     CalendarOutlined,
@@ -66,6 +66,9 @@ export default function UserProjectOverview() {
     const [current, setCurrent] = useState(0);
     const [isEditMode, setIsEditMode] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [metadataQueries, setMetadataQueries] = useState([]);
+    const [tagQueries, setTagQueries] = useState([]);
+
 
     useEffect(() => {
         async function fetchProjectAndFiles() {
@@ -118,47 +121,47 @@ export default function UserProjectOverview() {
         return <p>Loading project...</p>;
     }
 
-    const handleSearch = async () => {
-        const metadataFields = [selectedFileMDKey, selectedOperator, fileMDValue];
-        const metadataFilledCount = metadataFields.filter(val => {
-            if (Array.isArray(val)) return val.length > 0;
-            return Boolean(val);
-        }).length;
-
-        if (metadataFilledCount > 0 && metadataFilledCount < 3) {
-            message.warning('Please fill out all 3 metadata fields: key, operator, and value.');
+    const handleAddMetadataQuery = () => {
+        if (!selectedFileMDKey || !selectedOperator || fileMDValue === '') {
+            message.warning("Please fill all metadata fields");
             return;
         }
 
         const isNumber = !isNaN(fileMDValue);
-        const v_type = isNumber ? 1 : 0;
+        const newQuery = {
+            Key: selectedFileMDKey,
+            Op: selectedOperator,
+            Value: fileMDValue,
+            v_type: isNumber ? 1 : 0
+        };
 
-        if (!isNumber && selectedOperator !== "=") {
-            message.warning("Only '=' is allowed for string metadata comparisons.");
+        setMetadataQueries(prev => [...prev, newQuery]);
+
+        // Reset form inputs
+        setSelectedFileMDKey(null);
+        setSelectedOperator(null);
+        setFileMDValue('');
+        setOperatorDisabled(false);
+    };
+
+    const handleAddTagQuery = () => {
+        if (!selectedFileTag || tagQueries.includes(selectedFileTag)) {
             return;
         }
 
-        const metadataFilters = metadataFilledCount === 3 ? [
-            {
-                Key: selectedFileMDKey,
-                Op: selectedOperator,
-                Value: fileMDValue,
-                v_type: v_type
-            }
-        ] : [];
+        setTagQueries(prev => [...prev, selectedFileTag]);
+        setSelectedFileTag(null);
+    };
 
-        const tagArray = selectedFileTag && selectedFileTag.length > 0
-            ? Array.isArray(selectedFileTag)
-                ? selectedFileTag
-                : [selectedFileTag]
-            : [];
 
+    const handleSearch = async () => {
         const filterPayload = {
-            BasicTags: { bTags: tagArray },
-            MetadataTags: metadataFilters
+            BasicTags: { bTags: tagQueries },
+            MetadataTags: metadataQueries
         };
 
         try {
+            console.log("PAYLOAD: ", filterPayload);
             const result = await searchProjectFiles(id, filterPayload);
             let filtered = result;
 
@@ -186,9 +189,11 @@ export default function UserProjectOverview() {
             setImageList(hydratedFiles);
         } catch (error) {
             console.error("Search failed:", error);
+            message.error("Search failed.");
             setImageList([]);
         }
     };
+
 
     const handleClearFilters = async () => {
         setSearchQuery('');
@@ -199,6 +204,8 @@ export default function UserProjectOverview() {
         setFileMDValue('');
         setSelectedFileTag(null);
         setOperatorDisabled(false);
+        setMetadataQueries([]);
+        setTagQueries([]);
 
         try {
             const files = await getFilesForProject({ projectId: id });
@@ -362,6 +369,8 @@ export default function UserProjectOverview() {
                     onFinish={handleSearch}
                     style={{
                         display: 'flex',
+                        flexDirection: 'row',
+                        flexWrap: 'wrap',
                         justifyContent: 'center',
                         alignItems: 'center',
                         gap: '10px',
@@ -482,6 +491,14 @@ export default function UserProjectOverview() {
                                 dropdownStyle={{ minWidth: '150px' }}
                             />
                         </Form.Item>
+
+                        <Button type="dashed" onClick={handleAddMetadataQuery}>
+                            + Add Metadata Query
+                        </Button>
+                        <Button type="dashed" onClick={handleAddTagQuery}>
+                            + Add Tag Query
+                        </Button>
+
                     </Box>
 
                     <Box
@@ -504,6 +521,48 @@ export default function UserProjectOverview() {
                         </Form.Item>
                     </Box>
                 </Form>
+
+                <Box
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        backgroundColor: '#fff',
+                        padding: '10px',
+                        borderRadius: '8px',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                    }}
+                >
+                    <Typography.Title level={5}>Metadata Queries:</Typography.Title>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                        {metadataQueries.map((q, i) => (
+                            <Tag
+                                key={i}
+                                closable
+                                onClose={() => setMetadataQueries(prev => prev.filter((_, index) => index !== i))}
+                                style={{ backgroundColor: '#f0f0f0', padding: '5px 10px', fontSize: '14px' }}
+                            >
+                                {q.Key} {q.Op} {q.Value}
+                            </Tag>
+                        ))}
+                    </div>
+
+                    <Typography.Title level={5} style={{ marginTop: '16px' }}>Tag Queries:</Typography.Title>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                        {tagQueries.map((tag, i) => (
+                            <Tag
+                                key={i}
+                                closable
+                                onClose={() => setTagQueries(prev => prev.filter((_, index) => index !== i))}
+                                style={{ backgroundColor: '#f0f0f0', padding: '5px 10px', fontSize: '14px' }}
+                            >
+                                {tag}
+                            </Tag>
+                        ))}
+                    </div>
+                </Box>
+
+
+
             </Box>
 
             {/* Main content */}
@@ -514,7 +573,7 @@ export default function UserProjectOverview() {
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
-                        alignItems: 'start',
+                        alignItems: 'center',
                         width: '70%',
                         margin: '20px auto',
                         backgroundColor: '#f5f5f5',
