@@ -147,8 +147,10 @@ export default function ActivityLog() {
                         </thead>
 
                         <tbody>
-                        {logs.map((log, index) => (
-                            <tr key={log.id || index}>
+                        {[...logs]
+                            .sort((a, b) => new Date(b.logDate) - new Date(a.logDate))
+                            .map((log, index) => (
+                                <tr key={log.id || index}>
                                 {isAdmin ? (
                                     <>
                                         <td
@@ -193,7 +195,7 @@ export default function ActivityLog() {
                                             }}
                                         >
                                             <p style={{ margin: '0' }}>
-                                                {dayjs(log.time).format('MMM DD, YYYY h:mma')}
+                                                {dayjs(log.logDate).format('MMM DD, YYYY')}
                                             </p>
                                         </td>
                                         <td
