@@ -183,7 +183,7 @@ namespace DAMBackend.blob
                 if (!files.Any())
                 {
                     Console.WriteLine($"No files found for project {projectId}.");
-                    return false;
+                    return true;
                 }
 
                 foreach (var file in files)
