@@ -566,7 +566,7 @@ namespace DAMBackend.Controllers
                 return NotFound("User does not exist.");
             }
 
-            var hasAccess = _context.UserProjectRelations
+            var hasAccess = await _context.UserProjectRelations
                 .FirstOrDefaultAsync(upr => upr.ProjectId == pid && upr.UserId == userid);
 
             if (hasAccess == null)
