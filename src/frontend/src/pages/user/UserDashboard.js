@@ -63,6 +63,7 @@ export default function UserDashboard() {
 
     const handleSearch = async () => {
         const [start, end] = dateRange || [];
+
         const StartDate = start
             ? dayjs(start).toISOString()
             : '0001-01-01T00:00:00Z';
@@ -72,19 +73,16 @@ export default function UserDashboard() {
             : '9999-12-31T23:59:59Z';
 
         const query = {
-            StartDate: StartDate,
-            EndDate: EndDate,
+            StartDate,
+            EndDate,
         };
 
-        console.log("Search Query:", query);
-        
-        let filteredbydate = projects.filter(project => {
+        let filtered = projects.filter(project => {
             const projectDate = dayjs(project.startDate);
-            return  (!start || projectDate.isAfter(dayjs(StartDate).startOf('day'))) &&
+            return (!start || projectDate.isAfter(dayjs(StartDate).startOf('day'))) &&
                 (!end || projectDate.isBefore(dayjs(EndDate).endOf('day')));
         });
 
-        let filtered = filteredbydate;
         if (searchQuery.trim() !== '') {
             const lowerQuery = searchQuery.toLowerCase();
 
@@ -107,7 +105,6 @@ export default function UserDashboard() {
             filtered = filtered.filter(Boolean);
         }
 
-        setProjects(filtered);
         setFilteredProjects(filtered);
     };
 
@@ -115,8 +112,6 @@ export default function UserDashboard() {
         setSearchQuery('');
         setDateRange(null);
         setFilteredProjects(projects);
-        handleSearch();
-        window.location.reload();
     };
 
     const toggleFavorite = async (projectId) => {
