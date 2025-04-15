@@ -86,7 +86,7 @@ namespace DAMBackend.Controllers
             var projects = await _context.UserProjectRelations
                 .Where(upr => upr.UserId == userId)
                 .Select(upr => upr.Project)
-                .Where(p => EF.Functions.Like(p.Status, "active"))
+                .Where(p => EF.Functions.Like(p.Status, "Active"))
                 .ToListAsync();
 
             return Ok(new { data = projects });
@@ -549,7 +549,7 @@ namespace DAMBackend.Controllers
             if (success)
             {
                 project.isArchived = true;
-                project.Status = "inactive";
+                project.Status = "Inactive";
                 await _context.SaveChangesAsync();
 
                 return Ok("Archived successfully.");
