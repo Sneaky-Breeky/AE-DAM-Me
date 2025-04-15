@@ -537,12 +537,13 @@ namespace DAMBackend.Controllers
         }
 
 
-        // POST: api/files/uploadToProject/{pid}
+        // POST: api/files/uploadToProject/{pid}/{selectedResolution}/{userid}
 
         // Sample input: [102, 103, 104]
+        // add userid input
 
-        [HttpPost("uploadToProject/{pid}/{selectedResolution}")]
-        public async Task<IActionResult> UploadToProject([FromBody] List<int> fids, int pid, string selectedResolution)
+        [HttpPost("uploadToProject/{pid}/{selectedResolution}/{userid}")]
+        public async Task<IActionResult> UploadToProject([FromBody] List<int> fids, int pid, string selectedResolution, int userid)
         {
             var project = await _context.Projects
                 .Include(p => p.Files)
@@ -551,6 +552,26 @@ namespace DAMBackend.Controllers
             if (project == null)
             {
                 return NotFound("No project found.");
+            }
+            
+            if (project.Status != "Active" && project.Status != "active") 
+            {
+                return BadRequest("Cannot upload image. Project is not in a valid state.");
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userid);
+
+            if (user == null)
+            {
+                return NotFound("User does not exist.");
+            }
+
+            var hasAccess = _context.UserProjectRelations
+                .FirstOrDefaultAsync(upr => upr.ProjectId == pid && upr.UserId == userid);
+
+            if (hasAccess == null)
+            {
+                return BadRequest("User does not have access to this project");
             }
         
             var files = await _context.Files

@@ -81,7 +81,7 @@ namespace DAMBackend.Controllers
 
         // GET: api/damprojects/AccessList/{userId}
         [HttpGet("AccessList/{userId}")]
-        public async Task<ActionResult<IEnumerable<ProjectModel>>> GetProjects(int userId)
+        public async Task<ActionResult<IEnumerable<ProjectModel>>> GetUserProjects(int userId)
         {
             var projects = await _context.UserProjectRelations
                 .Where(upr => upr.UserId == userId)
@@ -114,6 +114,7 @@ namespace DAMBackend.Controllers
 
             return Ok(access);
         }
+        
 
 
         [HttpDelete("AccessList/{projectId}")]
