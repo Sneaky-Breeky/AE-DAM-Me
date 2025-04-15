@@ -662,9 +662,17 @@ export default function UserUpload() {
 
 
     const toggleFileSelection = (fileObj) => {
-
         const fileName = fileObj.file.name;
         const updatedSelection = new Set(selectedFiles);
+
+        const isSelecting = !updatedSelection.has(fileName);
+        if (isSelecting && updatedSelection.size === 0) {
+            // First selected file — set default resolution
+            if (fileObj.resolution !== undefined) {
+                const resolutionMap = { 0: 'Low', 1: 'Medium', 2: 'High' };
+                setSelectedResolution(resolutionMap[fileObj.resolution]);
+            }
+        }
 
         if (updatedSelection.has(fileName)) {
             updatedSelection.delete(fileName);
@@ -1428,6 +1436,7 @@ export default function UserUpload() {
                             { value: 'Medium', label: 'Medium' },
                             { value: 'High', label: 'High' }
                         ]}
+                        disabled={!(selectMode && selectedFiles.size > 0)}
                         suffixIcon={<DownOutlined />}
                     />
                 </Box>
@@ -1441,6 +1450,7 @@ export default function UserUpload() {
                         suffixIcon={<CalendarOutlined />}
                         style={{ width: '100%' }}
                         value={selectedDate ? dayjs(selectedDate) : null}
+                        disabled={!(selectMode && selectedFiles.size > 0)}
                     />
                 </Box>
 
@@ -1450,6 +1460,7 @@ export default function UserUpload() {
                         value={location}
                         onChange={handleLocationChange}
                         placeholder="Enter location"
+                        disabled={!(selectMode && selectedFiles.size > 0)}
                     />
                 </Box>
             </Box>
