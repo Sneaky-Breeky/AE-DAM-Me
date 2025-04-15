@@ -146,7 +146,12 @@ export default function UserProjectOverview() {
     };
 
     const handleAddTagQuery = () => {
-        if (!selectedFileTag || tagQueries.includes(selectedFileTag)) {
+        if (typeof selectedFileTag !== 'string' || selectedFileTag.trim() === '') {
+            message.warning("Please select a tag");
+            return;
+        }
+
+        if (tagQueries.includes(selectedFileTag)) {
             return;
         }
 
