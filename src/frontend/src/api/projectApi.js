@@ -457,34 +457,21 @@ export async function getFirstImageForProject({ projectId }) {
 
         if (!response.ok) {
             const errText = await response.text();
-            throw new Error(`Failed to fetch first image: ${errText}`);
+            console.warn(`No image found for project ${projectId}: ${errText}`);
+            return null;
         }
 
-        return await response.json();
+        const text = await response.text();
+        if (!text) {
+            console.warn(`Empty image response for project ${projectId}`);
+            return null;
+        }
+
+        return JSON.parse(text);
     } catch (error) {
         console.error("getFirstImageForProject error:", error);
-        return null; // or fallback to a placeholder
+        return null; // Use fallback
     }
-    // try {
-    //     const url = `${PROJECTS_URL}/files/${projectId}`;
-    //
-    //     const response = await fetch(url, {
-    //         method: 'GET',
-    //         headers: {
-    //             'Accept': 'application/json',
-    //         },
-    //     });
-    //
-    //     if (!response.ok) {
-    //         const errText = await response.text();
-    //         throw new Error(`Failed to fetch images: ${errText}`);
-    //     }
-    //
-    //     return await response.json();
-    // } catch (error) {
-    //     console.error("getFilesForImages error:", error);
-    //     return [];
-    // }
 }
 
 
