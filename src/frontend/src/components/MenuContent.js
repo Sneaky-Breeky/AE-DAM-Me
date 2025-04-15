@@ -44,7 +44,7 @@ const GetDirectoryPrefix = (isAdmin) => (isAdmin ? '/admin/' : '/user/');
 
 export default function MenuContent({setLoggedIn}) {
   const { isAdmin, logout } = useAuth();
-  const menuItems = isAdmin & sessionStorage.getItem('adminUser') === "false" ? adminPages : userPages;
+  const menuItems = isAdmin & (!sessionStorage.getItem('adminUser') || sessionStorage.getItem('adminUser') === "false") ? adminPages : userPages;
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   
