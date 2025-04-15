@@ -116,6 +116,7 @@ export default function UserDashboard() {
         setDateRange(null);
         setFilteredProjects(projects);
         handleSearch();
+        window.location.reload();
     };
 
     const toggleFavorite = async (projectId) => {
