@@ -4,7 +4,7 @@ import { Input, Button, DatePicker, Form, Typography, Card, Row, Col, Select, To
 import { SearchOutlined, CalendarOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext'
-import {addFavorite, removeFavorite, fetchProjects, fetchFavoriteProjects} from '../../api/projectApi';
+import {addFavorite, removeFavorite, fetchProjects, fetchFavoriteProjects, fetchProjectsForUser} from '../../api/projectApi';
 import {fetchProjectsByDateRange, getProjectBasicTags} from '../../api/queryFile';
 import dayjs from 'dayjs';
 
@@ -31,9 +31,8 @@ export default function UserProjectDir() {
             if (data.error) {
                 console.error(data.error);
             } else {
-                const activeProjects = data.filter(p => p.status.toLowerCase() === "active");
-                setProjects(activeProjects);
-                setFilteredProjects(activeProjects);
+                setProjects(data);
+                setFilteredProjects(data);
             }
 
             const favs = await fetchFavoriteProjects(user.id);
@@ -48,52 +47,6 @@ export default function UserProjectDir() {
     }, [user]);
 
 
-    // const handleSearch = async () => {
-    //     const [start, end] = dateRange || [];
-    //
-    //     const query = {
-    //         StartDate: start ? dayjs(start).toISOString() : '0001-01-01T00:00:00Z',
-    //         EndDate: end ? dayjs(end).toISOString() : '0001-01-01T00:00:00Z'
-    //     };
-    //
-    //     try {
-    //         const response = await fetchProjectsByDateRange(query);
-    //         let filtered = response;
-    //
-    //         if (searchQuery.trim() !== '') {
-    //             const lowerQuery = searchQuery.toLowerCase();
-    //
-    //             filtered = await Promise.all(
-    //                 response.map(async (project) => {
-    //                     const match =
-    //                         project.name.toLowerCase().includes(lowerQuery) ||
-    //                         project.id.toString().includes(lowerQuery) ||
-    //                         project.location.toLowerCase().includes(lowerQuery);
-    //
-    //                     const tags = await getProjectBasicTags(project.id);
-    //                     const tagMatch = tags?.some(tag =>
-    //                         tag.toLowerCase().includes(lowerQuery)
-    //                     );
-    //
-    //                     return match || tagMatch ? project : null;
-    //                 })
-    //             );
-    //
-    //             filtered = filtered.filter(Boolean);
-    //         }
-    //
-    //         if (selectedStatus) {
-    //             filtered = filtered.filter(
-    //                 project => project.status.toLowerCase() === selectedStatus.toLowerCase()
-    //             );
-    //         }
-    //
-    //         setProjects(response);
-    //         setFilteredProjects(filtered);
-    //     } catch (error) {
-    //         console.error("Error fetching projects:", error);
-    //     }
-    // };
 
     const handleSearch = async () => {
         const [start, end] = dateRange || [];
@@ -112,9 +65,19 @@ export default function UserProjectDir() {
 
         console.log("Search Query:", query);
 
+        let baseProjects;
 
+        if (selectedStatus === "myProjects") {
+            baseProjects = await fetchProjectsForUser(user.id);
+            if (baseProjects.error) {
+                message.error("Failed to load your projects.");
+                return;
+            }
+        } else {
+            baseProjects = projects;
+        }
 
-        let filteredbydate = projects.filter(project => {
+        let filteredbydate = baseProjects.filter(project => {
             const projectDate = dayjs(project.startDate);
             return  (!start || projectDate.isAfter(dayjs(StartDate).startOf('day'))) &&
                 (!end || projectDate.isBefore(dayjs(EndDate).endOf('day')));
@@ -143,14 +106,13 @@ export default function UserProjectDir() {
             filtered = filtered.filter(Boolean);
         }
 
-        // this is not useful since we only display active project (see line 34)
-        if (selectedStatus) {
-            filtered = filtered.filter(project => {
-                console.log( project.status.toLowerCase());
-                return project.status.toLowerCase() === selectedStatus.toLowerCase();
-            });
+        if (selectedStatus && selectedStatus !== "myProjects") {
+            filtered = filtered.filter(project =>
+                project.status.toLowerCase() === selectedStatus.toLowerCase()
+            );
         }
         setFilteredProjects(filtered);
+        console.log("Filtered projects being set:", filtered);
     };
 
 
@@ -245,14 +207,15 @@ export default function UserProjectDir() {
                     allowClear
                     options={[
                         { value: 'active', label: 'Active' },
-                        { value: 'inactive', label: 'Inactive' }
+                        { value: 'inactive', label: 'Inactive' },
+                        { value: 'myProjects', label: 'My Projects' }
                     ]}
                     value={selectedStatus || null}
                     onChange={(value) => {
                         setSelectedStatus(value);
                         handleSearch();
                     }}
-                    placeholder="Select status"
+                    placeholder="Category"
                 />
             </Form.Item>
 
