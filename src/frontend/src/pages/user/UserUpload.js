@@ -904,7 +904,7 @@ export default function UserUpload() {
         const fileIds = selectedFileObjs.map(f => f.id);
         setSpinning(true);
 
-        const res = await uploadFilesToProject(project.id, fileIds, selectedResolution);
+        const res = await uploadFilesToProject(project.id, fileIds, selectedResolution, user.id);
 
         setSpinning(false);
         if (res.error) {

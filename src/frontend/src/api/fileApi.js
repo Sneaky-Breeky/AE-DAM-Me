@@ -232,10 +232,10 @@ export async function deleteFilesDB(fileIds) {
     }
 }
 
-export async function uploadFilesToProject(projectId, fileIds, selectedResolution) {
+export async function uploadFilesToProject(projectId, fileIds, selectedResolution, userId) {
     try {
         
-        const response = await fetch(`${FILES_URL}/uploadToProject/${projectId}/${selectedResolution}`, {
+        const response = await fetch(`${FILES_URL}/uploadToProject/${projectId}/${selectedResolution}/${userId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
