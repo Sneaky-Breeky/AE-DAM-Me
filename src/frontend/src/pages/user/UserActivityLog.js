@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import { Typography, Spin, Alert, Select } from 'antd';
 import dayjs from 'dayjs';
-import { fetchLog } from "../../api/logApi";
-import { fetchProjectsForUser } from "../../api/projectApi"; // This API would need to be created to fetch the user's projects
+import {fetchLog, fetchProjectLog} from "../../api/logApi";
+import {fetchProjects, fetchProjectsForUser} from "../../api/projectApi"; // This API would need to be created to fetch the user's projects
 import { useAuth } from "./../../contexts/AuthContext";
 
 const { Title } = Typography;
@@ -22,11 +22,16 @@ export default function ActivityLog() {
             if (user && user.id) {
                 setLoading(true);
                 try {
-                    // Fetch user's projects
-                    const userProjects = await fetchProjectsForUser(user.id);
+                    var userProjects = [];
+                    if(isAdmin){
+                        userProjects = await fetchProjects();
+                    }
+                    else{
+                        userProjects = await fetchProjectsForUser(user.id);
+                    }
+
                     setProjects(userProjects);
 
-                    // Fetch all logs for the user
                     const result = await fetchLog(user.id);
                     setLogs(result);
                 } catch (error) {
@@ -40,15 +45,13 @@ export default function ActivityLog() {
         loadLogsAndProjects();
     }, [user]);
 
-    const handleProjectChange = (projectId) => {
+    async function handleProjectChange (projectId) {
         setSelectedProject(projectId);
 
-        // Filter logs by selected project
         if (projectId) {
-            const filteredLogs = logs.filter(log => log.projectId === projectId);
-            setLogs(filteredLogs);
+            const projectLogs = await fetchProjectLog(projectId);
+            setLogs(projectLogs);
         } else {
-            // Reset to show all logs if no project is selected
             setLogs(logs);
         }
     };
@@ -187,14 +190,6 @@ export default function ActivityLog() {
                                     }}
                                 >
                                     <p style={{ margin: '0' }}>{log.action}</p>
-                                    {log.fileId && (
-                                        <p style={{ margin: '0' }}>
-                                            <span>File ID: </span>
-                                            <span style={{ color: 'grey', fontStyle: 'italic' }}>
-                                                    {log.fileId}
-                                                </span>
-                                        </p>
-                                    )}
                                     {log.projectId && (
                                         <p style={{ margin: '0' }}>
                                             <span>Project ID: </span>
@@ -203,6 +198,15 @@ export default function ActivityLog() {
                                                 </span>
                                         </p>
                                     )}
+                                    {log.fileId && (
+                                        <p style={{ margin: '0' }}>
+                                            <span>File ID: </span>
+                                            <span style={{ color: 'grey', fontStyle: 'italic' }}>
+                                                    {log.fileId}
+                                                </span>
+                                        </p>
+                                    )}
+
                                 </td>
                                 <td
                                     style={{

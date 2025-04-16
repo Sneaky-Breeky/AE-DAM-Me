@@ -134,8 +134,9 @@ export default function ProjectManagement() {
 
     const handleArchiveProject = async (p) => {
         try {
-            const response = await archiveProject(p.id);
             await addLog(user.id, null, p.id, 'Archived a project');
+            const response = await archiveProject(p.id);
+
 
             if (response.error) {
                 throw new Error("Archive error", response.error);
