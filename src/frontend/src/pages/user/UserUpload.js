@@ -9,7 +9,11 @@ import { API_BASE_URL } from '../../api/apiURL.js';
 import { Palette } from '@mui/icons-material';
 import { fetchProjectsForUser } from '../../api/projectApi';
 import { addMetaAdvanceTag, addMetaBasicTag, assignSuggestedProjectToFile, uploadFilesToProject, removeBasicTag, removeAdvancedTag } from '../../api/fileApi';
-import { getProjectMetaDataKeysUpload, getProjectBasicTags } from '../../api/queryFile';
+import {
+    getProjectMetaDataKeysUpload,
+    getProjectBasicTags,
+    getProjectMetaDataKeysFilesUpload
+} from '../../api/queryFile';
 import {
     getProjectImageBasicTags,
     getProjectImageMetaDataValuesTags
@@ -180,16 +184,21 @@ export default function UserUpload() {
                 if (matchedProject) {
                     setSelectProject(matchedProject);
 
-                    const resultMD = await getProjectMetaDataKeysUpload(matchedProject.id);
-                    console.log("here");
+                    const projectMD = await getProjectMetaDataKeysUpload(matchedProject.id);
+                    const fileMD = await getProjectMetaDataKeysFilesUpload(matchedProject.id);
+                    var resultMD = projectMD;
+                    if(fileMD !== null){
+                        resultMD = projectMD.concat(fileMD);
+                    }
                     console.log(resultMD);
+
                     const resultTags = await getProjectBasicTags(matchedProject.id);
 
                     setExistingSelectProjectMD(resultMD || []);
                     setExistingSelectProjectTags(resultTags || []);
                 }
             }
-
+            // console.log(selectProjectMD);
             const metaRes = await getProjectImageMetaDataValuesTags({ pid: selectFile.projectId, fid: selectFile.id });
             const tagRes = await getProjectImageBasicTags({ pid: selectFile.projectId, fid: selectFile.id });
 
@@ -595,10 +604,16 @@ export default function UserUpload() {
             projectId: projectId
         }));
 
-        const resultMD = await getProjectMetaDataKeysUpload(projectId);
+        const projectMD = await getProjectMetaDataKeysUpload(projectId);
+        const fileMD = await getProjectMetaDataKeysFilesUpload(projectId);
+        let resultMD = projectMD;
+        if(fileMD !== null){
+            resultMD = projectMD.concat(fileMD);
+        }
         const resultTags = await getProjectBasicTags(projectId);
 
         resultMD && setExistingSelectProjectMD(resultMD);
+        // setExistingSelectProjectMD(resultMD||[]);
         resultTags && setExistingSelectProjectTags(resultTags);
     };
 

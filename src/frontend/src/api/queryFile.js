@@ -34,7 +34,7 @@ export async function fetchProjectsByDateRange(StartDate, EndDate) {
 }
 export async function getProjectBasicTags (pid){
     //console.log("insider query api");
-    console.log(pid);
+    // console.log(pid);
     try {
         const url = `${QUERY_URL}/basictags/${pid}`
         const response = await fetch(url, {
@@ -67,6 +67,28 @@ export async function getProjectMetaDataKeysUpload (pid){
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching basic tags:', error);
+        return null;
+    }
+}
+export async function getProjectMetaDataKeysFilesUpload (pid){
+    try {
+        const url = `${QUERY_URL}/metadatatagsFile/${pid}`
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        // console.log("insdide qhery");
+        // console.log(await response.json());
 
         return await response.json();
     } catch (error) {
