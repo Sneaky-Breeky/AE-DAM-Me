@@ -117,7 +117,7 @@ export default function ProjectManagement() {
 
     const handleDeleteProject = async (p) => {
         try {
-            await addLog(user.id, null, null, `Deleted a project ID: ${p.id}`);
+            await addLog(user.id, null, p.id, `Deleted Project`);
             const result = await deleteProject(p.id);
 
             if (result.error) {
@@ -134,8 +134,9 @@ export default function ProjectManagement() {
 
     const handleArchiveProject = async (p) => {
         try {
-            const response = await archiveProject(p.id);
             await addLog(user.id, null, p.id, 'Archived a project');
+            const response = await archiveProject(p.id);
+
 
             if (response.error) {
                 throw new Error("Archive error", response.error);

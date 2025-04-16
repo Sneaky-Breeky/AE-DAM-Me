@@ -49,7 +49,7 @@ export default function AdminFileManage() {
     const deleteSelectedImages = async () => {
       console.log(selectedImages);
       const selectedImagesArray = [...selectedImages];
-        await Promise.all(selectedImagesArray.map(fileId => addLog(user.id, null,project.id, `Deleted Image Id: ${fileId} From Project`)));
+        await Promise.all(selectedImagesArray.map(fileId => addLog(user.id, fileId,project.id, `Deleted Image From Project`)));
       await Promise.all(selectedImagesArray.map(fileId => deleteFileFromProject(project.id, fileId)));
 
       const files = await getFilesForProject({ projectId: project.id });

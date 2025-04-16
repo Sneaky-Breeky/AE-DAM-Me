@@ -25,11 +25,33 @@ export async function fetchLog(userId) {
         return { error: "Network error or server unreachable", message: error.message };
     }
 }
+export async function fetchProjectLog(projectId) {
+    try {
+        const response = await fetch(`${LOG_URL}/fetchProjectLog/${projectId}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            try {
+                const errorData = JSON.parse(errorText);
+                return { error: errorData.message || "Unknown error" };
+            } catch {
+                return { error: `HTTP Error ${response.status}: ${errorText}` };
+            }
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error("Network or fetch error:", error);
+        return { error: "Network error or server unreachable", message: error.message };
+    }
+}
 
 export async function addLog(userID, fileID, projectId, typeOfLog) {
-    console.log(typeOfLog);
-    // console.log(userID);
-    // console.log(fileID);
 
     const logData = {
         FileId: fileID,
@@ -38,6 +60,7 @@ export async function addLog(userID, fileID, projectId, typeOfLog) {
         TypeOfLog: typeOfLog,
         Date: new Date().toISOString(),
     };
+    console.log("inside log");
     console.log(logData);
     try {
         const response = await fetch(`${LOG_URL}/addLog`, {

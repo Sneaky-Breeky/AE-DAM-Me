@@ -62,7 +62,27 @@
 
              return Ok(log);
          }
-     }
+
+     [HttpGet("fetchProjectLog/{projectId}")]
+              public async Task<ActionResult<IEnumerable<LogImage>>> GetLogForProject(int projectId)
+              {
+                  try
+                  {
+                      var logs = await _context.LogImage
+                          .Where(l => l.ProjectId == projectId)
+                          .ToListAsync();
+
+                      return Ok(logs);
+
+                  }
+                  catch (Exception ex)
+                  {
+                      return BadRequest(ex.Message);
+                  }
+
+
+              }
+              }
 
      public class LogImageRequest
      {
