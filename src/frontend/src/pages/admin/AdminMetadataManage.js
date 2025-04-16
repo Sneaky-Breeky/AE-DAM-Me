@@ -108,6 +108,32 @@ const oldTagKeys = oldTags.map(tag => tag.key);
 const newTags = values.fields?.filter(f => f.field && f.fieldMD) || [];
 const newTagKeys = newTags.map(tag => tag.field);
 
+// HANDLE METADATA VALUES EDITS
+    const newEditedTags = newTags.reduce((acc, newTag) => {
+        const matchingOldTag = oldTags.find(oldTag => oldTag.key === newTag.field);  // Find the matching old tag by key
+
+        if (matchingOldTag) {
+            if (matchingOldTag.sValue !== newTag.fieldMD && matchingOldTag.iValue !== newTag.fieldMD) {
+                acc.push({
+                    key: newTag.field,
+                    fieldMD: newTag.fieldMD,
+                });
+            }
+        }
+
+        return acc;
+    }, []);
+
+    console.log(newEditedTags);
+    for (const tag of newEditedTags) {
+        const type = typeof tag.fieldMD === 'number' ? 1 : 0; // 1 = Integer, 0 = String
+        const res = await deleteProjectTag(tag.key, project.id);
+        if (!res.error) {
+            console.log("adding");
+            await addProjectTag(project.id, tag.key, tag.fieldMD, type);
+        }
+    }
+
 // add new tags
 for (const tag of newTags) {
 if (!oldTagKeys.includes(tag.field)) {
