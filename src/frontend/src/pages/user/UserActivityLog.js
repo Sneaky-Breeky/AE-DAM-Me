@@ -1,26 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
-import { Typography, Spin, Alert } from 'antd';
+import { Typography, Spin, Alert, Select } from 'antd';
 import dayjs from 'dayjs';
 import { fetchLog } from "../../api/logApi";
+import { fetchProjectsForUser } from "../../api/projectApi"; // This API would need to be created to fetch the user's projects
 import { useAuth } from "./../../contexts/AuthContext";
 
 const { Title } = Typography;
+const { Option } = Select;
 
 export default function ActivityLog() {
     const { user, isAdmin } = useAuth();
-    const variable = true;
     const [logs, setLogs] = useState([]);
+    const [projects, setProjects] = useState([]);
+    const [selectedProject, setSelectedProject] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        async function loadLogs() {
+        async function loadLogsAndProjects() {
             if (user && user.id) {
                 setLoading(true);
                 try {
+                    // Fetch user's projects
+                    const userProjects = await fetchProjectsForUser(user.id);
+                    setProjects(userProjects);
+
+                    // Fetch all logs for the user
                     const result = await fetchLog(user.id);
-                    console.log(result);
                     setLogs(result);
                 } catch (error) {
                     setError(error);
@@ -30,8 +37,21 @@ export default function ActivityLog() {
             }
         }
 
-        loadLogs();
+        loadLogsAndProjects();
     }, [user]);
+
+    const handleProjectChange = (projectId) => {
+        setSelectedProject(projectId);
+
+        // Filter logs by selected project
+        if (projectId) {
+            const filteredLogs = logs.filter(log => log.projectId === projectId);
+            setLogs(filteredLogs);
+        } else {
+            // Reset to show all logs if no project is selected
+            setLogs(logs);
+        }
+    };
 
     if (!user) {
         return <Alert message="Please login to see your activity log." type="warning" />;
@@ -53,7 +73,6 @@ export default function ActivityLog() {
                 height: '100vh',
             }}
         >
-            {/* Title */}
             <Box
                 sx={{
                     textAlign: 'center',
@@ -63,7 +82,28 @@ export default function ActivityLog() {
                 <Title level={1}>Activity Log</Title>
             </Box>
 
-            {/* container with activity log */}
+            {/* Dropdown for selecting project */}
+            <Box
+                sx={{
+                    textAlign: 'center',
+                    marginBottom: 2,
+                }}
+            >
+                <Select
+                    defaultValue={selectedProject || 'All Projects'}
+                    style={{ width: '200px' }}
+                    onChange={handleProjectChange}
+                >
+                    <Option value={null}>All Projects</Option>
+                    {projects.map(project => (
+                        <Option key={project.id} value={project.id}>
+                            {project.name}
+                        </Option>
+                    ))}
+                </Select>
+            </Box>
+
+            {/* Container with activity log */}
             <Box
                 sx={{
                     display: 'flex',
@@ -84,177 +124,109 @@ export default function ActivityLog() {
                 <div style={{ overflowY: 'auto', width: '100%', height: '100%' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
-                        {variable ? (
-                            <tr style={{ height: '10%' }}>
-                                <th
-                                    style={{
-                                        width: '15%', // Reduced width for User column
-                                        textAlign: 'left',
-                                        borderBottom: '1px solid black',
-                                    }}
-                                >
-                                    User
-                                </th>
-                                <th
-                                    style={{
-                                        width: '35%', // Reduced width for Activities column
-                                        textAlign: 'left',
-                                        borderBottom: '1px solid black',
-                                    }}
-                                >
-                                    Data Changed
-                                </th>
-                                <th
-                                    style={{
-                                        width: '20%', // Increased width for Timestamp column
-                                        textAlign: 'left',
-                                        borderBottom: '1px solid black',
-                                    }}
-                                >
-                                    Timestamp
-                                </th>
-                                <th
-                                    style={{
-                                        width: '30%', // Expanded width for Type of Log column
-                                        textAlign: 'left',
-                                        borderBottom: '1px solid black',
-                                        paddingLeft: '20px', // Added padding to the left of Type of Log column for more gap
-                                    }}
-                                >
-                                    Activity
-                                </th>
-                            </tr>
-                        ) : (
-                            <tr style={{ height: '10%' }}>
-                                <th
-                                    style={{
-                                        width: '55%', // Reduced width for Activities column
-                                        textAlign: 'left',
-                                        borderBottom: '1px solid black',
-                                    }}
-                                >
-                                    Activities
-                                </th>
-                                <th
-                                    style={{
-                                        width: '45%', // Increased width for Timestamp column
-                                        textAlign: 'left',
-                                        borderBottom: '1px solid black',
-                                    }}
-                                >
-                                    Timestamp
-                                </th>
-                            </tr>
-                        )}
+                        <tr style={{ height: '10%' }}>
+                            <th
+                                style={{
+                                    width: '15%',
+                                    textAlign: 'left',
+                                    borderBottom: '1px solid black',
+                                }}
+                            >
+                                User
+                            </th>
+                            <th
+                                style={{
+                                    width: '35%',
+                                    textAlign: 'left',
+                                    borderBottom: '1px solid black',
+                                }}
+                            >
+                                Data Changed
+                            </th>
+                            <th
+                                style={{
+                                    width: '20%',
+                                    textAlign: 'left',
+                                    borderBottom: '1px solid black',
+                                }}
+                            >
+                                Timestamp
+                            </th>
+                            <th
+                                style={{
+                                    width: '30%',
+                                    textAlign: 'left',
+                                    borderBottom: '1px solid black',
+                                    paddingLeft: '20px',
+                                }}
+                            >
+                                Activity
+                            </th>
+                        </tr>
                         </thead>
-
                         <tbody>
-                        {[...logs]
+                        {
+                            [...logs]
                             .sort((a, b) => new Date(b.logDate) - new Date(a.logDate))
                             .map((log, index) => (
-                                <tr key={log.id || index}>
-                                    {variable ? (
-                                        <>
-                                            <td
-                                                style={{
-                                                    width: '15%',
-                                                    textAlign: 'left',
-                                                    borderBottom: '1px solid black',
-                                                }}
-                                            >
-                                                <p style={{ margin: '0' }}>{log.userId}</p>
-                                            </td>
-                                            <td
-                                                style={{
-                                                    width: '35%',
-                                                    textAlign: 'left',
-                                                    borderBottom: '1px solid black',
-                                                }}
-                                            >
-                                                <p style={{ margin: '0' }}>{log.action}</p>
-                                                {log.fileId && (
-                                                    <p style={{ margin: '0' }}>
-                                                        <span>File ID: </span>
-                                                        <span style={{ color: 'grey', fontStyle: 'italic' }}>
-                                                            {log.fileId}
-                                                        </span>
-                                                    </p>
-                                                )}
-                                                {log.projectId && (
-                                                    <p style={{ margin: '0' }}>
-                                                        <span>Project ID: </span>
-                                                        <span style={{ color: 'grey', fontStyle: 'italic' }}>
-                                                            {log.projectId}
-                                                        </span>
-                                                    </p>
-                                                )}
-                                            </td>
-                                            <td
-                                                style={{
-                                                    width: '20%',
-                                                    textAlign: 'left',
-                                                    borderBottom: '1px solid black',
-                                                }}
-                                            >
-                                                <p style={{ margin: '0' }}>
-                                                    {dayjs(log.logDate).format('MMM DD, YYYY')}
-                                                </p>
-                                            </td>
-                                            <td
-                                                style={{
-                                                    width: '30%',
-                                                    textAlign: 'left',
-                                                    borderBottom: '1px solid black',
-                                                    paddingLeft: '20px', // Added padding for gap
-                                                }}
-                                            >
-                                                <p style={{ margin: '0' }}>
-                                                    {log.typeOfLog || 'N/A'}
-                                                </p>
-                                            </td>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <td
-                                                style={{
-                                                    width: '55%',
-                                                    textAlign: 'left',
-                                                    borderBottom: '1px solid black',
-                                                }}
-                                            >
-                                                <p style={{ margin: '0' }}>{log.action}</p>
-                                                {log.fileId && (
-                                                    <p style={{ margin: '0' }}>
-                                                        <span>File ID: </span>
-                                                        <span style={{ color: 'grey', fontStyle: 'italic' }}>
-                                                            {log.fileId}
-                                                        </span>
-                                                    </p>
-                                                )}
-                                                {log.projectId && (
-                                                    <p style={{ margin: '0' }}>
-                                                        <span>Project ID: </span>
-                                                        <span style={{ color: 'grey', fontStyle: 'italic' }}>
-                                                            {log.projectId}
-                                                        </span>
-                                                    </p>
-                                                )}
-                                            </td>
-                                            <td
-                                                style={{
-                                                    width: '45%',
-                                                    textAlign: 'left',
-                                                    borderBottom: '1px solid black',
-                                                }}
-                                            >
-                                                <p style={{ margin: '0' }}>
-                                                    {dayjs(log.logDate).format('MMM DD, YYYY')}
-                                                </p>
-                                            </td>
-                                        </>
+                            <tr key={log.id || index}>
+                                <td
+                                    style={{
+                                        width: '15%',
+                                        textAlign: 'left',
+                                        borderBottom: '1px solid black',
+                                    }}
+                                >
+                                    <p style={{ margin: '0' }}>{log.userId}</p>
+                                </td>
+                                <td
+                                    style={{
+                                        width: '35%',
+                                        textAlign: 'left',
+                                        borderBottom: '1px solid black',
+                                    }}
+                                >
+                                    <p style={{ margin: '0' }}>{log.action}</p>
+                                    {log.fileId && (
+                                        <p style={{ margin: '0' }}>
+                                            <span>File ID: </span>
+                                            <span style={{ color: 'grey', fontStyle: 'italic' }}>
+                                                    {log.fileId}
+                                                </span>
+                                        </p>
                                     )}
-                                </tr>
-                            ))}
+                                    {log.projectId && (
+                                        <p style={{ margin: '0' }}>
+                                            <span>Project ID: </span>
+                                            <span style={{ color: 'grey', fontStyle: 'italic' }}>
+                                                    {log.projectId}
+                                                </span>
+                                        </p>
+                                    )}
+                                </td>
+                                <td
+                                    style={{
+                                        width: '20%',
+                                        textAlign: 'left',
+                                        borderBottom: '1px solid black',
+                                    }}
+                                >
+                                    <p style={{ margin: '0' }}>
+                                        {dayjs(log.logDate).format('MMM DD, YYYY')}
+                                    </p>
+                                </td>
+                                <td
+                                    style={{
+                                        width: '30%',
+                                        textAlign: 'left',
+                                        borderBottom: '1px solid black',
+                                        paddingLeft: '20px',
+                                    }}
+                                >
+                                    <p style={{ margin: '0' }}>{log.typeOfLog || 'N/A'}</p>
+                                </td>
+                            </tr>
+                        ))}
                         </tbody>
                     </table>
                 </div>
