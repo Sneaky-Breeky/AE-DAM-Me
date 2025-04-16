@@ -56,7 +56,8 @@ export default function ActivityLog() {
             const projectLogs = await fetchProjectLog(projectId);
             setLogs(projectLogs);
         } else {
-            setLogs(logs);
+            const result = await fetchLog(user.id);
+            setLogs(result);
         }
     };
 
@@ -222,7 +223,7 @@ export default function ActivityLog() {
                                         {dayjs(log.logDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('MMM DD, YYYY')}
                                     </p>
                                     <p style={{ margin: '0', fontSize: '0.9em', color: 'grey' }}>
-                                        {dayjs(log.logDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('HH:mm:ss')}
+                                        {dayjs(log.logDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('hh:mm:ss A')}
                                     </p>
                                 </td>
                                 <td
