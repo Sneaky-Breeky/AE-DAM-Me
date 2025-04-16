@@ -2,9 +2,13 @@ import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import { Typography, Spin, Alert, Select } from 'antd';
 import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
 import {fetchLog, fetchProjectLog} from "../../api/logApi";
 import {fetchProjects, fetchProjectsForUser} from "../../api/projectApi"; // This API would need to be created to fetch the user's projects
 import { useAuth } from "./../../contexts/AuthContext";
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -209,13 +213,16 @@ export default function ActivityLog() {
                                 </td>
                                 <td
                                     style={{
-                                        width: '20%',
+                                        width: '22%',
                                         textAlign: 'left',
                                         borderBottom: '1px solid black',
                                     }}
                                 >
                                     <p style={{ margin: '0' }}>
-                                        {dayjs(log.logDate).format('MMM DD, YYYY')}
+                                        {dayjs(log.logDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('MMM DD, YYYY')}
+                                    </p>
+                                    <p style={{ margin: '0', fontSize: '0.9em', color: 'grey' }}>
+                                        {dayjs(log.logDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('HH:mm:ss')}
                                     </p>
                                 </td>
                                 <td
