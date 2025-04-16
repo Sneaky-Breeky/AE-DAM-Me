@@ -181,6 +181,8 @@ export default function UserUpload() {
                     setSelectProject(matchedProject);
 
                     const resultMD = await getProjectMetaDataKeysUpload(matchedProject.id);
+                    console.log("here");
+                    console.log(resultMD);
                     const resultTags = await getProjectBasicTags(matchedProject.id);
 
                     setExistingSelectProjectMD(resultMD || []);
