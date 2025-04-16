@@ -27,9 +27,6 @@ export async function fetchLog(userId) {
 }
 
 export async function addLog(userID, fileID, projectId, typeOfLog) {
-    console.log(typeOfLog);
-    // console.log(userID);
-    // console.log(fileID);
 
     const logData = {
         FileId: fileID,
@@ -38,6 +35,7 @@ export async function addLog(userID, fileID, projectId, typeOfLog) {
         TypeOfLog: typeOfLog,
         Date: new Date().toISOString(),
     };
+    console.log("inside log");
     console.log(logData);
     try {
         const response = await fetch(`${LOG_URL}/addLog`, {
