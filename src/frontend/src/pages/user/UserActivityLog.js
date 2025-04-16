@@ -85,7 +85,6 @@ export default function ActivityLog() {
                 <Title level={1}>Activity Log</Title>
             </Box>
 
-            {/* Dropdown for selecting project */}
             <Box
                 sx={{
                     textAlign: 'center',
