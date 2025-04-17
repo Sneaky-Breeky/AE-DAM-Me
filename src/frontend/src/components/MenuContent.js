@@ -86,12 +86,14 @@ export default function MenuContent({setLoggedIn}) {
         {isAdmin && 
             (<ListItem key={1} disablePadding sx={{ display: 'block' }}>
               <ListItemButton onClick={() => {
+                console.log(sessionStorage.getItem('adminUser'));
                 sessionStorage.setItem('adminUser', sessionStorage.getItem('adminUser') === "true" ? "false" : "true");
+                console.log(sessionStorage.getItem('adminUser'));
                 sessionStorage.setItem('menu', 0);
                 navigate(GetDirectoryPrefix(isAdmin & sessionStorage.getItem('adminUser') === "false") + 'dashboard')
               }}>
-                <ListItemIcon sx={{ color: 'white' }}>{sessionStorage.getItem('adminUser') === "false" ? <SupervisedUserCircleIcon /> : <AccountCircleIcon />}</ListItemIcon>
-                <ListItemText primary={sessionStorage.getItem('adminUser') === "false" ? 'Admin Operations' : 'User Operations'} sx={{ color: 'white' }} />
+                <ListItemIcon sx={{ color: 'white' }}>{sessionStorage.getItem('adminUser') === "true" ? <SupervisedUserCircleIcon /> : <AccountCircleIcon />}</ListItemIcon>
+                <ListItemText primary={sessionStorage.getItem('adminUser') === "true" ? 'Admin Operations' : 'User Operations'} sx={{ color: 'white' }} />
               </ListItemButton>
             </ListItem>)
         }
