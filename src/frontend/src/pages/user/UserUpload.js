@@ -476,6 +476,7 @@ export default function UserUpload() {
             setRotation(0);
 
             message.success("Edited image saved and uploaded!");
+            message.info("Reminder: Save to Palette to save your changes!");
         } catch (error) {
             console.error("Error saving cropped image:", error);
             message.error("Failed to upload edited image.");
